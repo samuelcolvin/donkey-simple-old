@@ -1,7 +1,7 @@
 import jinja2, json
 from jinja2 import meta as jinja2_meta
 import re, os
-from common import *
+from _common import *
 
 class RenderTemplate(object):
     def __init__(self, name):

@@ -2,13 +2,15 @@ import os
 import markdown2
 import pprint
 from _common import *
+import json
+import _template_renderer as tr
     
 class Page(object):
     def __init__(self, name, template):
         self._page = {'name': name, 'template': template}
     
     def clean_page(self):
-        r = RenderTemplate(self._page['template'])
+        r = tr.RenderTemplate(self._page['template'])
         self._page['context'] = r.get_empty_context()
         self._write()
         
@@ -41,7 +43,7 @@ class SiteGenerator(object):
             context[var] = item['value']
             if item['type'] == 'md':
                 context[var] = markdown2.markdown(item['value'])
-        r = RenderTemplate(page['template'])
+        r = tr.RenderTemplate(page['template'])
         content = r.render(context)
         fn = '%s/%s.html' % (self._base_dir, page['name'])
         open(fn, 'w').write(content)

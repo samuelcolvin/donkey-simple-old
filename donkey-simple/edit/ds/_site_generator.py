@@ -28,14 +28,23 @@ class SiteGenerator(object):
 
     def generate_entire_site(self):
         self._delete_existing_files()
-        for p in self.get_pages():
+        for p in self._get_page_files():
             self.generate_page(p)
             
-    def get_pages(self):
+    def _get_page_files(self):
         return [f for f in os.listdir(PAGE_DIR) if f.endswith('.json')]
     
-    def generate_page(self, page_name):
-        path = '%s/%s' % (PAGE_DIR, page_name)
+    def get_pages(self):
+        return [(fn, self._load_page_file(fn)) for fn in self._get_page_files()]
+            
+    def _load_page_file(self, page_file_name):
+        path = '%s/%s' % (PAGE_DIR, page_file_name)
+        with open(path, 'r') as infile:
+            return json.load(infile)
+        return None
+    
+    def generate_page(self, page_file_name):
+        path = '%s/%s' % (PAGE_DIR, page_file_name)
         with open(path, 'r') as infile:
             page = json.load(infile)
         context = {}

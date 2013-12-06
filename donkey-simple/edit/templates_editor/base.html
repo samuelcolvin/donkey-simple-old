@@ -13,12 +13,11 @@
   <body>
   	<div class="container">
       <div class="page-header">
-        <h1>editor</h1>
-        <p>Basic grid layouts to get you familiar with building within the Bootstrap grid system.</p>
+        <h1>{{title}}</h1>
+        <p>{% block page_tag %}{% endblock %}</p>
       </div>
-      <p>content</p>
+  	{% block content %}Content not defined.{% endblock %}
 	</div>
-	{% block content %}{% endblock %}
   	<script src="templates_editor/static/bootstrap.min.js"></script>
   	<script src="templates_editor/static/jquery-1.10.2.min.js"></script>
   </body>

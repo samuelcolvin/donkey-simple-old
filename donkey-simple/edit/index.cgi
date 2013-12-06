@@ -5,7 +5,7 @@ response = 'content-type: text/html\n\n'
 try:
     import ds, traceback
     wi = ds.WebInterface()
-    response += wi.base_page()
+    response += wi.index()
      
 except Exception, e:
     print 'content-type: text/plain\n\n'

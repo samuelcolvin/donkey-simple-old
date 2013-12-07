@@ -1,97 +1,113 @@
-import jinja2, os, cgi
-import _site_generator
+import jinja2, os, cgi, re
+import _site_generator as sg
+import _controllers as con
 from _common import *
 import HTMLParser
 
 EDITOR_TEMPLATE_DIR = 'templates_editor'
 
+urls = (
+    ('add-page', 'edit_page'),
+    ('edit-page-(\d+)', 'edit_page'),
+    ('add-template', 'edit_template'),
+    ('edit-template-(\d+)', 'edit_template'),
+    ('add-static', 'edit_static'),
+    ('edit-static-(\d+)', 'edit_static'),
+    ('upload-static', 'upload_static'),
+)
+
 class WebInterface(object):
-    def __init__(self, debug):
+    def __init__(self,):
         self._msgs = {}
-        self._debug = debug
         self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
         uri = os.environ['REQUEST_URI']
         self._site_uri = uri[:uri.index('/edit/')]
         e_index = uri.index('/edit/') + 5
         self._site_edit_uri = uri[:e_index] + '/'
-        self._static_uri = self._site_edit_uri + 'editor_static/'
-        sub_page = uri[e_index:].replace('/','')
-        self._process_form(sub_page)
-        self._generate_page(sub_page)
+        self._edit_static_uri = self._site_edit_uri + 'editor_static/'
+        self._static_uri = self._site_edit_uri + 'static/'
+        ProcessForm(self._add_msg)
+        self._generate_page(uri)
         
-    def _generate_page(self, sub_page):
-        context = {'title': '%s Editor' % SITE_NAME, 'static_uri': self._static_uri, 
+    def _generate_page(self, uri):
+        context = {'title': '%s Editor' % SITE_NAME, 'static_uri': self._edit_static_uri, 
                    'edit_uri': self._site_edit_uri, 'site_uri': self._site_uri}
         context.update(CONFIG_SETTINGS)
-#         self._debug.write_line('sub_page:', sub_page)
-        if 'add-template' in sub_page:
-            self._edit_template(context, -1)
-        elif 'edit-template' in sub_page:
-            tid = int(sub_page.replace('edit-template-', ''))
-            self._edit_template(context, tid)
-        elif 'add-page' in sub_page:
-            self._edit_page(context, -1)
-        elif 'edit-page' in sub_page:
-            pid = int(sub_page.replace('edit-page-', ''))
-            self._edit_page(context, pid)
-        else:
-            self._index(context)
+        print 'uri:', uri
+        found = False
+        for reg, func in urls:
+            m = re.search(reg, uri)
+            if m:
+                found = True
+                fid = None
+                if len(m.regs) > 1:
+                    fid = int(m.group(1))
+                getattr(self, func)(context, fid)
+                break
+        if not found:
+            self.index(context)
         context.update(self._msgs)
         self.page = self._template.render(**context)
-            
-    def _process_form(self, sub_page):
-        self._debug.write_line(sub_page)
-        if sub_page == 'generate':
-            sg = _site_generator.SiteGenerator(self._debug)
-            sg.generate_entire_site()
-            self._add_msg('Site generated successfully', 'success')
-        fields = cgi.FieldStorage()
-        if 'action' in fields:
-            for name in fields:
-                self._debug.write_line(name, fields[name].value)
-            action = fields['action'].value
-            if action == 'edit-template':
-                t = _site_generator.Templates()
-                text = HTMLParser.HTMLParser().unescape(fields['template-text'].value)
-                fname = t.write_template(text, fields['template-name'].value)
-                self._add_msg('"%s" successfully saved' % fname, 'success')
-            elif action == 'delete-template':
-                t = _site_generator.Templates()
-                fname = t.delete_template(fields['template-name'].value)
-                self._add_msg('"%s" successfully deleted' % fname, 'success')
-            elif action == 'edit-page':
-                page = _site_generator.Page(fields['page-name'].value, fields['page-template'].value)
-                context = dict([(name, fields[name].value) for name in fields])
-                page.update_context(context)
-                fname = page.generate_page()
-                self._add_msg('"%s" successfully saved' % fname, 'success')
-            elif action == 'delete-page':
-                page = _site_generator.Page(fields['page-name'].value)
-                fname = page.delete_existing()
-                self._add_msg('"%s" successfully deleted' % fname, 'success')
     
-    def _index(self, context):
+    def index(self, context):
         self._template = self._env.get_template('edit_index.html')
-        sg = _site_generator.SiteGenerator(self._debug)
+        page_con = con.Pages()
         context['pages'] = []
-        for page in sg.get_pages():
+        for page in page_con.get_pages():
             context['pages'].append({'link': 'edit-page-%d' % page['id'], 'name': page['name']})
         context['templates'] = []
-        t = _site_generator.Templates()
-        for i, t in enumerate(t.get_all_templates()):
+        t = con.Templates()
+        for i, t in enumerate(t.get_all_filenames()):
             context['templates'].append({'link': 'edit-template-%d' % i, 'name': t})
+        context['static_files'] = []
+        s = con.Statics()
+        for i, s in enumerate(s.get_all_filenames()):
+            context['static_files'].append({'link': 'edit-static-%d' % i, 'name': s})
     
-    def _edit_template(self, context, tid):
-        if tid >= 0:
-            t = _site_generator.Templates()
-            context['template_name'], template_text = t.get_template_text(tid=tid)
-            context['template'] = cgi.escape(template_text)
-        self._template = self._env.get_template('edit_template.html')
+    def edit_template(self, context, tid):
+        context['help_statement'] = """
+            <p>Template names should contain <span class="code">.template.</span> in their name, eg. <span class="code">my_template.template.html</span>.</p>
+            <p>Templates are rendered using <a href="http://jinja.pocoo.org/docs/">Jinja2</a> which is a "Django like" template engine. See their site for Documentation.</p>
+        """
+        if tid is not None:
+            t = con.Templates()
+            context['file_name'], template_text = t.get_file_content(fid=tid)
+            context['file_text'] = cgi.escape(template_text)
+        else:
+            context['new_file'] = True
+        context['action'] = 'edit-template'
+        context['delete_action'] = 'delete-template'
+        self._template = self._env.get_template('edit_file.html')
     
-    def _edit_page(self, context, pid):
-        if pid >= 0:
-            sg = _site_generator.SiteGenerator(self._debug)
-            page = sg.get_page(pid=pid)
+    def edit_static(self, context, sid):
+        context['file_type'] = 'Text'
+        if sid is not None:
+            static = con.Statics()
+            context['file_name'], content = static.get_file_content(fid=sid)
+            context['file_type'] = static.get_file_type(context['file_name'])
+            if context['file_type'] == 'Text':
+                context['file_text'] = cgi.escape(content)
+            elif context['file_type'] == 'Image':
+                context['file_image_path'] = self._static_uri + context['file_name']
+            elif context['file_type'] == 'Font':
+                context['font_path'] = self._static_uri + context['file_name']
+                context['font_name'] = get_font_name(static.get_path(context['file_name']))
+        else:
+            context['new_file'] = True
+        context['action'] = 'edit-static'
+        context['delete_action'] = 'delete-static'
+        self._template = self._env.get_template('edit_file.html')
+        
+    def upload_static(self, context, _):
+        context['aside'] = 'Upload static files'
+        context['action'] = 'upload-static'
+        self._template = self._env.get_template('upload_files.html')
+        
+    
+    def edit_page(self, context, pid):
+        if pid is not None:
+            page_con = con.Pages()
+            page = page_con.get_page(pid=pid)
             context['page_name'] = page['name']
             context['page_context_str'] = []
             context['page_context_other'] = []
@@ -108,3 +124,102 @@ class WebInterface(object):
             self._msgs[mtype] = [msg]
         else:
             self._msgs[mtype].append(msg)
+
+class ProcessForm:
+    def __init__(self, add_msg):
+        self._add_msg = add_msg
+        fields = cgi.FieldStorage()
+        if 'action' in fields:
+#             for name in fields:
+#                 print name, 
+#                 if hasattr(fields[name], 'value'):
+#                     print fields[name].value
+#                 else:
+#                     print fields[name]
+            action_func = fields['action'].value.replace('-', '_')
+            if hasattr(self, action_func):
+                self.fields = fields
+                getattr(self, action_func)()
+            else:
+                raise Exception('ProcessForm has no function called %s' % action_func)
+    
+    def generate_site(self):
+        sg.SiteGenerator().generate_entire_site()
+        self._add_msg('Site generated successfully', 'success')
+        
+    def edi_page(self):
+        page_con = con.Pages()
+        page_con.set_name(self.fields['page-name'].value, self.fields['page-template'].value)
+        context = dict([(name, self.fields[name].value) for name in self.fields])
+        page_con.update_context(context)
+        fname = page_con.generate_page()
+        self._add_msg('"%s" successfully saved' % fname, 'success')
+        
+    def delete_page(self):
+        page = con.Pages()
+        self._delete_file(page)
+        
+    def edit_template(self):
+        t = con.Templates()
+        text = self._unescape_file_text()
+        fname = t.write_file(text, self.fields['file-name'].value)
+        self._add_msg('"%s" successfully saved' % fname, 'success')
+        
+    def delete_template(self):
+        t = con.Templates()
+        self._delete_file(t)
+        
+    def edit_static(self):
+        static = con.Statics()
+        if self.fields['file-type'].value == 'Text':
+            text = self._unescape_file_text()
+            fname = static.write_file(text, self.fields['file-name'].value)
+        else:
+            src = self.fields['previous-file-name'].value
+            dst = self.fields['file-name'].value
+            if src == dst:
+                return
+            fname = static.copy_file(src, dst)
+        self._add_msg('"%s" successfully saved' % fname, 'success')
+            
+    def delete_static(self):
+        static = con.Statics()
+        self._delete_file(static)
+        
+    def upload_static(self):
+        self._process_files('files')
+    
+    def _process_files(self, field_name):
+        if isinstance(self.fields[field_name], list):
+            print 'field_name is list'
+            for f in self.fields[field_name]:
+                self._process_file(f)
+        else:
+            print 'single file'
+            self._process_file(self.fields[field_name])
+    
+    def _process_file(self, file_field):
+        print 'filename:', file_field.filename
+        if file_field.file:
+            content = file_field.file.read()
+            print 'first 50 chars: """', content[:50], '"""'
+        
+    def _delete_file(self, controller):
+        fname = controller.delete_file(self.fields['file-name'].value)
+        self._add_msg('"%s" successfully deleted' % fname, 'success')
+    
+    def _unescape_file_text(self):
+        return HTMLParser.HTMLParser().unescape(self.fields['file-text'].value)
+ 
+def get_font_name(filename):
+    try:
+        from fontTools import ttLib
+        tt = ttLib.TTFont(filename)
+        return tt['name'].names[1].string
+    except Exception, e:
+        print 'Problem processing font:', e
+        return 'unknown'
+
+
+
+

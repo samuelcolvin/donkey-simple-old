@@ -2,47 +2,48 @@
     
 class Debug:
     _text = ''
-    def __init__(self, active):
-        self._active = active
+    _finished = False
+    def __init__(self):
+        self.active = True
+        self._stdout_original = sys.stdout
+        sys.stdout = StringIO.StringIO()
     
-    def write_line(self, *args):
-        self._write(' ', *args)
-        self._text += '\n'
-
-    def write_lines(self, *args):
-        self._write('\n', *args)
-        
-    def _write(self, split, *args):
-        for arg in args:
-            self._text += '%s%s' % (str(arg), split)
+    def finish_debugging(self):
+        if not self._finished:
+            self._text = sys.stdout.getvalue()
+            sys.stdout.close()
+            sys.stdout = self._stdout_original
+            self._finished = True
         
     @property
     def html(self):
-        if self._text.strip('\r\t\n ') == '' or not self._active:
+        if self._text.strip('\r\t\n ') == '' or not self.active:
             return ''
         try:
             import cgi
             self._text = cgi.escape(self._text)
         except:
             pass
-        return '<div class="container"><h4>Debug Output:</h4>\n<pre><code>\n%s\n</code></pre></div>' % self._text
+        return '<div class="container"><h4>Debug Output:</h4>\n<pre><code>%s\n</code></pre></div>' % self._text.strip('\r\t\n ')
     
     @property
     def text(self):
-        if not self._active:
+        if not self.active:
             return ''
-        return 'DEBUG:\n%s' % self._text
+        return 'DEBUG OUTPUT:\n%s' % self._text.strip('\r\t\n ')
 
 response = 'content-type: text/html\n\n'
 
+import traceback, sys, StringIO
+debug = Debug()
 try:
-    import traceback, sys
     import ds
-    debugger = Debug(ds.DEBUG)
-    wi = ds.WebInterface(debugger)
+    debug.active = ds.DEBUG
+    wi = ds.WebInterface()
     response += wi.page
      
 except Exception, e:
+    debug.finish_debugging()
     print 'content-type: text/plain\n\n'
     print 'EXCEPTION OCCURRED:'
     print e
@@ -50,13 +51,12 @@ except Exception, e:
         traceback.print_exc(file=sys.stdout)
     except:
         pass
-    
+    try: print debug.text
+    except Exception,e: print 'DEBUG ERROR:', e
     print 'RESPONSE:\n', response
-    try: print debugger.text
-    except: pass
-    
 else:
+    debug.finish_debugging()
     print response
-    print debugger.html
+    print debug.html
 
 

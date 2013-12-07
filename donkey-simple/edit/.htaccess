@@ -10,5 +10,6 @@ RewriteEngine On
 
 RewriteCond %{REQUEST_URI} !^.*/index.cgi$
 RewriteCond %{REQUEST_URI} !^.*/editor_static/.*$
+RewriteCond %{REQUEST_URI} !^.*/static/.*$
 RewriteRule ^(.*) index.cgi
 

@@ -1,23 +1,36 @@
 {% extends "base.html" %}
-{% block page_tag %}{{ template_name }}{% endblock %}
+{% block page_tag %}{{ file_name }}{% endblock %}
 {% block content %}
 <form id="form" action="{{ edit_uri }}" method="post" class="pad">
-	<input name="action" type="hidden" value="edit-template"/>
-	<input name="template-text" type="hidden" value="empty"/>
+	<input name="action" type="hidden" value="{{ action }}"/>
+	<input name="file-text" type="hidden" value="empty"/>
+    <input name="previous-file-name" type="hidden" value="{{ file_name }}">
+    <input name="file-type" type="hidden" value="{{ file_type }}">
 	
 	<div class="input-group">
   	  <span class="input-group-btn">
 		  <input type="submit" class="btn btn-default" value="Save"/>
 		  <input id="delete-btn" type="submit" class="btn btn-default" value="Delete"/>
 	  </span>
-	  <input type="text" name="template-name" id="name-input" class="form-control" placeholder="Template Filename" value="{{ template_name }}">
+	  <input type="text" name="file-name" id="name-input" class="form-control" placeholder="File Filename" value="{{ file_name }}">
 	</div>
 </form>
 <div class="help-block">
-<p>Template names should contain <span class="code">.template.</span> in their name, eg. <span class="code">my_template.template.html</span>.</p>
-<p>Templates are rendered using <a href="http://jinja.pocoo.org/docs/">Jinja2</a> which is a "Django like" template engine. See their site for Documentation.</p>
+	{{ help_statement|safe }}
 </div>
-<div id="editor" class="pad">{{ template }}</div>
+{% if file_type %}
+<div class="pad">File Type: <strong>{{ file_type }}</strong></div>
+{% endif %}
+
+{% if file_text or new_file %}
+<div id="editor" class="pad">{{ file_text }}</div>
+{% endif %}
+{% if file_image_path %}
+<img class="pad" src="{{ file_image_path }}" alt="{{ file_image_path }}">
+{% endif %}
+{% if font_path %}
+<div class="pad" style="font-family: '{{ font_name }}';src: url({{ font_path }});font-size: 30px">Grumpy wizards make toxic brew for the evil Queen and Jack.</div>
+{% endif %}
 <div id="blank" style="display:none"></div>
 {% endblock %}
 
@@ -25,20 +38,37 @@
 {{ super() }}
 <script src="{{ static_uri }}ace.js"></script>
 <script src="{{ static_uri }}ace_modes/mode-html.js"></script>
+<script src="{{ static_uri }}ace_modes/mode-javascript.js"></script>
+<script src="{{ static_uri }}ace_modes/mode-json.js"></script>
+<script src="{{ static_uri }}ace_modes/mode-css.js"></script>
 <script>
-	var editor = ace.edit('editor');
-	var mode = require('ace/mode/html').Mode;
-	editor.getSession().setMode(new mode());
-	editor.setShowPrintMargin(false);
-	editor.getSession().setUseWrapMode(true);
 	
 	$('#delete-btn').click(function(){
-		$('[name="action"]').val('delete-template');
+		$('[name="action"]').val('{{ delete_action }}');
 	});
+	if ($('#editor').length > 0){
+		setup_editor();
+		$('[name="file-name"]').change(setup_editor);
+		$('#form').on('submit', function(){
+			var escaped_text = $('#blank').text(editor.getValue()).html();
+			$('[name="file-text"]').val(escaped_text);
+		});
+	}
 	
-	$('#form').on('submit', function(){
-		var escaped_text = $('#blank').text(editor.getValue()).html();
-		$('[name="template-text"]').val(escaped_text);
-	});
+	function setup_editor(){
+		var editor = ace.edit('editor');
+		var ext = $('[name="file-name"]').val().split('.').pop();
+		if (ext == '')
+			return;
+		var formats = ['html', 'js', 'json', 'css'];
+		if ($.inArray(ext, formats)){
+			if (ext == 'js')
+				ext = 'javascript';
+			var mode = require('ace/mode/' + ext).Mode;
+			editor.getSession().setMode(new mode());
+		}
+		editor.setShowPrintMargin(false);
+		editor.getSession().setUseWrapMode(true);
+	}
 </script>
 {% endblock %}

@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% block page_tag %}Site Editor - edit, add and delete templates and pages.{% endblock %}
 {% block content %}
-<form action="generate" method="post">
-<div class="btn-group">
-  <button class="btn btn-default">Generate Site</button>
-  <a class="btn btn-default" href="{{ site_uri }}">Go to {{ SITE_NAME }}</a>
-</div>
+<form action="" method="post">
+	<input name="action" type="hidden" value="generate-site"/>
+	<div class="btn-group">
+	  <button class="btn btn-default">Generate Site</button>
+	  <a class="btn btn-default" href="{{ site_uri }}">Go to {{ SITE_NAME }}</a>
+	</div>
 </form>
 <div class="row">
   <div class="col-md-4">
@@ -21,8 +22,9 @@
   </div>
   <div class="col-md-4">
   	<h3>Templates</h3>
-  	<div class="pad">
-	<a href="add-template" class="btn btn-default">Add Template</a>
+  	<div class="pad btn-group">
+		<a href="add-template" class="btn btn-default">Add Template</a>
+		<a href="upload-template" class="btn btn-default">Upload Templates</a>
 	</div>
 	<div class="list-group">
 		{% for item in templates %}
@@ -32,11 +34,11 @@
   </div>
   <div class="col-md-4">
   	<h3>Static Files</h3>
-  	<div class="pad">
-		<a href="add-template" class="btn btn-default">Add Static Files</a>
+  	<div class="pad btn-group">
+		<a href="add-static" class="btn btn-default">Add Static File</a>
+		<a href="upload-static" class="btn btn-default">Upload Static Files</a>
 	</div>
 	<div class="list-group">
-	  	<a href="" class="list-group-item ">Static files go here</a>
 		{% for item in static_files %}
 	  		<a href="{{item.link}}" class="list-group-item ">{{item.name}}</a>
 	  	{% endfor %}

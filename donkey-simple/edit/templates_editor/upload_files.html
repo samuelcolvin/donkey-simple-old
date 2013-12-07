@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block page_tag %}{{ aside }}{% endblock %}
+{% block content %}
+<form action="{{ edit_uri }}" method="post" enctype="multipart/form-data">
+  <input name="action" type="hidden" value="{{ action }}"/>
+  Select Files to Upload: <input type="file" name="files" multiple class="pad">
+  <input type="submit" class="btn btn-default pad">
+</form>
+{% endblock %}

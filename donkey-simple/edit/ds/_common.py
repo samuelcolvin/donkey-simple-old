@@ -1,5 +1,6 @@
 import json
 TEMPLATES_DIR = 'templates'
+STATIC_DIR = 'static'
 PAGE_DIR = 'pages'
 CONFIG_FILE = 'config.json'
 CONFIG_SETTINGS = {}

@@ -33,7 +33,6 @@ class RenderTemplate(object):
         return self._codes, self._t_vars
     
     def _process_file(self, path):
-        print 'processing', path
         code = open(path, 'r').read()
         ast = self._env.parse(code)
         t_vars = jinja2_meta.find_undeclared_variables(ast)

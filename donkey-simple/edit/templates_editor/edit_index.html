@@ -1,8 +1,14 @@
 {% extends "base.html" %}
 {% block page_tag %}Site Editor - edit, add and delete templates and pages.{% endblock %}
 {% block content %}
+<form action="generate" method="post">
+<div class="btn-group">
+  <button class="btn btn-default">Generate Site</button>
+  <a class="btn btn-default" href="{{ site_uri }}">Go to {{ SITE_NAME }}</a>
+</div>
+</form>
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-4">
   	<h3>Pages</h3>
   	<div class="pad">
 	<a href="add-page" class="btn btn-default">Add Page</a>
@@ -13,10 +19,25 @@
 	  	{% endfor %}
 	</div>
   </div>
-  <div class="col-md-6">
+  <div class="col-md-4">
   	<h3>Templates</h3>
+  	<div class="pad">
+	<a href="add-template" class="btn btn-default">Add Template</a>
+	</div>
 	<div class="list-group">
 		{% for item in templates %}
+	  		<a href="{{item.link}}" class="list-group-item ">{{item.name}}</a>
+	  	{% endfor %}
+	</div>
+  </div>
+  <div class="col-md-4">
+  	<h3>Static Files</h3>
+  	<div class="pad">
+		<a href="add-template" class="btn btn-default">Add Static Files</a>
+	</div>
+	<div class="list-group">
+	  	<a href="" class="list-group-item ">Static files go here</a>
+		{% for item in static_files %}
 	  		<a href="{{item.link}}" class="list-group-item ">{{item.name}}</a>
 	  	{% endfor %}
 	</div>

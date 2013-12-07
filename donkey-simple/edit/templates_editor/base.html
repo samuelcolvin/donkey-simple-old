@@ -5,20 +5,46 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 		<title>{{title}}</title>
-		<link rel="icon" type="image/png" href="favicon.png" />
-		<link rel="stylesheet" href="templates_editor/static/bootstrap.min.css">
-		<link rel="stylesheet" href="templates_editor/static/editor_styles.css?">
+		<link rel="icon" type="image/png" href="{{ static_uri }}favicon.png" />
+		<link rel="stylesheet" href="{{ static_uri }}bootstrap.min.css">
+		<link rel="stylesheet" href="{{ static_uri }}editor_styles.css?">
 	{% endblock head %}
   </head>
   <body>
   	<div class="container">
       <div class="page-header">
-        <h1>{{title}}</h1>
+        <h1><a href="{{ edit_uri }}">{{title}}</a></h1>
         <p>{% block page_tag %}{% endblock %}</p>
-      </div>
+    </div>
+    {% if success %}
+	<div class="alert alert-success">
+		{% for s in success %} <p> {{s}} </p> {% endfor %}
+	</div>
+	{% else %}
+	<div class="alert alert-success" style="display:none"></div>
+	{% endif %}
+	
+	{% if info %}
+	<div class="alert alert-info">
+		{% for info_i in info %} <p> {{info_i}} </p> {% endfor %}
+	</div>
+	{% else %}
+	<div class="alert alert-info" style="display:none"></div>
+	{% endif %}
+	
+	{% if errors %}
+	<div class="alert alert-danger">
+		{% for error in errors %} <p> {{error}} </p> {% endfor %}
+	</div>
+	{% else %}
+	<div class="alert alert-danger" style="display:none"></div>
+	{% endif %}
+	
   	{% block content %}Content not defined.{% endblock %}
 	</div>
-  	<script src="templates_editor/static/bootstrap.min.js"></script>
-  	<script src="templates_editor/static/jquery-1.10.2.min.js"></script>
+	{% block js %}
+  	<script src="{{ static_uri }}jquery-1.10.2.min.js"></script>
+  	<script src="{{ static_uri }}bootstrap.min.js"></script>
+  	{% endblock %}
   </body>
 </html>

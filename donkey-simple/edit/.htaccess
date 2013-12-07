@@ -8,6 +8,7 @@ require valid-user
 
 RewriteEngine On
 
-RewriteCond %{REQUEST_URI} !^/index.cgi$
+RewriteCond %{REQUEST_URI} !^.*/index.cgi$
+RewriteCond %{REQUEST_URI} !^.*/editor_static/.*$
 RewriteRule ^(.*) index.cgi
 

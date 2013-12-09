@@ -1,8 +1,12 @@
 import jinja2, os, cgi, re
-import _site_generator as sg
-import _controllers as con
-from _common import *
+import ds
+# import _site_generator as sg
+# import _controllers as con
+# from _common import *
 import HTMLParser
+
+sg = ds.SiteGenerator
+
 
 EDITOR_TEMPLATE_DIR = 'templates_editor'
 
@@ -29,9 +33,9 @@ class WebInterface(object):
         self._generate_page(uri)
         
     def _generate_page(self, uri):
-        context = {'title': '%s Editor' % SITE_NAME, 'static_uri': self._edit_static_uri, 
+        context = {'title': '%s Editor' % ds.SITE_NAME, 'static_uri': self._edit_static_uri, 
                    'edit_uri': self._site_edit_uri, 'site_uri': self._site_uri}
-        context.update(CONFIG_SETTINGS)
+        context.update(ds.CONFIG_SETTINGS)
         print 'uri:', uri
         found = False
         for reg, func in urls:
@@ -50,16 +54,16 @@ class WebInterface(object):
     
     def index(self, context):
         self._template = self._env.get_template('edit_index.html')
-        page_con = con.Pages()
+        page_con = ds.con.Pages()
         context['pages'] = []
         for page in page_con.get_pages():
             context['pages'].append({'link': 'edit-page-%d' % page['id'], 'name': page['name']})
         context['templates'] = []
-        t = con.Templates()
+        t = ds.con.Templates()
         for i, t in enumerate(t.get_all_filenames()):
             context['templates'].append({'link': 'edit-template-%d' % i, 'name': t})
         context['static_files'] = []
-        s = con.Statics()
+        s = ds.con.Statics()
         for i, s in enumerate(s.get_all_filenames()):
             context['static_files'].append({'link': 'edit-static-%d' % i, 'name': s})
     
@@ -69,7 +73,7 @@ class WebInterface(object):
             <p>Templates are rendered using <a href="http://jinja.pocoo.org/docs/">Jinja2</a> which is a "Django like" template engine. See their site for Documentation.</p>
         """
         if tid is not None:
-            t = con.Templates()
+            t = ds.con.Templates()
             context['file_name'], template_text = t.get_file_content(fid=tid)
             context['file_text'] = cgi.escape(template_text)
         else:
@@ -81,7 +85,7 @@ class WebInterface(object):
     def edit_static(self, context, sid):
         context['file_type'] = 'Text'
         if sid is not None:
-            static = con.Statics()
+            static = ds.con.Statics()
             context['file_name'], content = static.get_file_content(fid=sid)
             context['file_type'] = static.get_file_type(context['file_name'])
             if context['file_type'] == 'Text':
@@ -98,15 +102,16 @@ class WebInterface(object):
         self._template = self._env.get_template('edit_file.html')
     
     def edit_page(self, context, pid):
-        t_con = con.Templates()
+        t_con = ds.con.Templates()
         context['page_templates'] = t_con.get_all_filenames()
         if pid is not None:
-            page_con = con.Pages()
+            page_con = ds.con.Pages()
             page = page_con.get_page(pid=pid)
             context['page_name'] = page['name']
             context['page_context_str'] = []
             context['page_context_other'] = []
-            for name, value in page['context'].items():
+            for name, value in page_con.get_true_context(pid=pid).items():
+                print value
                 if value['type'] == 'string':
                     context['page_context_str'].append({'name': name, 'value': value['value'], 'type': value['type']})
                 else:
@@ -139,11 +144,11 @@ class ProcessForm:
                 raise Exception('ProcessForm has no function called %s' % action_func)
     
     def generate_site(self):
-        sg.SiteGenerator().generate_entire_site()
+        ds.SiteGenerator(self._add_msg).generate_entire_site()
         self._add_msg('Site generated successfully', 'success')
         
     def edit_page(self):
-        page_con = con.Pages()
+        page_con = ds.con.Pages()
         page_con.set_name(self.fields['page-name'].value, self.fields['page-template'].value)
         context = dict([(name, self.fields[name].value) for name in self.fields])
         page_con.update_context(context)
@@ -151,24 +156,24 @@ class ProcessForm:
         self._add_msg('"%s" successfully saved' % fname, 'success')
         
     def delete_page(self):
-        page = con.Pages()
-        self._delete_file(page)
+        page = ds.con.Pages()
+        self._delete_file(page, 'page-name')
         
     def edit_template(self):
-        t = con.Templates()
+        t = ds.con.Templates()
         text = self._unescape_file_text()
         fname = t.write_file(text, self.fields['file-name'].value)
         self._add_msg('"%s" successfully saved' % fname, 'success')
         
     def delete_template(self):
-        t = con.Templates()
-        self._delete_file(t)
+        t = ds.con.Templates()
+        self._delete_file(t, 'file-name')
         
     def upload_template(self):
-        self._process_files('files', con.Templates())
+        self._process_files('files', ds.con.Templates())
         
     def edit_static(self):
-        static = con.Statics()
+        static = ds.con.Statics()
         if self.fields['file-type'].value == 'Text':
             text = self._unescape_file_text()
             fname = static.write_file(text, self.fields['file-name'].value)
@@ -181,11 +186,11 @@ class ProcessForm:
         self._add_msg('"%s" successfully saved' % fname, 'success')
             
     def delete_static(self):
-        static = con.Statics()
-        self._delete_file(static)
+        static = ds.con.Statics()
+        self._delete_file(static, 'file-name')
         
     def upload_static(self):
-        self._process_files('files', con.Statics())
+        self._process_files('files', ds.con.Statics())
     
     def _process_files(self, field_name, controller):
         if isinstance(self.fields[field_name], list):
@@ -209,8 +214,8 @@ class ProcessForm:
         else:
             self._add_msg('Error getting file from upload', 'error')
         
-    def _delete_file(self, controller):
-        fname = controller.delete_file(self.fields['file-name'].value)
+    def _delete_file(self, controller, field_name):
+        fname = controller.delete_file(self.fields[field_name].value)
         self._add_msg('"%s" successfully deleted' % fname, 'success')
     
     def _unescape_file_text(self):

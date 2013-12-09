@@ -16,20 +16,20 @@
         <h1><a href="{{ edit_uri }}">{{title}}</a></h1>
         <p>{% block page_tag %}{% endblock %}</p>
     </div>
-    {% if success %}
-	<div class="alert alert-success">
-		{% for s in success %} <p> {{s}} </p> {% endfor %}
-	</div>
-	{% else %}
-	<div class="alert alert-success" style="display:none"></div>
-	{% endif %}
-	
 	{% if info %}
 	<div class="alert alert-info">
 		{% for info_i in info %} <p> {{info_i}} </p> {% endfor %}
 	</div>
 	{% else %}
 	<div class="alert alert-info" style="display:none"></div>
+	{% endif %}
+	
+    {% if success %}
+	<div class="alert alert-success">
+		{% for s in success %} <p> {{s}} </p> {% endfor %}
+	</div>
+	{% else %}
+	<div class="alert alert-success" style="display:none"></div>
 	{% endif %}
 	
 	{% if errors %}

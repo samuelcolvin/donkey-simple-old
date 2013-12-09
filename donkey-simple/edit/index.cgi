@@ -37,9 +37,10 @@ response = 'content-type: text/html\n\n'
 import traceback, sys, StringIO
 debug = Debug()
 try:
+    from web_interface import WebInterface 
     import ds
     debug.active = ds.DEBUG
-    wi = ds.WebInterface()
+    wi = WebInterface()
     response += wi.page
      
 except Exception, e:

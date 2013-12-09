@@ -109,6 +109,15 @@ class Pages(_File_Controller):
     def get_pages(self):
         return [self.load_file(fn) for fn in self.get_all_filenames()]
     
+    def get_true_context(self, pid=None, name=None):
+        self._page = self.get_page(pid, name)
+        context = {}
+        for name, item in self.get_empty_context().items():
+            context[name] = item
+            if name in self._page['context']:
+                context[name]['value'] = self._page['context'][name]['value']
+        return context
+    
     def get_page(self, pid=None, name=None):
         pages = self.get_pages()
         if pid is not None:

@@ -2,16 +2,18 @@ from _common import *
 import os, shutil
 import HTMLParser
 import _template_renderer as tr
+import re
 
 class _File_Controller(object):
     DIR = ''
     EXTENSION = ''
+    perm_files = ['.gitignore', 'readme.txt']
     
     def _file_test(self, fn):
         return True
     
     def get_all_filenames(self):
-        return [f for f in os.listdir(self.DIR) if self._file_test(f)]
+        return [f for f in os.listdir(self.DIR) if self._file_test(f) and f not in self.perm_files]
     
     def get_file_content(self, name = None, fid = None):
         name, path = self._get_name(name, fid)
@@ -23,23 +25,48 @@ class _File_Controller(object):
         dst_path = self._get_path_extension(dst)
         _, src_path = self._get_name(src)
         shutil.copy(src_path, dst_path)
-        os.chmod(dst_path, 0666)
+        self.set_mod(dst_path)
         return dst_path
     
     def write_file(self, content, name):
         path = self._get_path_extension(name)
         try:
-            self.delete_file(name)
+            self.delete_file(path)
         except: pass
         with open(path, 'w') as handle:
             handle.write(content)
-        os.chmod(path, 0666)
+        self.set_mod(path)
         return path
+    
+    def set_mod(self, path):
+        os.chmod(path, 0666)
     
     def delete_file(self, name):
         _, path = self._get_name(name)
         os.remove(path)
         return path
+    
+    def new_file_path(self, name):
+        self._existing = self.get_all_filenames()
+        name = name.strip('.')
+        name = re.sub(r'[\\/]', '', name)
+        return self.get_path(self._new_name(name))
+    
+    def _new_name(self, name, num=1):
+        def not_existing(name):
+            return name not in self._existing and name not in self.perm_files
+        if not_existing(name):
+            return name
+        num_str = ('', '_%d' % num)[num>1]
+        if '.' in name:
+            dot = name.index('.')
+            new_name = name[:dot] + num_str + name[dot:]
+        else:
+            new_name = name + num_str
+        if not_existing(new_name):
+            return new_name
+        return self._new_name(name, num + 1)
+        
         
     def _get_name(self, name, fid = -1):
         files = self.get_all_filenames()
@@ -58,10 +85,10 @@ class _File_Controller(object):
         return name, self.get_path(name)
     
     def get_path(self, name):
-        return '%s/%s' % (self.DIR, name)
+        return os.path.join(self.DIR, name)
     
     def _get_path_extension(self, name):
-        return '%s/%s%s' % (self.DIR, name, self.EXTENSION)
+        return self.get_path('%s%s' % (name, self.EXTENSION))
     
 class Pages(_File_Controller):
     DIR = PAGE_DIR
@@ -119,7 +146,6 @@ class Templates(_File_Controller):
 
 class Statics(_File_Controller):
     DIR = STATIC_DIR
-    ignore_files = ['.gitignore', 'readme.txt']
     extension_groups = (
         ('Text', ('.js', '.json', '.css', '.html', '.txt')),
         ('Image', ('.png', '.jpeg', '.jpg', '.gif', '.bmp')),
@@ -127,7 +153,7 @@ class Statics(_File_Controller):
     )
     
     def _file_test(self, fn):
-        return fn not in self.ignore_files
+        return True
         
     def get_file_type(self, file_name):
         for name, extensions in self.extension_groups:

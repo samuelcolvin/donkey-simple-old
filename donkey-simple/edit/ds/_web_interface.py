@@ -13,7 +13,6 @@ urls = (
     ('edit-template-(\d+)', 'edit_template'),
     ('add-static', 'edit_static'),
     ('edit-static-(\d+)', 'edit_static'),
-    ('upload-static', 'upload_static'),
 )
 
 class WebInterface(object):
@@ -97,14 +96,10 @@ class WebInterface(object):
         context['action'] = 'edit-static'
         context['delete_action'] = 'delete-static'
         self._template = self._env.get_template('edit_file.html')
-        
-    def upload_static(self, context, _):
-        context['aside'] = 'Upload static files'
-        context['action'] = 'upload-static'
-        self._template = self._env.get_template('upload_files.html')
-        
     
     def edit_page(self, context, pid):
+        t_con = con.Templates()
+        context['page_templates'] = t_con.get_all_filenames()
         if pid is not None:
             page_con = con.Pages()
             page = page_con.get_page(pid=pid)
@@ -116,7 +111,7 @@ class WebInterface(object):
                     context['page_context_str'].append({'name': name, 'value': value['value'], 'type': value['type']})
                 else:
                     context['page_context_other'].append({'name': name, 'value': cgi.escape(value['value']), 'type': value['type']})
-            context['page_template'] = page['template']
+            context['active_page_template'] = page['template']
         self._template = self._env.get_template('edit_page.html')
     
     def _add_msg(self, msg, mtype='info'):
@@ -130,12 +125,12 @@ class ProcessForm:
         self._add_msg = add_msg
         fields = cgi.FieldStorage()
         if 'action' in fields:
-#             for name in fields:
-#                 print name, 
-#                 if hasattr(fields[name], 'value'):
-#                     print fields[name].value
-#                 else:
-#                     print fields[name]
+            for name in fields:
+                print name, 
+                if hasattr(fields[name], 'value'):
+                    print fields[name].value
+                else:
+                    print fields[name]
             action_func = fields['action'].value.replace('-', '_')
             if hasattr(self, action_func):
                 self.fields = fields
@@ -147,7 +142,7 @@ class ProcessForm:
         sg.SiteGenerator().generate_entire_site()
         self._add_msg('Site generated successfully', 'success')
         
-    def edi_page(self):
+    def edit_page(self):
         page_con = con.Pages()
         page_con.set_name(self.fields['page-name'].value, self.fields['page-template'].value)
         context = dict([(name, self.fields[name].value) for name in self.fields])
@@ -169,6 +164,9 @@ class ProcessForm:
         t = con.Templates()
         self._delete_file(t)
         
+    def upload_template(self):
+        self._process_files('files', con.Templates())
+        
     def edit_static(self):
         static = con.Statics()
         if self.fields['file-type'].value == 'Text':
@@ -187,22 +185,29 @@ class ProcessForm:
         self._delete_file(static)
         
     def upload_static(self):
-        self._process_files('files')
+        self._process_files('files', con.Statics())
     
-    def _process_files(self, field_name):
+    def _process_files(self, field_name, controller):
         if isinstance(self.fields[field_name], list):
-            print 'field_name is list'
             for f in self.fields[field_name]:
-                self._process_file(f)
+                self._process_file(f, controller)
         else:
-            print 'single file'
-            self._process_file(self.fields[field_name])
+            self._process_file(self.fields[field_name], controller)
     
-    def _process_file(self, file_field):
-        print 'filename:', file_field.filename
+    def _process_file(self, file_field, controller):
         if file_field.file:
-            content = file_field.file.read()
-            print 'first 50 chars: """', content[:50], '"""'
+            name = file_field.filename
+            path = controller.new_file_path(name)
+            fout = file(path, 'wb')
+            while 1:
+                chunk = file_field.file.read(100000)
+                if not chunk: break
+                fout.write(chunk)
+            fout.close()
+            controller.set_mod(path)
+            self._add_msg('File successfully uploaded to "%s"' % path, 'success')
+        else:
+            self._add_msg('Error getting file from upload', 'error')
         
     def _delete_file(self, controller):
         fname = controller.delete_file(self.fields['file-name'].value)

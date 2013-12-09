@@ -46,6 +46,7 @@
 	$('#delete-btn').click(function(){
 		$('[name="action"]').val('{{ delete_action }}');
 	});
+	var editor;
 	if ($('#editor').length > 0){
 		setup_editor();
 		$('[name="file-name"]').change(setup_editor);
@@ -56,12 +57,12 @@
 	}
 	
 	function setup_editor(){
-		var editor = ace.edit('editor');
+		editor = ace.edit('editor');
 		var ext = $('[name="file-name"]').val().split('.').pop();
 		if (ext == '')
 			return;
 		var formats = ['html', 'js', 'json', 'css'];
-		if ($.inArray(ext, formats)){
+		if ($.inArray(ext, formats) != -1){
 			if (ext == 'js')
 				ext = 'javascript';
 			var mode = require('ace/mode/' + ext).Mode;

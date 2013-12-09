@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block page_tag %}Site Editor - edit, add and delete templates and pages.{% endblock %}
+{% block page_tag %}Site Editor - edit, add and delete templates, pages and static files.{% endblock %}
 {% block content %}
 <form action="" method="post">
 	<input name="action" type="hidden" value="generate-site"/>
@@ -24,11 +24,11 @@
   	<h3>Templates</h3>
   	<div class="pad btn-group">
 		<a href="add-template" class="btn btn-default">Add Template</a>
-		<a href="upload-template" class="btn btn-default">Upload Templates</a>
+		<button class="btn btn-default upload-modal-btn" upload_action="upload-template">Upload Templates</button>
 	</div>
 	<div class="list-group">
 		{% for item in templates %}
-	  		<a href="{{item.link}}" class="list-group-item ">{{item.name}}</a>
+	  		<a href="{{item.link}}" class="list-group-item">{{item.name}}</a>
 	  	{% endfor %}
 	</div>
   </div>
@@ -36,13 +36,46 @@
   	<h3>Static Files</h3>
   	<div class="pad btn-group">
 		<a href="add-static" class="btn btn-default">Add Static File</a>
-		<a href="upload-static" class="btn btn-default">Upload Static Files</a>
+		<button class="btn btn-default upload-modal-btn" upload_action="upload-static">Upload Static Files</button>
 	</div>
 	<div class="list-group">
 		{% for item in static_files %}
-	  		<a href="{{item.link}}" class="list-group-item ">{{item.name}}</a>
+	  		<a href="{{item.link}}" class="list-group-item">{{item.name}}</a>
 	  	{% endfor %}
 	</div>
   </div>
 </div>
+
+<div class="modal fade" id="upload-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+	  <form action="" method="post" enctype="multipart/form-data">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" id="upload-name"></h4>
+	      </div>
+	      <div class="modal-body">
+			  <input name="action" type="hidden" value=""/>
+			  Select Files to Upload: <input type="file" name="files" multiple class="pad">
+			  <div class="help-block">(You may choose more than one file to upload.)</div>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			<input type="submit" class="btn btn-primary" value="Upload">
+	      </div>
+	  </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+{{ super() }}
+<script>
+	
+	$('.upload-modal-btn').click(function(){
+		$('#upload-name').text($(this).text());
+		$('[name="action"]').val($(this).attr('upload_action'));
+		$('#upload-modal').modal('show');
+	});
+</script>
 {% endblock %}

@@ -1,4 +1,3 @@
-{
-	"SITE_NAME": "Site",
-	"DEBUG": true
-}
+
+DEBUG = True
+SITE_NAME = 'Site'

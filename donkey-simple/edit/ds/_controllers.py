@@ -1,5 +1,5 @@
 from _common import *
-import os, shutil
+import os, shutil, json
 import HTMLParser
 import _template_renderer as tr
 import re

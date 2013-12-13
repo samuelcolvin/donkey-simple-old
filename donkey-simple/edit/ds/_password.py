@@ -9,6 +9,7 @@ import hmac
 import struct
 import binascii
 from collections import OrderedDict
+import time
 
 UNUSABLE_PASSWORD_PREFIX = '!'
 UNUSABLE_PASSWORD_SUFFIX_LENGTH = 40
@@ -33,8 +34,7 @@ class Password(object):
         if password is None:
             return UNUSABLE_PASSWORD_PREFIX + _get_random_string(UNUSABLE_PASSWORD_SUFFIX_LENGTH)
         salt = _get_random_string()
-        hash = _pbkdf2(password, salt, self.iterations, digest=self.digest)
-        hash = base64.b64encode(hash).decode('ascii').strip()
+        return self._encode(password, salt)
         return "%s$%d$%s$%s" % (self.algorithm, self.iterations, salt, hash)
 
     def check_password(self, password, encoded):
@@ -42,7 +42,7 @@ class Password(object):
             return False
         algorithm, iterations, salt, hash = encoded.split('$', 3)
         assert algorithm == self.algorithm
-        encoded_2 = self.encode(password, salt, int(iterations))
+        encoded_2 = self._encode(password, salt, int(iterations))
         return _constant_time_compare(encoded, encoded_2)
 
     def safe_summary(self, encoded):
@@ -55,6 +55,15 @@ class Password(object):
             (_('hash'), _mask_hash(hash)),
         ])
         
+    def _encode(self, password, salt, iterations=None):
+        assert password is not None
+        assert salt and '$' not in salt
+        if not iterations:
+            iterations = self.iterations
+        hash = _pbkdf2(password, salt, iterations, digest=self.digest)
+        hash = base64.b64encode(hash).decode('ascii').strip()
+        return "%s$%d$%s$%s" % (self.algorithm, iterations, salt, hash)
+
 def _constant_time_compare(val1, val2):
     """
     Returns True if the two strings are equal, False otherwise.
@@ -87,8 +96,9 @@ def _get_random_string(length=12,
                       allowed_chars='abcdefghijklmnopqrstuvwxyz'
                                     'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
     """
+    based on django version but editted to avoid need for secret key
     Returns a securely generated random string.
-
+    
     The default length of 12 with the a-z, A-Z, 0-9 character set returns
     a 71-bit value. log_2((26+26+10)^12) =~ 71 bits
     """
@@ -101,10 +111,8 @@ def _get_random_string(length=12,
         # is better than absolute predictability.
         random.seed(
             hashlib.sha256(
-                ("%s%s%s" % (
-                    random.getstate(),
-                    time.time(),
-                    settings.SECRET_KEY)).encode('utf-8')
+                ("%s%s" % (
+                    random.getstate(), time.time())).encode('utf-8')
             ).digest())
     return ''.join(random.choice(allowed_chars) for i in range(length))
 
@@ -175,14 +183,12 @@ def _force_bytes(s):
     """
     modified from django version
     """
-    errors='strict'
-    encoding='utf-8'
     if isinstance(s, bytes):
-        if encoding == 'utf-8':
-            return s
-        else:
-            return s.decode('utf-8', errors).encode(encoding, errors)
+        return s
     if isinstance(s, buffer):
         return bytes(s)
     if not isinstance(s, basestring):
         return bytes(s)
+    else:
+        return s.encode('utf-8', 'strict')
+

@@ -11,19 +11,19 @@ h1 a:link, h1 a:visited, h1 a:hover, h1 a:active{
 	margin-bottom: 15px;
 }
 
-#editor, .md-editor{
+#editor, .ace-editor{
 	height: 500px;
 	font-size: 14px !important;
 	border: 1px solid #bbb;
 	border-radius: 8px;
 }
 
-.md-editor{
+.ace-editor{
 	height: 300px;
 }
 
-#name-input{
-	width: 300px;
+.max-width-input {
+	max-width: 300px;
 }
 
 .code{

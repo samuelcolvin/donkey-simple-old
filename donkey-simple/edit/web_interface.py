@@ -1,8 +1,5 @@
 import jinja2, os, cgi, re
 import ds
-# import _site_generator as sg
-# import _controllers as con
-# from _common import *
 import HTMLParser
 
 sg = ds.SiteGenerator
@@ -35,7 +32,7 @@ class WebInterface(object):
     def _generate_page(self, uri):
         context = {'title': '%s Editor' % ds.SITE_NAME, 'static_uri': self._edit_static_uri, 
                    'edit_uri': self._site_edit_uri, 'site_uri': self._site_uri}
-        context.update(ds.CONFIG_SETTINGS)
+        context.update(ds.SETTINGS_DICT)
         print 'uri:', uri
         found = False
         for reg, func in urls:
@@ -104,6 +101,7 @@ class WebInterface(object):
     def edit_page(self, context, pid):
         t_con = ds.con.Templates()
         context['page_templates'] = t_con.get_all_filenames()
+        context['other_formats'] = ['markdown', 'html']
         if pid is not None:
             page_con = ds.con.Pages()
             page = page_con.get_page(pid=pid)

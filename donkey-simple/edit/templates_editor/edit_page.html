@@ -16,7 +16,7 @@
 	<div class="form-group">
 	    <label for="template-name">Page Template</label>
 		<input name="original-template" type="hidden" value="{{ active_page_template }}"/>
-		<select name="page-template" class="form-control" value="">
+		<select name="page-template" class="form-control">
 			{% for pt in page_templates %}<option value="{{ pt }}" {% if pt == active_page_template %}selected{% endif %}>{{ pt }}</option>
 			{% endfor %}
 		</select>
@@ -34,8 +34,12 @@
 <div class="context-input">
 {% for input in page_context_other %}
 	<div class="context-item">
-		<div class="context-item-title">{{ input.name }} ({{ input.type }})</div>
-		<div id="md_editor_{{ input.name }}" format-type="{{ input.type }}" class="md-editor context-input" tb_name="{{ input.name }}">{{ input.value }}</div>
+		<div class="context-item-title">{{ input.name }}</div>
+		<select name="{{ input.name }}-type" class="form-control pad max-width-input">
+			{% for f in other_formats %}<option value="{{ f }}" {% if f == input.type %}selected{% endif %}>{{ f }}</option>
+			{% endfor %}
+		</select>
+		<div id="ace_editor_{{ input.name }}" format-type-input="{{ input.name }}-type" class="ace-editor context-input" tb_name="{{ input.name }}">{{ input.value }}</div>
 		<input type="hidden" name="{{ input.name }}" value="empty"/>
 	</div>
 {% endfor %}
@@ -46,47 +50,50 @@
 
 {% block js %}
 {{ super() }}
-<script src="{{ static_uri }}ace.js"></script>
+<script src="{{ static_uri }}ace_modes/ace.js"></script>
 <script src="{{ static_uri }}ace_modes/mode-markdown.js"></script>
 <script src="{{ static_uri }}ace_modes/mode-html.js"></script>
 <script>
-	var editors = [];
-	var mode_md = require('ace/mode/markdown').Mode;
-	var mode_html = require('ace/mode/html').Mode;
-	$.each($('.md-editor'), function(){
-		var editor = ace.edit($(this).attr('id'));
-		if ($(this).attr('format-type') == 'html')
-			editor.getSession().setMode(new mode_html());
-		else
-			editor.getSession().setMode(new mode_md());
-		editor.setShowPrintMargin(false);
-		editor.getSession().setUseWrapMode(true);
-		editors.push({editor:editor, div:$(this)});
-	});
-
-	$('#delete-btn').click(function(){
-		$('[name="action"]').val('delete-page');
-	});
-	
-	$('[name="page-template"]').change(function(){
-		bootbox.confirm('Changing the template may involve changing the fields of this page, fields missing from the new Template will be deleted!',
-		function(result) {
-		  if (result){
-		  	$('#form').attr('action', '');
-		  	$('#form').submit();
-		  }
-		  else{
-		  	$('[name="page-template"]').val($('[name="original-template"]').val());
-		  }
-		});
-	});
-	
-	$('#form').on('submit', update_code_tb);
-	function update_code_tb(){
-		$.each(editors, function(){
-			var escaped_text = $('#blank').text(this.editor.getValue()).html();
-			$('[name="' + this.div.attr('tb_name') + '"]').val(escaped_text);
-		});
-	}
+	var delete_action = 'delete-page';
+	// var editors = [];
+	// var mode_md = require('ace/mode/markdown').Mode;
+	// var mode_html = require('ace/mode/html').Mode;
+	// $.each($('.md-editor'), function(){
+		// var editor = ace.edit($(this).attr('id'));
+		// var format = $('[name="' + $(this).attr('format-type-input') + '"]').val();
+		// if (format == 'html')
+			// editor.getSession().setMode(new mode_html());
+		// else
+			// editor.getSession().setMode(new mode_md());
+		// editor.setShowPrintMargin(false);
+		// editor.getSession().setUseWrapMode(true);
+		// editors.push({editor:editor, div:$(this)});
+	// });
+// 
+	// $('#delete-btn').click(function(){
+		// $('[name="action"]').val('delete-page');
+	// });
+// 	
+	// $('[name="page-template"]').change(function(){
+		// bootbox.confirm('Changing the template may involve changing the fields of this page, fields missing from the new Template will be deleted!',
+		// function(result) {
+		  // if (result){
+		  	// $('#form').attr('action', '');
+		  	// $('#form').submit();
+		  // }
+		  // else{
+		  	// $('[name="page-template"]').val($('[name="original-template"]').val());
+		  // }
+		// });
+	// });
+// 	
+	// $('#form').on('submit', update_code_tb);
+	// function update_code_tb(){
+		// $.each(editors, function(){
+			// var escaped_text = $('#blank').text(this.editor.getValue()).html();
+			// $('[name="' + this.div.attr('tb_name') + '"]').val(escaped_text);
+		// });
+	// }
 </script>
+<script src="{{ static_uri }}editor.js"></script>
 {% endblock %}

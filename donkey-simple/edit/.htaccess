@@ -1,11 +1,6 @@
 Options +ExecCGI
 AddHandler cgi-script .cgi
 
-AuthUserFile /home/samuel/Dropbox/dev/eclipse_workspace_ub/donkey-simple/donkey-simple/edit/.htpasswd
-AuthName "Authorization Required"
-AuthType Basic
-require valid-user
-
 RewriteEngine On
 
 RewriteCond %{REQUEST_URI} !^.*/index.cgi$

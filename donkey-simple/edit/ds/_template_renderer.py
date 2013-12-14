@@ -63,7 +63,7 @@ class RenderTemplate(object):
             finding = finds[0]
             t = 'string'
             if 'safe' in finding:
-                t = 'html'
+                t = 'markdown'
             if 'for' in finding:
                 t= 'list'
         return success, t

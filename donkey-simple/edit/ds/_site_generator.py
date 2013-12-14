@@ -21,7 +21,7 @@ class SiteGenerator(object):
         context = {}
         for var, item in page['context'].items():
             context[var] = item['value']
-            if item['type'] == 'md':
+            if item['type'] == 'markdown':
                 context[var] = markdown2.markdown(item['value'])
         r = tr.RenderTemplate(page['template'])
         content = r.render(context)

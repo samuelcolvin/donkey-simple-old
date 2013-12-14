@@ -59,7 +59,10 @@ function setup_from_dropdown(d){
 $.each($('.ace-editor'), function(){
 	setup_from_dropdown(this);
 	get_dropdown(this).change(function(){
-		var div = $('[format-type-input=main_article-type]');
+		console.log(this);
+		var editor_attr = $(this).attr('name');
+		var div = $('[format-type-input=' + editor_attr + ']');
+		console.log(div);
 		setup_from_dropdown(div);});
 });
 

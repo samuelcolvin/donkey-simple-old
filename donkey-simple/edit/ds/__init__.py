@@ -1,4 +1,5 @@
 from _site_generator import SiteGenerator
 from _template_renderer import RenderTemplate
 import _controllers as con
+from _auth import Auth
 from _common import *

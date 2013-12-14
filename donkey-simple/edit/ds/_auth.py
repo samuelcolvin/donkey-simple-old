@@ -10,6 +10,8 @@ import struct
 import binascii
 from collections import OrderedDict
 import time
+import json, datetime
+from _common import *
 
 UNUSABLE_PASSWORD_PREFIX = '!'
 UNUSABLE_PASSWORD_SUFFIX_LENGTH = 40
@@ -21,6 +23,87 @@ try:
 except NotImplementedError:
     print 'A secure pseudo-random number generator is not available on your system. Falling back to Mersenne Twister.'
     using_sysrandom = False
+    
+class Auth(object):
+    dt_format = '%a, %d-%b-%Y %H:%M:%S UTC'
+    cookie = None
+    msg = None
+    username = None
+    user = None
+    
+    def __init__(self):
+        self._load_success, self.users = self._get_users()
+    
+    def login(self, username, password):
+        if not self._load_success:
+            self.msg = 'Error Loading Users file'
+            return False
+        if username not in self.users:
+            self.msg = 'Username not found'
+            return False
+        self.user = self.users[username]
+        pw = Password()
+        correct_pw = pw.check_password(password, self.user['hash'])
+        if not correct_pw:
+            self.msg = 'Incorrect Password'
+            return False
+        self.cookie = self._generate_cookie()
+        self.username = username
+        self._update_user(self.username, self.cookie)
+        self.msg = 'Logged in successfully'
+        return True
+    
+    def logout(self, username):
+        self.username = username
+        self.cookie = self._generate_cookie()
+        self._update_user(self.username, self.cookie)
+    
+    def check_cookie(self, cookies):
+        if self._get_user(cookies):
+            self.cookie = self._generate_cookie()
+            self._update_user(self.username, self.cookie)
+            return True
+        return False
+    
+    def _get_user(self, cookies):
+        if SETTINGS.COOKIE_NAME in cookies:
+            cookie_value = cookies[SETTINGS.COOKIE_NAME].value
+            for username, user in self.users.items():
+                if user['cookie'] == cookie_value:
+                    self.username = username
+                    self.user = user
+                    return True
+        return False
+    
+    def _generate_cookie(self):
+        v = _get_random_string(length=15)
+        cook = {'version': 1}
+        expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=SETTINGS.PASSWORD_EXPIRE_HOURS)
+        cook['expires'] = expiration.strftime(self.dt_format)
+        if hasattr(SETTINGS, 'COOKIE_DOMAIN'):
+            cook['domain'] = SETTINGS.COOKIE_DOMAIN
+        if hasattr(SETTINGS, 'COOKIE_PATH'):
+            cook['path'] = SETTINGS.COOKIE_PATH
+        return {'name': SETTINGS.COOKIE_NAME, 'value': v, 'extra_values': cook}
+            
+    def _update_user(self, username, cookie):
+        self.users[username]['cookie'] = cookie['value']
+        self.users[username]['last_seen'] = datetime.datetime.utcnow().strftime(self.dt_format)
+        try:
+            with open(USERS_FILE, 'w') as handle:
+                json.dump(self.users, handle, sort_keys=True, indent=4, separators=(',', ': '))
+        except Exception, e:
+            print 'ERROR loading users file:', str(e)
+    
+    def _get_users(self):
+        try:
+            with open(USERS_FILE, 'r') as handle:
+                users = json.load(handle)
+        except Exception, e:
+            print 'ERROR loading users file:', str(e)
+            return False, {}
+        else:
+            return True, users
 
 class Password(object):
     """

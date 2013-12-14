@@ -1,6 +1,7 @@
 import jinja2, os, cgi, re
 import ds
 import HTMLParser
+import Cookie
 
 sg = ds.SiteGenerator
 
@@ -8,6 +9,7 @@ sg = ds.SiteGenerator
 EDITOR_TEMPLATE_DIR = 'templates_editor'
 
 urls = (
+    ('logout', 'logout'),
     ('add-page', 'edit_page'),
     ('edit-page-(\d+)', 'edit_page'),
     ('add-template', 'edit_template'),
@@ -17,6 +19,13 @@ urls = (
 )
 
 class WebInterface(object):
+    user = None
+    all_users = None
+    cookie = ''
+    content_type = 'content-type: text/html\n'
+    location = ''
+    page = ''
+    
     def __init__(self,):
         self._msgs = {}
         self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
@@ -26,28 +35,73 @@ class WebInterface(object):
         self._site_edit_uri = uri[:e_index] + '/'
         self._edit_static_uri = self._site_edit_uri + 'editor_static/'
         self._static_uri = self._site_edit_uri + 'static/'
-        ProcessForm(self._add_msg)
-        self._generate_page(uri)
+        fields = cgi.FieldStorage()
+        valid_user = self._auth(fields)
+        ProcessForm(self._add_msg, fields)
+        self._generate_page(uri, loggedin = valid_user)
         
-    def _generate_page(self, uri):
+    def _generate_page(self, uri, loggedin = False):
         context = {'title': '%s Editor' % ds.SITE_NAME, 'static_uri': self._edit_static_uri, 
                    'edit_uri': self._site_edit_uri, 'site_uri': self._site_uri}
+        if self.user:
+            context.update({'username': self.user['username'], 'admin': self.user['admin']})
         context.update(ds.SETTINGS_DICT)
         print 'uri:', uri
-        found = False
-        for reg, func in urls:
-            m = re.search(reg, uri)
-            if m:
-                found = True
-                fid = None
-                if len(m.regs) > 1:
-                    fid = int(m.group(1))
-                getattr(self, func)(context, fid)
-                break
-        if not found:
-            self.index(context)
+        if not loggedin:
+            self.login(context)
+        else:
+            found = False
+            for reg, func in urls:
+                m = re.search(reg, uri)
+                if m:
+                    found = True
+                    fid = None
+                    if len(m.regs) > 1:
+                        fid = int(m.group(1))
+                    getattr(self, func)(context, fid)
+                    break
+            if not found:
+                self.index(context)
         context.update(self._msgs)
-        self.page = self._template.render(**context)
+        if hasattr(self, '_template'):
+            self.page = self._template.render(**context)
+        
+    def _auth(self, fields):
+#         for name in fields:
+#             print '%s:' % name, fields[name].value
+        auth = ds.Auth()
+        if 'username' in fields and 'password' in fields:
+            username = fields['username'].value
+            password = fields['password'].value
+            valid = auth.login(username, password)
+        else:
+            cookies = ''
+            try:cookies = Cookie.SimpleCookie(os.environ["HTTP_COOKIE"])
+            except:
+                valid = False
+                auth.msg = 'Error processing cookies'
+            valid = auth.check_cookie(cookies)
+        if not valid:
+            if auth.msg not in ['', None]:
+                self._add_msg(auth.msg, 'errors')
+            return False
+        C = Cookie.SimpleCookie()
+        C[auth.cookie['name']] = auth.cookie['value']
+        for name, value in auth.cookie['extra_values'].items():
+            C[auth.cookie['name']][name] = value
+        self.cookie = C.output()
+        self.user = auth.user
+        self.all_users = auth.users
+        return True
+        
+    def login(self, context):
+        self._template = self._env.get_template('login.html')
+        context['title'] =  ds.SITE_NAME + ' login'
+        
+    def logout(self, context, fid):
+        auth = ds.Auth()
+        auth.logout(self.user['username'])
+        self.location = 'Location: %s\n' % self._site_edit_uri
     
     def index(self, context):
         self._template = self._env.get_template('edit_index.html')
@@ -63,6 +117,9 @@ class WebInterface(object):
         s = ds.con.Statics()
         for i, s in enumerate(s.get_all_filenames()):
             context['static_files'].append({'link': 'edit-static-%d' % i, 'name': s})
+        context['users'] = []
+        for i, u in enumerate(self.all_users.values()):
+            context['users'].append({'link': 'edit-user-%d' % i, 'name': u['username']})
     
     def edit_template(self, context, tid):
         context['help_statement'] = """
@@ -108,8 +165,8 @@ class WebInterface(object):
             context['page_name'] = page['name']
             context['page_context_str'] = []
             context['page_context_other'] = []
-            for name, value in page_con.get_true_context(pid=pid).items():
-                print value
+            for name, value in page_con.get_true_context().items():
+                print name, value
                 if value['type'] == 'string':
                     context['page_context_str'].append({'name': name, 'value': value['value'], 'type': value['type']})
                 else:
@@ -124,12 +181,11 @@ class WebInterface(object):
             self._msgs[mtype].append(msg)
 
 class ProcessForm:
-    def __init__(self, add_msg):
+    def __init__(self, add_msg, fields):
         self._add_msg = add_msg
-        fields = cgi.FieldStorage()
         if 'action' in fields:
             for name in fields:
-                print name, 
+                print '%s:' % name, 
                 if hasattr(fields[name], 'value'):
                     print fields[name].value
                 else:
@@ -149,7 +205,8 @@ class ProcessForm:
         page_con = ds.con.Pages()
         page_con.set_name(self.fields['page-name'].value, self.fields['page-template'].value)
         context = dict([(name, self.fields[name].value) for name in self.fields])
-        page_con.update_context(context)
+        ftypes = dict([(name.replace('contype-', ''), self.fields[name].value) for name in self.fields if name.startswith('contype-')])
+        page_con.update_context(context, ftypes)
         fname = page_con.generate_page()
         self._add_msg('"%s" successfully saved' % fname, 'success')
         

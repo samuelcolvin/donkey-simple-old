@@ -1,3 +1,7 @@
+body {
+  padding: 20px 0px;
+}
+
 h1 a:link, h1 a:visited, h1 a:hover, h1 a:active{
 	color: black;
 	text-decoration: none;

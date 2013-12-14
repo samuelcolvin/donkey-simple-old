@@ -44,6 +44,19 @@
 	  	{% endfor %}
 	</div>
   </div>
+  {% if admin %}
+  <div class="col-md-4">
+  	<h3>Users</h3>
+  	<div class="pad btn-group">
+		<a href="add-user" class="btn btn-default">Add User</a>
+	</div>
+	<div class="list-group">
+		{% for item in users %}
+	  		<a href="{{item.link}}" class="list-group-item">{{item.name}}</a>
+	  	{% endfor %}
+	</div>
+  </div>
+  {% endif %}
 </div>
 
 <div class="modal fade" id="upload-modal">

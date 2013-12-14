@@ -32,8 +32,6 @@ class Debug:
             return ''
         return 'DEBUG OUTPUT:\n%s' % self._text.strip('\r\t\n ')
 
-response = 'content-type: text/html\n\n'
-
 import traceback, sys, StringIO
 debug = Debug()
 try:
@@ -41,8 +39,12 @@ try:
     import ds
     debug.active = ds.DEBUG
     wi = WebInterface()
+    response = wi.location
+    response += wi.content_type
+    response += wi.cookie
+    response += '\n\n'
     response += wi.page
-     
+#     raise Exception('X')
 except Exception, e:
     debug.finish_debugging()
     print 'content-type: text/plain\n\n'

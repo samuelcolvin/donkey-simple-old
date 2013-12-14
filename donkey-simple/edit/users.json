@@ -1,0 +1,11 @@
+{
+    "admin": {
+        "admin": true,
+        "cookie": "PM7kiQoUKjKvsn9",
+        "email": "",
+        "hash": "pbkdf2_sha256$12000$FFqoPiPj09Tp$AI0lrs7YVOed9QqevUyQCGnl5+Duva1cRJ2rgSq8td4=",
+        "last_seen": "Sat, 14-Dec-2013 20:08:14 UTC",
+        "session_expires": "",
+        "username": "admin"
+    }
+}

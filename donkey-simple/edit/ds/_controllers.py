@@ -94,6 +94,7 @@ class Pages(_File_Controller):
     DIR = PAGE_DIR
     EXTENSION = '.json'
     _page = {}
+    type_sets = [['string'], ['list'], ['html', 'markdown']]
     
     def set_name(self, name, template):
         self._page.update({'name': name, 'template': template})
@@ -109,31 +110,41 @@ class Pages(_File_Controller):
     def get_pages(self):
         return [self.load_file(fn) for fn in self.get_all_filenames()]
     
-    def get_true_context(self, pid=None, name=None):
-        self._page = self.get_page(pid, name)
+    
+    def get_true_context(self):
         context = {}
         for name, item in self.get_empty_context().items():
             context[name] = item
             if name in self._page['context']:
                 context[name]['value'] = self._page['context'][name]['value']
+            if self._page['context'][name]['type'] != item['type']:
+                for ts in self.type_sets:
+                    if self._page['context'][name]['type'] in ts and item['type'] in ts:
+                        context[name]['type'] = self._page['context'][name]['type']
+                        break
         return context
+    
+    
     
     def get_page(self, pid=None, name=None):
         pages = self.get_pages()
         if pid is not None:
-            return next((page for page in pages if page['id'] == pid))
+            self._page = next((page for page in pages if page['id'] == pid))
         else:
-            return next((page for page in pages if page['name'] == name))
+            self._page = next((page for page in pages if page['name'] == name))
+        return self._page
     
-    def update_context(self, fields):
+    def update_context(self, fields, f_types):
         context = {}
         for name, item in self.get_empty_context().items():
             context[name] = item
             if name in fields:
                 text = fields[name]
-                if item['type'] in ['html', 'md']:
+                if item['type'] in ['html', 'markdown']:
                     text = HTMLParser.HTMLParser().unescape(text)
                 context[name]['value'] = text
+            if name in f_types:
+                context[name]['type'] = f_types[name]
         self._page['context'] = context
         
     def _file_test(self, fn):

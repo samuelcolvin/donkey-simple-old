@@ -2,7 +2,7 @@
     "donkey": {
         "admin": true,
         "cookie": "r04IrShUCr9XI8s",
-        "email": "samcolvin@gmail.com",
+        "email": "donkey_simple@example.com",
         "hash": "pbkdf2_sha256$12000$SrbAcNIoZGfQ$6d8dAr+xSiMJIKKkEeDsu1HjaDaAhAyOs05L+idxnA8=",
         "last_seen": "Mon, 03-Mar-2014 19:16:38 UTC",
         "session_expires": ""

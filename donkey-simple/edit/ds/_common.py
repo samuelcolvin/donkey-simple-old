@@ -4,6 +4,7 @@ STATIC_DIR = 'static'
 PAGE_DIR = 'pages'
 SETTINGS_FILE = 'settings.py'
 USERS_FILE = 'users.json'
+MIN_PASSWORD_LENGTH = 6
 # import os
 # print os.path.dirname(os.path.realpath(__file__))
 try:

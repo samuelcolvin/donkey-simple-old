@@ -1,0 +1,46 @@
+{% extends "base.template.html" %}
+{% block head %}
+    {{ super() }}
+	<style>
+	@font-face {
+	  font-family: 'Ubuntu';
+	  font-style: normal;
+	  font-weight: 400;
+	}
+	
+	body{
+	  font-family: Ubuntu, sans-serif;
+	  background-color: black;
+	  padding: 15px;
+	}
+	
+	.main {
+	  text-align: left;
+	  max-width: 800px;
+	  margin: 50px auto;
+	  background-color: white;
+	  border: 1px double white;
+	  color: black;
+	  padding: 30px 80px;
+	  min-width: 300px;
+	}
+	@media (max-width: 600px) {
+	  .main {
+	    padding: 30px 20px;
+	  }
+	}
+	</style>
+{% endblock %}
+{% block body_attr %}align="center"{% endblock %}
+
+{% block content %}
+    <div class="main">
+      <header>
+	  <h1>{{title}}</h1>
+	  <aside>{{ aside }}</aside>
+      </header>
+      
+      <div>{{ main_article|safe }}</div>
+  
+    </div>
+{% endblock %}

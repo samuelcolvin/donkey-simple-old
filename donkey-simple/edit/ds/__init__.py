@@ -3,3 +3,4 @@ from _template_renderer import RenderTemplate
 import _controllers as con
 from _auth import Auth
 from _common import *
+from _send_emails import send_email, password_email

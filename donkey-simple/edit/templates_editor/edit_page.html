@@ -6,12 +6,12 @@
 	
 	<span class="btn-group pad">
 		<input type="submit" class="btn btn-default" value="Save"/>
-		<input id="delete-btn" type="submit" class="btn btn-default" value="Delete"/>
+		<input altaction="delete-page" type="submit" class="btn btn-default" value="Delete"/>
 		<input id="changet-btn" type="button" class="btn btn-default" value="Change Template"/>
 	</span>
 	<div class="form-group">
 	    <label for="name-input">Page Name</label>
-		<input type="text" name="page-name" class="form-control" placeholder="Page Name" value="{{ page_name }}">
+		<input type="text" name="page-name" class="form-control" placeholder="Page Name" value="{{ page_name }}" required>
 	</div>
 	<div class="form-group">
 	    <label for="template-name">Page Template</label>
@@ -54,8 +54,5 @@
 <script src="{{ static_uri }}ace_modes/ace.js"></script>
 <script src="{{ static_uri }}ace_modes/mode-markdown.js"></script>
 <script src="{{ static_uri }}ace_modes/mode-html.js"></script>
-<script>
-	var delete_action = 'delete-page';
-</script>
 <script src="{{ static_uri }}editor.js"></script>
 {% endblock %}

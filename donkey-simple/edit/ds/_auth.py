@@ -23,7 +23,6 @@ try:
 except NotImplementedError:
     print 'A secure pseudo-random number generator is not available on your system. Falling back to Mersenne Twister.'
     using_sysrandom = False
-    
 class Auth(object):
     dt_format = '%a, %d-%b-%Y %H:%M:%S UTC'
     cookie = None
@@ -60,10 +59,32 @@ class Auth(object):
     
     def check_cookie(self, cookies):
         if self._get_user(cookies):
-            self.cookie = self._generate_cookie()
-            self._update_user(self.username, self.cookie)
+            self.cookie = self._generate_cookie(self.user['cookie'])
+#             self._update_user(self.username, self.cookie)
             return True
         return False
+    
+    def new_random_password(self, length=10):
+        return _get_random_string(length=length)
+    
+    def pop_user(self, username, save=False):
+        user = self.users.pop(username)
+        if save:
+            self._save_users()
+        return user
+            
+    def add_user(self, username, user, password=None):
+        assert username not in self.users, 'User %s already exists!' % username
+        if 'hash' not in user or password is not None:
+            pw = Password()
+            user['hash'] = pw.make_hash(password)
+            user['cookie'] = self._generate_cookie()['value']
+        if 'cookie' not in user:
+            user['cookie'] = self._generate_cookie()['value']
+        if 'admin' not in user:
+            user['admin'] = False
+        self.users[username] = user
+        self._save_users()
     
     def _get_user(self, cookies):
         if SETTINGS.COOKIE_NAME in cookies:
@@ -75,8 +96,9 @@ class Auth(object):
                     return True
         return False
     
-    def _generate_cookie(self):
-        v = _get_random_string(length=15)
+    def _generate_cookie(self, value=None):
+        if value is None:
+            value = _get_random_string(length=15)
         cook = {'version': 1}
         expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=SETTINGS.PASSWORD_EXPIRE_HOURS)
         cook['expires'] = expiration.strftime(self.dt_format)
@@ -84,16 +106,22 @@ class Auth(object):
             cook['domain'] = SETTINGS.COOKIE_DOMAIN
         if hasattr(SETTINGS, 'COOKIE_PATH'):
             cook['path'] = SETTINGS.COOKIE_PATH
-        return {'name': SETTINGS.COOKIE_NAME, 'value': v, 'extra_values': cook}
+        return {'name': SETTINGS.COOKIE_NAME, 'value': value, 'extra_values': cook}
             
     def _update_user(self, username, cookie):
         self.users[username]['cookie'] = cookie['value']
         self.users[username]['last_seen'] = datetime.datetime.utcnow().strftime(self.dt_format)
+        self._save_users()
+            
+    def _save_users(self):
         try:
             with open(USERS_FILE, 'w') as handle:
                 json.dump(self.users, handle, sort_keys=True, indent=4, separators=(',', ': '))
         except Exception, e:
             print 'ERROR loading users file:', str(e)
+            return False
+        else:
+            return True
     
     def _get_users(self):
         try:
@@ -113,7 +141,7 @@ class Password(object):
     iterations = 12000
     digest = hashlib.sha256
 
-    def make_password(self, password):
+    def make_hash(self, password):
         if password is None:
             return UNUSABLE_PASSWORD_PREFIX + _get_random_string(UNUSABLE_PASSWORD_SUFFIX_LENGTH)
         salt = _get_random_string()
@@ -176,10 +204,9 @@ def _mask_hash(hash, show=6, char="*"):
 
 
 def _get_random_string(length=12,
-                      allowed_chars='abcdefghijklmnopqrstuvwxyz'
-                                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
+                      allowed_chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
     """
-    based on django version but editted to avoid need for secret key
+    based on django version but edited to avoid need for secret key
     Returns a securely generated random string.
     
     The default length of 12 with the a-z, A-Z, 0-9 character set returns

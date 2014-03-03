@@ -1,7 +1,19 @@
 
-// set the form action when delete is pressed
-$('#delete-btn').click(function(){
-	$('[name="action"]').val(delete_action);
+// // set the form action when delete is pressed
+// $('#delete-btn').click(function(){
+	// $('[name="action"]').val(delete_action);
+// });
+// 
+// // set the form action when Reset Password is pressed
+// $('#pword-reset-btn').click(function(){
+	// $('[name="action"]').val(password_reset_action);
+// });
+
+$('[type=submit]').click(function(){
+	var action = $(this).attr('altaction');
+	if (typeof(action) != 'undefined'){
+		$('[name="action"]').val(action);
+	}
 });
 
 // generic editor setup

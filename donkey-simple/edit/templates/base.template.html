@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	{% block head %}
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	  <meta name="description" content="{{description}}">
+	  <meta name="author" content="{{author}}">
+	  <title>{{title}}</title>
+	  <link rel="icon" type="image/png" href="favicon.png" />
+	{% endblock head %}
+  </head>
+  <body {% block body_attr %}{% endblock %}>
+  	{% block content %}{% endblock %}
+  </body>
+</html>

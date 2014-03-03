@@ -39,7 +39,8 @@ try:
     import ds
     debug.active = ds.DEBUG
     wi = WebInterface()
-    response = wi.location
+    response = wi.response_code
+    response += wi.location
     response += wi.content_type
     response += wi.cookie
     response += '\n\n'
@@ -47,7 +48,7 @@ try:
 #     raise Exception('X')
 except Exception, e:
     debug.finish_debugging()
-    print 'content-type: text/plain\n\n'
+    print 'Status: 500 Internal Server Error\n'
     print 'EXCEPTION OCCURRED:'
     print e
     try:

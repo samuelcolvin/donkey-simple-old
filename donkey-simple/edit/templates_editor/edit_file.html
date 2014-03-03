@@ -10,7 +10,7 @@
 	<div class="input-group">
   	  <span class="input-group-btn">
 		  <input type="submit" class="btn btn-default" value="Save"/>
-		  <input id="delete-btn" type="submit" class="btn btn-default" value="Delete"/>
+		  <input altaction="{{ delete_action }}" type="submit" class="btn btn-default" value="Delete"/>
 	  </span>
 	  <input type="text" name="file-name" id="name-input" class="form-control max-width-input" placeholder="File Filename" value="{{ file_name }}">
 	</div>
@@ -42,36 +42,5 @@
 <script src="{{ static_uri }}ace_modes/mode-javascript.js"></script>
 <script src="{{ static_uri }}ace_modes/mode-json.js"></script>
 <script src="{{ static_uri }}ace_modes/mode-css.js"></script>
-<script>
-	var delete_action = '{{ delete_action }}';
-	// $('#delete-btn').click(function(){
-		// $('[name="action"]').val('{{ delete_action }}');
-	// });
-	// var editor;
-	// if ($('#editor').length > 0){
-		// setup_editor();
-		// $('[name="file-name"]').change(setup_editor);
-		// $('#form').on('submit', function(){
-			// var escaped_text = $('#blank').text(editor.getValue()).html();
-			// $('[name="file-text"]').val(escaped_text);
-		// });
-	// }
-// 	
-	// function setup_editor(){
-		// editor = ace.edit('editor');
-		// var ext = $('[name="file-name"]').val().split('.').pop();
-		// if (ext == '')
-			// return;
-		// var formats = ['html', 'js', 'json', 'css'];
-		// if ($.inArray(ext, formats) != -1){
-			// if (ext == 'js')
-				// ext = 'javascript';
-			// var mode = require('ace/mode/' + ext).Mode;
-			// editor.getSession().setMode(new mode());
-		// }
-		// editor.setShowPrintMargin(false);
-		// editor.getSession().setUseWrapMode(true);
-	// }
-</script>
 <script src="{{ static_uri }}editor.js"></script>
 {% endblock %}

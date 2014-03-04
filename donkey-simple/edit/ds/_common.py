@@ -2,11 +2,11 @@ import imp
 TEMPLATES_DIR = 'templates'
 STATIC_DIR = 'static'
 PAGE_DIR = 'pages'
+REPOS_DIR = 'repos'
 SETTINGS_FILE = 'settings.py'
-USERS_FILE = 'users.json'
+USERS_FILE = 'web_interface/users.json'
 MIN_PASSWORD_LENGTH = 6
-# import os
-# print os.path.dirname(os.path.realpath(__file__))
+
 try:
     SETTINGS = imp.load_source('SETTINGS', SETTINGS_FILE)
 except Exception, e:

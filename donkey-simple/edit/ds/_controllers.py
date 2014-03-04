@@ -9,29 +9,39 @@ class _File_Controller(object):
     EXTENSION = ''
     perm_files = ['.gitignore', 'readme.txt']
     
+    def __init__(self):
+        self.items = sorted(list(self._get_all_items()))
+    
     def _file_test(self, fn):
         return True
     
-    def get_all_filenames(self):
-        return [f for f in os.listdir(self.DIR) if self._file_test(f) and f not in self.perm_files]
+    def _get_all_items(self):
+        for repo in os.listdir(REPOS_DIR):
+            if os.path.isdir(os.path.join(REPOS_DIR, repo)):
+                directory = os.path.join(REPOS_DIR, repo, self.DIR)
+                for fn in os.listdir(directory):
+                    if self._file_test(fn) and fn not in self.perm_files:
+                        path = os.path.join(directory, fn)
+                        display_name = '%s:%s' % (repo, fn)
+                        yield {'repo': repo, 'name': fn, 'path': path, 'display': display_name}
     
-    def get_file_content(self, name = None, fid = None):
-        name, path = self._get_name(name, fid)
-        with open(path, 'r') as handle:
+    def get_file_content(self, fid = None, name=None, repo=None):
+        item = self._get_name(fid, name, repo)
+        with open(item['path'], 'r') as handle:
             content = handle.read()
-        return name, content
+        return item['name'], content
     
-    def copy_file(self,src, dst):
-        dst_path = self._get_path_extension(dst)
-        _, src_path = self._get_name(src)
-        shutil.copy(src_path, dst_path)
-        self.set_mod(dst_path)
-        return dst_path
+#     def copy_file(self, src, dst):
+#         dst_path = self._get_path_extension(dst)
+#         _, src_path = self._get_name(src)
+#         shutil.copy(src_path, dst_path)
+#         self.set_mod(dst_path)
+#         return dst_path
     
     def write_file(self, content, name):
         path = self._get_path_extension(name)
         try:
-            self.delete_file(path)
+            self.delete_file(path=path)
         except: pass
         with open(path, 'w') as handle:
             handle.write(content)
@@ -41,20 +51,22 @@ class _File_Controller(object):
     def set_mod(self, path):
         os.chmod(path, 0666)
     
-    def delete_file(self, name):
-        _, path = self._get_name(name)
+    def delete_file(self, name = None, path = None):
+        if path is None:
+            path = self._get_name(name)['path']
         os.remove(path)
         return path
     
-    def new_file_path(self, name):
-        self._existing = self.get_all_filenames()
-        name = name.strip('.')
-        name = re.sub(r'[\\/]', '', name)
-        return self.get_path(self._new_name(name))
+#     def new_file_path(self, name):
+#         name = name.strip('.')
+#         name = re.sub(r'[\\/]', '', name)
+#         return self.get_path(self._new_name(name))
     
-    def _new_name(self, name, num=1):
+    def _new_name(self, name, repo, num=1):
         def not_existing(name):
-            return name not in self._existing and name not in self.perm_files
+            if self._get_name(name=name, repo=repo) is None:
+                return True
+            return name not in self.perm_files
         if not_existing(name):
             return name
         num_str = ('', '_%d' % num)[num>1]
@@ -65,27 +77,19 @@ class _File_Controller(object):
             new_name = name + num_str
         if not_existing(new_name):
             return new_name
-        return self._new_name(name, num + 1)
+        return self._new_name(name, repo, num + 1)
         
-        
-    def _get_name(self, name, fid = -1):
-        files = self.get_all_filenames()
-        if name is None:
-            if fid is None or fid < 0:
-                raise Exception('No valid file id provided')
-            if fid >= len(files):
-                raise Exception('File id %d is greater than number of files(%d)' %(fid, len(files)))
-            name = files[fid]
-        elif name not in files:
-            name_ext = '%s%s'  % (name, self.EXTENSION)
-            if name_ext in files:
-                name = name_ext
-            else:
-                raise Exception('File "%s" does not exist: %r' % (name, files))
-        return name, self.get_path(name)
+    def _get_name(self, fid = None, name=None, repo=None):
+        if fid is not None:
+            return self.items[fid]
+        for item in self.items:
+            if repo is not None and item['repo'] != repo:
+                continue
+            if item['name'] == name:
+                return item
     
-    def get_path(self, name):
-        return os.path.join(self.DIR, name)
+    def get_path(self, repo, name):
+        return os.path.join(REPOS_DIR, repo, self.DIR, name)
     
     def _get_path_extension(self, name):
         return self.get_path('%s%s' % (name, self.EXTENSION))
@@ -100,16 +104,19 @@ class Pages(_File_Controller):
         self._page.update({'name': name, 'template': template})
     
     def get_empty_context(self):
-        r = tr.RenderTemplate(self._page['template'])
+        repo_path = os.path.join(REPOS_DIR, self._repo)
+        r = tr.RenderTemplate(self._page['template'], repo_path)
         return r.get_empty_context()
     
-    def load_file(self, page_file_name):
-        _, text = self.get_file_content(name = page_file_name)
+    def load_file(self, item):
+        _, text = self.get_file_content(name=item['name'], repo=item['repo'])
         return json.loads(text)
     
     def get_pages(self):
-        return [self.load_file(fn) for fn in self.get_all_filenames()]
+        return [(page, item['display']) for page, item in self._get_pages()]
     
+    def _get_pages(self):
+        return [(self.load_file(item), item) for item in self.items]
     
     def get_true_context(self):
         context = {}
@@ -125,11 +132,11 @@ class Pages(_File_Controller):
         return context
     
     def get_page(self, pid=None, name=None):
-        pages = self.get_pages()
+        page_items = self._get_pages()
         if pid is not None:
-            self._page = next((page for page in pages if page['id'] == pid))
+            self._page, self._repo = next(((page, item['repo']) for page, item in page_items if page['id'] == pid))
         else:
-            self._page = next((page for page in pages if page['name'] == name))
+            self._page, self._repo = next(((page, item['repo']) for page, item in page_items if page['name'] == name))
         return self._page
     
     def update_context(self, fields, f_types):
@@ -152,7 +159,7 @@ class Pages(_File_Controller):
         return self._write()
         
     def _write(self):
-        self._page['id'] = len(self.get_all_filenames())
+        self._page['id'] = len(self.items)
         content = json.dumps(self._page, sort_keys=True, indent=4, separators=(',', ': '))
         return self.write_file(content, self._page['name'])
 

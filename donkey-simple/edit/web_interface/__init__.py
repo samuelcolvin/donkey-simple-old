@@ -5,8 +5,8 @@ import Cookie
 
 sg = ds.SiteGenerator
 
-
-EDITOR_TEMPLATE_DIR = 'templates_editor'
+THIS_PATH = os.path.dirname(os.path.realpath(__file__))
+EDITOR_TEMPLATE_DIR = os.path.join(THIS_PATH, 'templates') 
 
 urls = (
     ('logout$', 'logout'),
@@ -40,7 +40,7 @@ class WebInterface(object):
         self._site_uri = uri[:uri.index('/edit/')]
         e_index = uri.index('/edit/') + 5
         self._site_edit_uri = uri[:e_index] + '/'
-        self._edit_static_uri = self._site_edit_uri + 'editor_static/'
+        self._edit_static_uri = self._site_edit_uri + 'web_interface/static/'
         self._static_uri = self._site_edit_uri + 'static/'
         fields = cgi.FieldStorage()
         valid_user = self._auth(fields)
@@ -132,16 +132,16 @@ class WebInterface(object):
         self._template = self._env.get_template('edit_index.html')
         page_con = ds.con.Pages()
         self.context['pages'] = []
-        for page in page_con.get_pages():
-            self.context['pages'].append({'link': 'edit-page-%d' % page['id'], 'name': page['name']})
+        for page, display_name in page_con.get_pages():
+            self.context['pages'].append({'link': 'edit-page-%d' % page['id'], 'name': display_name})
         self.context['templates'] = []
         t = ds.con.Templates()
-        for i, t in enumerate(t.get_all_filenames()):
-            self.context['templates'].append({'link': 'edit-template-%d' % i, 'name': t})
+        for i, t in enumerate(t.items):
+            self.context['templates'].append({'link': 'edit-template-%d' % i, 'name': t['display']})
         self.context['static_files'] = []
         s = ds.con.Statics()
-        for i, s in enumerate(s.get_all_filenames()):
-            self.context['static_files'].append({'link': 'edit-static-%d' % i, 'name': s})
+        for i, s in enumerate(s.items):
+            self.context['static_files'].append({'link': 'edit-static-%d' % i, 'name': s['display']})
         if self.isadmin:
             self.context['users'] = []
             for i, u in enumerate(self.o_usernames):
@@ -188,15 +188,16 @@ class WebInterface(object):
     
     def edit_page(self, pid):
         t_con = ds.con.Templates()
-        self.context['page_templates'] = t_con.get_all_filenames()
+        self.context['page_templates'] = t_con.items
         self.context['other_formats'] = ['markdown', 'html']
         self.context['action_uri'] = self._site_edit_uri + 'edit-page-last'
         if pid is not None:
             page_con = ds.con.Pages()
-            try:
-                page = page_con.get_page(pid=pid)
-            except:
-                return self._error_occurred('Page not found', code=httplib.BAD_REQUEST)
+            page = page_con.get_page(pid=pid)
+#             try:
+#                 page = page_con.get_page(pid=pid)
+#             except:
+#                 return self._error_occurred('Page not found', code=httplib.BAD_REQUEST)
             self.context['page_name'] = page['name']
             self.context['page_context_str'] = []
             self.context['page_context_other'] = []

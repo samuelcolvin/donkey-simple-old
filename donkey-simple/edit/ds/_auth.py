@@ -60,9 +60,12 @@ class Auth(object):
     def check_cookie(self, cookies):
         if self._get_user(cookies):
             self.cookie = self._generate_cookie(self.user['cookie'])
-#             self._update_user(self.username, self.cookie)
+            self._update_user(self.username, self.cookie)
             return True
         return False
+    
+    def get_sorted_users(self):
+        return sorted(self.users.keys())
     
     def new_random_password(self, length=10):
         return _get_random_string(length=length)
@@ -83,6 +86,8 @@ class Auth(object):
             user['cookie'] = self._generate_cookie()['value']
         if 'admin' not in user:
             user['admin'] = False
+        if 'created' not in user:
+            user['created'] = datetime.datetime.utcnow().strftime(self.dt_format)
         self.users[username] = user
         self._save_users()
     

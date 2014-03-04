@@ -124,8 +124,6 @@ class Pages(_File_Controller):
                         break
         return context
     
-    
-    
     def get_page(self, pid=None, name=None):
         pages = self.get_pages()
         if pid is not None:

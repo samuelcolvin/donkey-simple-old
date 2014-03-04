@@ -1,14 +1,4 @@
-
-// // set the form action when delete is pressed
-// $('#delete-btn').click(function(){
-	// $('[name="action"]').val(delete_action);
-// });
-// 
-// // set the form action when Reset Password is pressed
-// $('#pword-reset-btn').click(function(){
-	// $('[name="action"]').val(password_reset_action);
-// });
-
+// change action for alternative submit buttons
 $('[type=submit]').click(function(){
 	var action = $(this).attr('altaction');
 	if (typeof(action) != 'undefined'){
@@ -79,7 +69,7 @@ $.each($('.ace-editor'), function(){
 });
 
 // specific warning function for change of template
-$('[name="page-template"]').change(function(){
+$('[name="page-template"].warn-change').change(function(){
 	bootbox.confirm('Changing the template may involve changing the fields of this page, fields missing from the new Template will be deleted!',
 	function(result) {
 	  if (result){

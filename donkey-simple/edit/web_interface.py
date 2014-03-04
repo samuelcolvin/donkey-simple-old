@@ -1,4 +1,4 @@
-import jinja2, os, cgi, re
+import jinja2, os, cgi, re, httplib, traceback
 import ds
 import HTMLParser
 import Cookie
@@ -12,6 +12,7 @@ urls = (
     ('logout$', 'logout'),
     ('add-page$', 'edit_page'),
     ('edit-page-(\d+)$', 'edit_page'),
+    ('edit-page-last$', 'edit_last_page'),
     ('add-template$', 'edit_template'),
     ('edit-template-(\d+)$', 'edit_template'),
     ('add-static$', 'edit_static'),
@@ -47,22 +48,23 @@ class WebInterface(object):
             proc_form = ProcessForm(self._add_msg, fields, self.isadmin, self.username)
             if proc_form.regen_users:
                 valid_user = self._auth(fields)
+            self.created_item = proc_form.created_item
         else:
             AnonFormProcessor(self._add_msg, fields)
         self._generate_page(uri, loggedin = valid_user)
         
     def _generate_page(self, uri, loggedin = False):
-        context = {'title': '%s Editor' % ds.SITE_NAME, 'static_uri': self._edit_static_uri, 
+        self.context = {'title': '%s Editor' % ds.SITE_NAME, 'static_uri': self._edit_static_uri, 
                    'edit_uri': self._site_edit_uri, 'site_uri': self._site_uri}
         if loggedin:
-            context.update({'username': self.username, 'admin': self.user['admin']})
-        context.update(ds.SETTINGS_DICT)
+            self.context.update({'username': self.username, 'admin': self.user['admin']})
+        self.context.update(ds.SETTINGS_DICT)
         print 'uri: %r' % uri
         if not loggedin:
             if 'reset-password' in uri:
-                self.reset_password(context)
+                self.reset_password()
             else:
-                self.login(context)
+                self.login()
         else:
             found = False
             for reg, func in urls:
@@ -72,15 +74,15 @@ class WebInterface(object):
                     fid = None
                     if len(m.regs) > 1:
                         fid = int(m.group(1))
-                    getattr(self, func)(context, fid)
+                    getattr(self, func)(fid)
                     break
             if not found:
                 if uri != self._site_edit_uri:
                     self._add_msg('%s not found' % uri, 'errors')
-                self.index(context)
-        context.update(self._msgs)
+                self.index()
+        self.context.update(self._msgs)
         if hasattr(self, '_template'):
-            self.page = self._template.render(**context)
+            self.page = self._template.render(**self.context)
         
     def _auth(self, fields):
 #         for name in fields:
@@ -110,138 +112,160 @@ class WebInterface(object):
         self.username = auth.username
         self.isadmin = self.user['admin']
         self.all_users = auth.users
-        self.o_usernames = sorted(self.all_users.keys())
+        self.o_usernames = auth.get_sorted_users()
         return True
         
-    def login(self, context):
+    def login(self):
         self._template = self._env.get_template('login.html')
-        context['title'] =  ds.SITE_NAME + ' login'
-        context['reset_password'] = 'reset-password'
+        self.context['title'] =  ds.SITE_NAME + ' login'
+        self.context['reset_password'] = 'reset-password'
         
-    def reset_password(self, context):
+    def reset_password(self):
         self._template = self._env.get_template('reset_password.html')
         
-    def logout(self, context, fid):
+    def logout(self, fid):
         auth = ds.Auth()
         auth.logout(self.username)
         self.location = 'Location: %s\n' % self._site_edit_uri
     
-    def index(self, context):
+    def index(self):
         self._template = self._env.get_template('edit_index.html')
         page_con = ds.con.Pages()
-        context['pages'] = []
+        self.context['pages'] = []
         for page in page_con.get_pages():
-            context['pages'].append({'link': 'edit-page-%d' % page['id'], 'name': page['name']})
-        context['templates'] = []
+            self.context['pages'].append({'link': 'edit-page-%d' % page['id'], 'name': page['name']})
+        self.context['templates'] = []
         t = ds.con.Templates()
         for i, t in enumerate(t.get_all_filenames()):
-            context['templates'].append({'link': 'edit-template-%d' % i, 'name': t})
-        context['static_files'] = []
+            self.context['templates'].append({'link': 'edit-template-%d' % i, 'name': t})
+        self.context['static_files'] = []
         s = ds.con.Statics()
         for i, s in enumerate(s.get_all_filenames()):
-            context['static_files'].append({'link': 'edit-static-%d' % i, 'name': s})
+            self.context['static_files'].append({'link': 'edit-static-%d' % i, 'name': s})
         if self.isadmin:
-            context['users'] = []
+            self.context['users'] = []
             for i, u in enumerate(self.o_usernames):
-                context['users'].append({'link': 'edit-user-%d' % i, 'name': u})
+                self.context['users'].append({'link': 'edit-user-%d' % i, 'name': u})
     
-    def edit_template(self, context, tid):
-        context['help_statement'] = """
+    def edit_template(self, tid):
+        self.context['help_statement'] = """
             <p>Template names should contain <span class="code">.template.</span> in their name, eg. <span class="code">my_template.template.html</span>.</p>
             <p>Templates are rendered using <a href="http://jinja.pocoo.org/docs/">Jinja2</a> which is a "Django like" template engine. See their site for Documentation.</p>
         """
         if tid is not None:
             t = ds.con.Templates()
-            context['file_name'], template_text = t.get_file_content(fid=tid)
-            context['file_text'] = cgi.escape(template_text)
+            self.context['file_name'], template_text = t.get_file_content(fid=tid)
+            self.context['file_text'] = cgi.escape(template_text)
         else:
-            context['new_file'] = True
-        context['action'] = 'edit-template'
-        context['delete_action'] = 'delete-template'
+            self.context['new_file'] = True
+        self.context['action'] = 'edit-template'
+        self.context['delete_action'] = 'delete-template'
         self._template = self._env.get_template('edit_file.html')
     
-    def edit_static(self, context, sid):
-        context['file_type'] = 'Text'
+    def edit_static(self, sid):
+        self.context['file_type'] = 'Text'
         if sid is not None:
             static = ds.con.Statics()
-            context['file_name'], content = static.get_file_content(fid=sid)
-            context['file_type'] = static.get_file_type(context['file_name'])
-            if context['file_type'] == 'Text':
-                context['file_text'] = cgi.escape(content)
-            elif context['file_type'] == 'Image':
-                context['file_image_path'] = self._static_uri + context['file_name']
-            elif context['file_type'] == 'Font':
-                context['font_path'] = self._static_uri + context['file_name']
-                context['font_name'] = get_font_name(static.get_path(context['file_name']))
+            self.context['file_name'], content = static.get_file_content(fid=sid)
+            self.context['file_type'] = static.get_file_type(self.context['file_name'])
+            if self.context['file_type'] == 'Text':
+                self.context['file_text'] = cgi.escape(content)
+            elif self.context['file_type'] == 'Image':
+                self.context['file_image_path'] = self._static_uri + self.context['file_name']
+            elif self.context['file_type'] == 'Font':
+                self.context['font_path'] = self._static_uri + self.context['file_name']
+                self.context['font_name'] = get_font_name(static.get_path(self.context['file_name']))
         else:
-            context['new_file'] = True
-        context['action'] = 'edit-static'
-        context['delete_action'] = 'delete-static'
+            self.context['new_file'] = True
+        self.context['action'] = 'edit-static'
+        self.context['delete_action'] = 'delete-static'
         self._template = self._env.get_template('edit_file.html')
     
-    def edit_page(self, context, pid):
+    def edit_last_page(self, _):
+        page_con = ds.con.Pages()
+        page = page_con.get_page(name = self.created_item)
+        self.edit_page(page['id'])
+    
+    def edit_page(self, pid):
         t_con = ds.con.Templates()
-        context['page_templates'] = t_con.get_all_filenames()
-        context['other_formats'] = ['markdown', 'html']
+        self.context['page_templates'] = t_con.get_all_filenames()
+        self.context['other_formats'] = ['markdown', 'html']
+        self.context['action_uri'] = self._site_edit_uri + 'edit-page-last'
         if pid is not None:
             page_con = ds.con.Pages()
-            page = page_con.get_page(pid=pid)
-            context['page_name'] = page['name']
-            context['page_context_str'] = []
-            context['page_context_other'] = []
+            try:
+                page = page_con.get_page(pid=pid)
+            except:
+                return self._error_occurred('Page not found', code=httplib.BAD_REQUEST)
+            self.context['page_name'] = page['name']
+            self.context['page_context_str'] = []
+            self.context['page_context_other'] = []
             for name, value in page_con.get_true_context().items():
                 print name, value
                 if value['type'] == 'string':
-                    context['page_context_str'].append({'name': name, 'value': value['value'], 'type': value['type']})
+                    self.context['page_context_str'].append({'name': name, 'value': value['value'], 'type': value['type']})
                 else:
-                    context['page_context_other'].append({'name': name, 'value': cgi.escape(value['value']), 'type': value['type']})
-            context['active_page_template'] = page['template']
+                    self.context['page_context_other'].append({'name': name, 'value': cgi.escape(value['value']), 'type': value['type']})
+            self.context['active_page_template'] = page['template']
+            self.context['action_uri'] = self.context['edit_uri']
         self._template = self._env.get_template('edit_page.html')
         
-    def edit_last_user(self, context, fid):
-        self.edit_user(context, -1, True)
+    def edit_last_user(self, _):
+        uid = self.o_usernames.index(self.created_item)
+        self.edit_user(uid)
     
-    def edit_this_user(self, context, uid):
+    def edit_this_user(self, uid):
         uid = (uid for uid, un in enumerate(self.o_usernames) if un == self.username).next()
-        self.edit_user(context, uid)
+        self.edit_user(uid)
     
-    def edit_user(self, context, uid, latest=None):
-        context['page_tag'] = 'New User'
-        if latest:
-            uid = len(self.o_usernames) - 1
+    def edit_user(self, uid):
+        self.context['page_tag'] = 'New User'
         if not self.isadmin:
             if uid is None:
                 return self._permission_denied()
             edit_username = self.o_usernames[uid]
             if edit_username != self.username:
                 return self._permission_denied()
+        self.context['action_uri'] = self._site_edit_uri + 'edit-user-last'
         if uid is not None:
-            context['existing_user'] = True
-            context['password_uri'] = self._site_edit_uri + 'set-password-%d' % uid
+            self.context['existing_user'] = True
+            self.context['password_uri'] = self._site_edit_uri + 'set-password-%d' % uid
             edit_username = self.o_usernames[uid]
             edit_user = self.all_users[edit_username]
-            context['page_tag'] = edit_username
-            context['edit_email'] = edit_user['email']
-            context['edit_username'] = edit_username
-            context['is_admin'] = edit_user['admin']
+            self.context['page_tag'] = edit_username
+            self.context['edit_email'] = edit_user['email']
+            self.context['edit_username'] = edit_username
+            self.context['is_admin'] = edit_user['admin']
+            self.context['user_details'] = []
             if 'last_seen' in edit_user:
-                context['user_details'] = []
-                context['user_details'].append({'name': 'Last Seen', 'value': edit_user['last_seen']})
-                #context['user_details'].append({'name': 'Session Expires', 'value': user['session_expires']})
-        else:
-            context['edit_uri'] = self._site_edit_uri + 'edit-user-last'
+                self.context['user_details'].append({'name': 'Last Seen', 'value': edit_user['last_seen']})
+            if 'created' in edit_user:
+                self.context['user_details'].append({'name': 'Created', 'value': edit_user['created']})
+                #self.context['user_details'].append({'name': 'Session Expires', 'value': user['session_expires']})
+            self.context['action_uri'] = self.context['edit_uri']
         self._template = self._env.get_template('edit_user.html')
         
-    def set_user_password(self, context, uid):
+    def set_user_password(self, uid):
         edit_username = self.o_usernames[uid]
         if not self.isadmin and edit_username != self.username:
             return self._permission_denied()
-        context['edit_username'] = edit_username
+        self.context['edit_username'] = edit_username
         self._template = self._env.get_template('set_password.html')
         
     def _permission_denied(self):
-        self.response_code = 'Status: 403 Forbidden\n'
-        self._template = self._env.get_template('permission_denied.html')
+        self._bad('You do not have permission to view this page.', code=httplib.FORBIDDEN)
+        
+    def _error_occurred(self, e, code = httplib.INTERNAL_SERVER_ERROR):
+        self._bad(str(e),error=e, code=code)
+        
+    def _bad(self, error_description, error = None, code = httplib.BAD_REQUEST):
+        self.context['error'] = '%d %s' % (code, httplib.responses[code])
+        self.response_code = 'Status: %s\n' % self.context['error']
+        self.context['description'] = error_description
+        if error:
+            self.context['error_details'] = str(error)
+            traceback.print_exc()
+        self._template = self._env.get_template('bad.html')
     
     def _add_msg(self, msg, mtype='info'):
         if mtype not in self._msgs:
@@ -249,8 +273,7 @@ class WebInterface(object):
         else:
             self._msgs[mtype].append(msg)
 
-class Universal(object):
-    
+class UniversalProcessor(object):
     def process(self, fields):
         if 'action' in fields:
             for name in fields:
@@ -290,7 +313,8 @@ class Universal(object):
                 self._add_msg(msg, 'errors')
         return False
 
-class ProcessForm(Universal):
+class ProcessForm(UniversalProcessor):
+    created_item = None
     def __init__(self, add_msg, fields, isadmin, username):
         self._add_msg = add_msg
         self.isadmin = isadmin
@@ -307,11 +331,13 @@ class ProcessForm(Universal):
         if 'page-name' not in self.fields:
             self._add_msg('page name may not be blank', 'errors')
             return
-        page_con.set_name(self.fields['page-name'].value, self.fields['page-template'].value)
+        page_name = self.fields['page-name'].value
+        page_con.set_name(page_name, self.fields['page-template'].value)
         context = dict([(name, self.fields[name].value) for name in self.fields])
         ftypes = dict([(name.replace('contype-', ''), self.fields[name].value) for name in self.fields if name.startswith('contype-')])
         page_con.update_context(context, ftypes)
         fname = page_con.generate_page()
+        self.created_item = page_name
         self._add_msg('"%s" successfully saved' % fname, 'success')
         
     def delete_page(self):
@@ -380,6 +406,7 @@ class ProcessForm(Universal):
                 if prev_username != username:
                     action_type += ' username changed'
         auth.add_user(username, newuser)
+        self.created_item = username
         self.regen_users = True
         self._add_msg('"%s" %s' % (username, action_type), msg_type)
     
@@ -449,7 +476,7 @@ class ProcessForm(Universal):
     def _unescape_file_text(self):
         return HTMLParser.HTMLParser().unescape(self.fields['file-text'].value)
     
-class AnonFormProcessor(Universal):
+class AnonFormProcessor(UniversalProcessor):
     def __init__(self, add_msg, fields):
         self._add_msg = add_msg
         self.process(fields)

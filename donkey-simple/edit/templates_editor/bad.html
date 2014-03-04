@@ -1,5 +1,8 @@
 {% extends "base.html" %}
-{% block page_tag %}Permission Denied{% endblock %}
+{% block page_tag %}{{ error }}{% endblock %}
 {% block content %}
-<h2>You do not have permission to view this page.</h2>
+<h2>{{ error }}: {{ description }}</h2>
+{% if error_details %}
+<pre>{{ error_details }}</pre>
+{% endif %}
 {% endblock %}

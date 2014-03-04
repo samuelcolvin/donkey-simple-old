@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block page_tag %}{{ page_name }}{% endblock %}
 {% block content %}
-<form id="form" action="{{ edit_uri }}" method="post" class="pad">
+<form id="form" action="{{ action_uri }}" method="post" class="pad">
 	<input name="action" type="hidden" value="edit-page"/>
 	
 	<span class="btn-group pad">
@@ -16,7 +16,7 @@
 	<div class="form-group">
 	    <label for="template-name">Page Template</label>
 		<input name="original-template" type="hidden" value="{{ active_page_template }}"/>
-		<select name="page-template" class="form-control">
+		<select name="page-template" class="form-control {%if active_page_template %}warn-change{% endif %}">
 			{% for pt in page_templates %}<option value="{{ pt }}" {% if pt == active_page_template %}selected{% endif %}>{{ pt }}</option>
 			{% endfor %}
 		</select>

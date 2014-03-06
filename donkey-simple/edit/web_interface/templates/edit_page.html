@@ -9,17 +9,24 @@
 		<input altaction="delete-page" type="submit" class="btn btn-default" value="Delete"/>
 		<input id="changet-btn" type="button" class="btn btn-default" value="Change Template"/>
 	</span>
-	<div class="form-group">
-	    <label for="name-input">Page Name</label>
-		<input type="text" name="page-name" class="form-control" placeholder="Page Name" value="{{ page_name }}" required>
-	</div>
-	<div class="form-group">
-	    <label for="template-name">Page Template</label>
-		<input name="original-template" type="hidden" value="{{ active_page_template }}"/>
-		<select name="page-template" class="form-control {%if active_page_template %}warn-change{% endif %}">
-			{% for pt in page_templates %}<option value="{{ pt }}" {% if pt == active_page_template %}selected{% endif %}>{{ pt }}</option>
+	
+	<div class="row">
+	  <div class="col-lg-6 form-group">
+	  	<div class="input-group">
+		  <span class="input-group-addon">Page Name</span>
+	  	  <input type="text" name="page-name" class="form-control" placeholder="Page Name" value="{{ page_name }}" required>
+		</div>
+	  </div>
+	  <div class="col-lg-6 form-group">
+	  	<div class="input-group">
+		  <span class="input-group-addon">Page Template</span>
+		  <input name="original-template-id" type="hidden" value="{{ active_page_template_id }}"/>
+		  <select name="page-template-id" class="form-control {%if active_page_template %}warn-change{% endif %}">
+			{% for pt in page_templates %}<option value="{{ pt.id }}" {% if pt.id == active_page_template_id %}selected{% endif %}>{{ pt.display }}</option>
 			{% endfor %}
-		</select>
+		  </select>
+		</div>
+	  </div>
 	</div>
 <div class="help-block">
 </div>

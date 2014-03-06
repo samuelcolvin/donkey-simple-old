@@ -11,7 +11,6 @@ To do:
 * add static files - upload, move into place - DONE
 * allow editing of static files- DONE
 * get pull and push to git working
-* fix problems with page and choosing template working
 * static file compression and organising
 * link generation, static-dir tag
 * default variables eg author, title

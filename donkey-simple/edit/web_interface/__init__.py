@@ -14,14 +14,14 @@ urls = (
     ('edit-page-(\d+)$', 'edit_page'),
     ('edit-page-last$', 'edit_last_page'),
     ('add-template$', 'edit_template'),
-    ('edit-template-(\d+)$', 'edit_template'),
+    ('edit-template-(.+)$', 'edit_template'),
     ('add-static$', 'edit_static'),
-    ('edit-static-(\d+)$', 'edit_static'),
+    ('edit-static-(.+)$', 'edit_static'),
     ('add-user$', 'edit_user'),
     ('user$', 'edit_this_user'),
-    ('edit-user-(\d+)$', 'edit_user'),
+    ('edit-user-(.+)$', 'edit_user'),
     ('edit-user-last$', 'edit_last_user'),
-    ('set-password-(\d+)$', 'set_user_password'),
+    ('set-password-(.+)$', 'set_user_password'),
 )
 
 class WebInterface(object):
@@ -40,8 +40,7 @@ class WebInterface(object):
         self._site_uri = uri[:uri.index('/edit/')]
         e_index = uri.index('/edit/') + 5
         self._site_edit_uri = uri[:e_index] + '/'
-        self._edit_static_uri = self._site_edit_uri + 'web_interface/static/'
-        self._static_uri = self._site_edit_uri + 'static/'
+        self._edit_static_uri = join_uri(self._site_edit_uri, 'web_interface/static/')
         fields = cgi.FieldStorage()
         valid_user = self._auth(fields)
         if valid_user:
@@ -59,6 +58,7 @@ class WebInterface(object):
         if loggedin:
             self.context.update({'username': self.username, 'admin': self.user['admin']})
         self.context.update(ds.SETTINGS_DICT)
+        self.context['repos'] = [r for r, _ in ds.con.get_all_repos()]
         print 'uri: %r' % uri
         if not loggedin:
             if 'reset-password' in uri:
@@ -73,7 +73,7 @@ class WebInterface(object):
                     found = True
                     fid = None
                     if len(m.regs) > 1:
-                        fid = int(m.group(1))
+                        fid = m.group(1)
                     getattr(self, func)(fid)
                     break
             if not found:
@@ -112,7 +112,7 @@ class WebInterface(object):
         self.username = auth.username
         self.isadmin = self.user['admin']
         self.all_users = auth.users
-        self.o_usernames = auth.get_sorted_users()
+#         self.o_usernames = auth.get_sorted_users()
         return True
         
     def login(self):
@@ -136,16 +136,16 @@ class WebInterface(object):
             self.context['pages'].append({'link': 'edit-page-%d' % page['id'], 'name': display_name})
         self.context['templates'] = []
         t = ds.con.Templates()
-        for i, t in enumerate(t.items):
-            self.context['templates'].append({'link': 'edit-template-%d' % i, 'name': t['display']})
+        for fc in t.cfiles.values():
+            self.context['templates'].append({'link': 'edit-template-%s' % fc.id, 'name': fc.display})
         self.context['static_files'] = []
         s = ds.con.Statics()
-        for i, s in enumerate(s.items):
-            self.context['static_files'].append({'link': 'edit-static-%d' % i, 'name': s['display']})
+        for fc in s.cfiles.values():
+            self.context['static_files'].append({'link': 'edit-static-%s' % fc.id, 'name': fc.display})
         if self.isadmin:
             self.context['users'] = []
-            for i, u in enumerate(self.o_usernames):
-                self.context['users'].append({'link': 'edit-user-%d' % i, 'name': u})
+            for u in self.all_users:
+                self.context['users'].append({'link': 'edit-user-%s' % u, 'name': u})
     
     def edit_template(self, tid):
         self.context['help_statement'] = """
@@ -154,7 +154,7 @@ class WebInterface(object):
         """
         if tid is not None:
             t = ds.con.Templates()
-            self.context['file_name'], template_text = t.get_file_content(fid=tid)
+            self.context['file_name'], self.context['active_repo'], template_text = t.get_file_content(fid=tid)
             self.context['file_text'] = cgi.escape(template_text)
         else:
             self.context['new_file'] = True
@@ -166,15 +166,18 @@ class WebInterface(object):
         self.context['file_type'] = 'Text'
         if sid is not None:
             static = ds.con.Statics()
-            self.context['file_name'], content = static.get_file_content(fid=sid)
+            filename, active_repo, content = static.get_file_content(fid=sid)
+            self.context['file_name'] = filename
+            self.context['active_repo'] = active_repo
             self.context['file_type'] = static.get_file_type(self.context['file_name'])
+            static_uri = join_uri(self._site_edit_uri, ds.REPOS_DIR, active_repo, static.DIR, filename)
             if self.context['file_type'] == 'Text':
                 self.context['file_text'] = cgi.escape(content)
             elif self.context['file_type'] == 'Image':
-                self.context['file_image_path'] = self._static_uri + self.context['file_name']
+                self.context['file_image_path'] = static_uri
             elif self.context['file_type'] == 'Font':
-                self.context['font_path'] = self._static_uri + self.context['file_name']
-                self.context['font_name'] = get_font_name(static.get_path(self.context['file_name']))
+                self.context['font_path'] = static_uri
+                self.context['font_name'] = get_font_name(static.get_path(active_repo, filename))
         else:
             self.context['new_file'] = True
         self.context['action'] = 'edit-static'
@@ -183,22 +186,23 @@ class WebInterface(object):
     
     def edit_last_page(self, _):
         page_con = ds.con.Pages()
-        page = page_con.get_page(name = self.created_item)
+        page, _ = page_con.get_page(name = self.created_item)
         self.edit_page(page['id'])
     
     def edit_page(self, pid):
         t_con = ds.con.Templates()
-        self.context['page_templates'] = t_con.items
+        self.context['page_templates'] = t_con.cfiles
         self.context['other_formats'] = ['markdown', 'html']
         self.context['action_uri'] = self._site_edit_uri + 'edit-page-last'
         if pid is not None:
             page_con = ds.con.Pages()
-            page = page_con.get_page(pid=pid)
+            page, repo = page_con.get_page(pid=pid)
 #             try:
-#                 page = page_con.get_page(pid=pid)
+#                 page, repo = page_con.get_page(pid=pid)
 #             except:
 #                 return self._error_occurred('Page not found', code=httplib.BAD_REQUEST)
             self.context['page_name'] = page['name']
+            self.context['page_templates'] = [fc for fc in t_con.cfiles if fc.repo == repo]
             self.context['page_context_str'] = []
             self.context['page_context_other'] = []
             for name, value in page_con.get_true_context().items():
@@ -207,35 +211,32 @@ class WebInterface(object):
                     self.context['page_context_str'].append({'name': name, 'value': value['value'], 'type': value['type']})
                 else:
                     self.context['page_context_other'].append({'name': name, 'value': cgi.escape(value['value']), 'type': value['type']})
-            self.context['active_page_template'] = page['template']
+            self.context['active_page_template_id'] = t_con.get_cfile(filename = page['template'], repo = repo).id
             self.context['action_uri'] = self.context['edit_uri']
         self._template = self._env.get_template('edit_page.html')
         
     def edit_last_user(self, _):
-        uid = self.o_usernames.index(self.created_item)
+        uid = self.created_item
         self.edit_user(uid)
     
     def edit_this_user(self, uid):
-        uid = (uid for uid, un in enumerate(self.o_usernames) if un == self.username).next()
-        self.edit_user(uid)
+        self.edit_user(self.username)
     
     def edit_user(self, uid):
         self.context['page_tag'] = 'New User'
         if not self.isadmin:
             if uid is None:
                 return self._permission_denied()
-            edit_username = self.o_usernames[uid]
-            if edit_username != self.username:
+            if uid != self.username:
                 return self._permission_denied()
         self.context['action_uri'] = self._site_edit_uri + 'edit-user-last'
         if uid is not None:
             self.context['existing_user'] = True
-            self.context['password_uri'] = self._site_edit_uri + 'set-password-%d' % uid
-            edit_username = self.o_usernames[uid]
-            edit_user = self.all_users[edit_username]
-            self.context['page_tag'] = edit_username
+            self.context['password_uri'] = self._site_edit_uri + 'set-password-%s' % uid
+            edit_user = self.all_users[uid]
+            self.context['page_tag'] = uid
             self.context['edit_email'] = edit_user['email']
-            self.context['edit_username'] = edit_username
+            self.context['edit_username'] = uid
             self.context['is_admin'] = edit_user['admin']
             self.context['user_details'] = []
             if 'last_seen' in edit_user:
@@ -333,7 +334,9 @@ class ProcessForm(UniversalProcessor):
             self._add_msg('page name may not be blank', 'errors')
             return
         page_name = self.fields['page-name'].value
-        page_con.set_name(page_name, self.fields['page-template'].value)
+        t_con = ds.con.Templates()
+        template = t_con.get_cfile(int(self.fields['page-template-id'].value))
+        page_con.set_name(page_name, template.filename, template.repo)
         context = dict([(name, self.fields[name].value) for name in self.fields])
         ftypes = dict([(name.replace('contype-', ''), self.fields[name].value) for name in self.fields if name.startswith('contype-')])
         page_con.update_context(context, ftypes)
@@ -343,17 +346,21 @@ class ProcessForm(UniversalProcessor):
         
     def delete_page(self):
         page = ds.con.Pages()
-        self._delete_file(page, 'page-name')
+        t_con = ds.con.Templates()
+        template = t_con.get_cfile(int(self.fields['page-template-id'].value))
+        self._delete_file(page, None, 'page-name', repo = template.repo)
         
     def edit_template(self):
         t = ds.con.Templates()
         text = self._unescape_file_text()
-        fname = t.write_file(text, self.fields['file-name'].value)
+        filename = self.fields['file-name'].value
+        repo = self.fields['repo'].value
+        fname = t.write_file(text, repo, filename)
         self._add_msg('"%s" successfully saved' % fname, 'success')
         
     def delete_template(self):
         t = ds.con.Templates()
-        self._delete_file(t, 'file-name')
+        self._delete_file(t, 'repo', 'file-name')
         
     def upload_template(self):
         self._process_files('files', ds.con.Templates())
@@ -373,7 +380,7 @@ class ProcessForm(UniversalProcessor):
             
     def delete_static(self):
         static = ds.con.Statics()
-        self._delete_file(static, 'file-name')
+        self._delete_file(static, 'repo', 'file-name')
         
     def edit_user(self):
         if 'previous-username' in self.fields:
@@ -470,9 +477,13 @@ class ProcessForm(UniversalProcessor):
         else:
             self._add_msg('Error getting file from upload', 'error')
         
-    def _delete_file(self, controller, field_name):
-        fname = controller.delete_file(self.fields[field_name].value)
-        self._add_msg('"%s" successfully deleted' % fname, 'success')
+    def _delete_file(self, controller, repo_field_name, file_field_name, repo = None):
+        if repo is None:
+            repo = self.fields[repo_field_name].value
+        filename = self.fields[file_field_name].value
+        print repo, filename
+        fname = controller.delete_file(repo = repo, filename = filename)
+        self._add_msg('"%s" successfully deleted' % fname.display, 'success')
     
     def _unescape_file_text(self):
         return HTMLParser.HTMLParser().unescape(self.fields['file-text'].value)
@@ -495,6 +506,8 @@ def get_font_name(filename):
         print 'Problem processing font:', e
         return 'unknown'
 
-
-
-
+def join_uri(*args):
+    uri = '/' + '/'.join(p.strip('/') for p in args)
+    if args[-1].endswith('/'):
+        uri += '/'
+    return uri

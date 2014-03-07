@@ -1,3 +1,6 @@
+"""
+File controller class with inheritted classes for each type of file.
+"""
 from _common import *
 import os, shutil, json
 import HTMLParser
@@ -5,12 +8,20 @@ import _template_renderer as tr
 import re, base64, hashlib
 
 def get_all_repos():
+    """
+    Generator for all repos in this site.
+    """
     for repo in os.listdir(REPOS_DIR):
         repo_path = os.path.join(REPOS_DIR, repo)
         if os.path.isdir(repo_path):
             yield repo, repo_path
             
 class _File(object):
+    """
+    Represents a single file, either page, template or static file.
+    """
+    info = None
+    active_cfile = None
     def __init__(self, repo, file_type, filename):
         self.repo = repo
         self.file_type = file_type
@@ -21,9 +32,15 @@ class _File(object):
         
     @property
     def display(self):
-        return '%s:%s' % (self.repo, self.filename)
+        """
+        Display property for the file.
+        """ 
+        return '%s :: %s' % (self.repo, self.filename)
     
     def is_match(self, repo, name, ext=''):
+        """
+        Identifies whether or not this file matches the details provided.
+        """
         if (repo is None or self.repo == repo):
             if name == self.filename:
                 return True
@@ -31,21 +48,45 @@ class _File(object):
             if filename == self.filename:
                 return True
         return False
+    
+    def delete_file(self):
+        os.remove(self.path)
+    
+    def write_file(self, content):
+        try:
+            self.delete_file()
+        except: pass
+        with open(self.path, 'w') as handle:
+            handle.write(content)
+        self.set_mod()
+    
+    def set_mod(self):
+        os.chmod(self.path, 0666)
+        
 
 class _File_Controller(object):
+    """
+    Parent class for control of all files in a given directory: eg. pages, templates or static
+    """
     DIR = ''
     EXTENSION = ''
     perm_files = ['.gitignore', 'readme.txt']
     
     def __init__(self):
-        self.cfiles = {} #sorted(list(self._get_all_files()), key= lambda f: f.sort_on)
+        self.cfiles = {}
         for cf in self._get_all_files():
             self.cfiles[cf.id] = cf
     
     def _file_test(self, fn):
+        """
+        Tests whether a given file should be included in control.
+        """
         return True
     
     def _get_all_files(self):
+        """
+        Generates list of _File objects of all files in self.DIR.
+        """
         for repo, repo_path in get_all_repos():
             directory = os.path.join(repo_path, self.DIR)
             for fn in os.listdir(directory):
@@ -53,7 +94,13 @@ class _File_Controller(object):
                     yield _File(repo, self.DIR, fn)
     
     def get_file_content(self, fid = None, name=None, repo=None):
-        cfile = self.get_cfile(fid, name, repo)
+        """
+        Gets the content of a file either via file id or name and repo.
+        """
+        if fid is not None:
+            cfile = self.cfiles[fid]
+        else:
+            cfile = self.get_cfile_name(name, repo)
         with open(cfile.path, 'r') as handle:
             content = handle.read()
         return cfile.filename, cfile.repo, content
@@ -66,23 +113,16 @@ class _File_Controller(object):
 #         return dst_path
     
     def write_file(self, content, repo, name):
-        path = self._get_path_extension(repo, name)
-        try:
-            self.delete_file(path=path)
-        except: pass
-        with open(path, 'w') as handle:
-            handle.write(content)
-        self.set_mod(path)
-        return path
-    
-    def set_mod(self, path):
-        os.chmod(path, 0666)
+        cfile = _File(repo, self.DIR, self._extension_name(name))
+        cfile.write_file(content)
+        self.cfiles[cfile.id] = cfile
+        return cfile
     
     def delete_file(self, path = None, repo = None, filename = None):
         if path is None:
-            cfile = self.get_cfile(filename = filename, repo=repo)
-        os.remove(cfile.path)
-        return cfile
+            cfile = self.get_cfile_name(filename, repo)
+        cfile.delete_file()
+        return self.cfiles.pop(cfile.id)
     
 #     def new_file_path(self, name):
 #         name = name.strip('.')
@@ -91,7 +131,7 @@ class _File_Controller(object):
     
     def _new_name(self, name, repo, num=1):
         def not_existing(name):
-            if self.get_cfile(name=name, repo=repo) is None:
+            if self.get_cfile_name(name, repo) is None:
                 return True
             return name not in self.perm_files
         if not_existing(name):
@@ -105,10 +145,15 @@ class _File_Controller(object):
         if not_existing(new_name):
             return new_name
         return self._new_name(name, repo, num + 1)
-        
-    def get_cfile(self, fid = None, filename=None, repo=None):
-        if fid is not None:
-            return self.cfiles[fid]
+    
+    def get_cfile_pid(self, pid):
+        self.active_cfile = self.cfiles[pid]
+        return self.active_cfile 
+    
+    def get_cfile_name(self, filename, repo):
+        """
+        File a cfile based on name and repo.
+        """
         for cf in self.cfiles.values():
             if cf.is_match(repo, filename, self.EXTENSION):
                 return cf
@@ -117,8 +162,8 @@ class _File_Controller(object):
     def get_path(self, repo, name):
         return os.path.join(REPOS_DIR, repo, self.DIR, name)
     
-    def _get_path_extension(self, repo, name):
-        return self.get_path(repo, '%s%s' % (name, self.EXTENSION))
+    def _extension_name(self, name):
+        return '%s%s' % (name, self.EXTENSION)
     
 class Pages(_File_Controller):
     DIR = PAGE_DIR
@@ -128,46 +173,39 @@ class Pages(_File_Controller):
     
     def __init__(self, *args, **kw):
         super(Pages, self).__init__(*args, **kw)
-        self.pages = self._get_pages()
+        self._generate_pages()
     
-    def set_name(self, name, template, repo):
-        self._repo = repo
-        self._page.update({'name': name, 'template': template})
+    def set_name(self, name, template):
+        self.active_cfile.info.update({'name': name, 'template': template})
     
     def get_empty_context(self):
-        repo_path = os.path.join(REPOS_DIR, self._repo)
-        r = tr.RenderTemplate(self._page['template'], repo_path)
+        repo_path = os.path.join(REPOS_DIR, self.active_cfile.repo)
+        r = tr.RenderTemplate(self.active_cfile.info['template'], repo_path)
         return r.get_empty_context()
     
     def load_file(self, cfile):
-        _, _, text = self.get_file_content(name=cfile.filename, repo=cfile.repo)
+        _, _, text = self.get_file_content(cfile.id)
         return json.loads(text)
     
-    def get_pages(self):
-        return [(page, item.display) for page, item in self.pages]
-    
-    def _get_pages(self):
-        return [(self.load_file(cfile), cfile) for cfile in self.cfiles.values()]
+    def _generate_pages(self):
+        """
+        Add page info to cfile.info.
+        """
+        for key, cfile in self.cfiles.items():
+            self.cfiles[key].info = self.load_file(cfile)
     
     def get_true_context(self):
         context = {}
         for name, item in self.get_empty_context().items():
             context[name] = item
-            if name in self._page['context']:
-                context[name]['value'] = self._page['context'][name]['value']
-            if self._page['context'][name]['type'] != item['type']:
+            if name in self.active_cfile.info['context']:
+                context[name]['value'] = self.active_cfile.info['context'][name]['value']
+            if self.active_cfile.info['context'][name]['type'] != item['type']:
                 for ts in self.type_sets:
-                    if self._page['context'][name]['type'] in ts and item['type'] in ts:
-                        context[name]['type'] = self._page['context'][name]['type']
+                    if self.active_cfile.info['context'][name]['type'] in ts and item['type'] in ts:
+                        context[name]['type'] = self.active_cfile.info['context'][name]['type']
                         break
         return context
-    
-    def get_page(self, pid=None, name=None):
-        if pid is not None:
-            self._page, self._repo = next(((page, cfile.repo) for page, cfile in self.pages if page['id'] == pid))
-        else:
-            self._page, self._repo = next(((page, cfile.repo) for page, cfile in self.pages if page['name'] == name))
-        return self._page, self._repo
     
     def update_context(self, fields, f_types):
         context = {}
@@ -180,7 +218,7 @@ class Pages(_File_Controller):
                 context[name]['value'] = text
             if name in f_types:
                 context[name]['type'] = f_types[name]
-        self._page['context'] = context
+        self.active_cfile.info['context'] = context
         
     def _file_test(self, fn):
         return fn.endswith(self.EXTENSION)
@@ -189,9 +227,9 @@ class Pages(_File_Controller):
         return self._write()
         
     def _write(self):
-        self._page['id'] = max([p['id'] for p, cf in self.pages]) + 1
-        content = json.dumps(self._page, sort_keys=True, indent=4, separators=(',', ': '))
-        return self.write_file(content, self._repo, self._page['name'])
+        self.active_cfile.info['id'] = max([p['id'] for p, cf in self.pages]) + 1
+        content = json.dumps(self.active_cfile.info, sort_keys=True, indent=4, separators=(',', ': '))
+        return self.write_file(content, self._repo, self.active_cfile.info['name'])
 
 class Templates(_File_Controller):
     DIR = TEMPLATES_DIR

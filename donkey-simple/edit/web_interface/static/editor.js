@@ -69,7 +69,7 @@ $.each($('.ace-editor'), function(){
 });
 
 // specific warning function for change of template
-$('[name="page-template"].warn-change').change(function(){
+$('[name="page-template-id"].warn-change').change(function(){
 	bootbox.confirm('Changing the template may involve changing the fields of this page, fields missing from the new Template will be deleted!',
 	function(result) {
 	  if (result){

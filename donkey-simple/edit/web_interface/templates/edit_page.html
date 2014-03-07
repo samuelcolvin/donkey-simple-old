@@ -21,7 +21,7 @@
 	  	<div class="input-group">
 		  <span class="input-group-addon">Page Template</span>
 		  <input name="original-template-id" type="hidden" value="{{ active_page_template_id }}"/>
-		  <select name="page-template-id" class="form-control {%if active_page_template %}warn-change{% endif %}">
+		  <select name="page-template-id" class="form-control {%if active_page_template_id %}warn-change{% endif %}">
 			{% for pt in page_templates %}<option value="{{ pt.id }}" {% if pt.id == active_page_template_id %}selected{% endif %}>{{ pt.display }}</option>
 			{% endfor %}
 		  </select>

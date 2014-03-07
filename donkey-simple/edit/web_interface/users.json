@@ -1,11 +1,11 @@
 {
     "donkey": {
         "admin": true,
-        "cookie": "Rb8P9uqXmx4qx5p",
+        "cookie": "mwMHmeNoDXKGo8v",
         "created": "Tue, 04-Mar-2014 00:00:00 UTC",
         "email": "donkey_simple@example.com",
         "hash": "pbkdf2_sha256$12000$SrbAcNIoZGfQ$6d8dAr+xSiMJIKKkEeDsu1HjaDaAhAyOs05L+idxnA8=",
-        "last_seen": "Thu, 06-Mar-2014 22:30:15 UTC",
+        "last_seen": "Fri, 07-Mar-2014 11:54:13 UTC",
         "session_expires": ""
     }
 }

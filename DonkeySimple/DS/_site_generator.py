@@ -13,35 +13,35 @@ class SiteGenerator(object):
     def generate_entire_site(self):
         self._delete_existing_files()
         page_controller = con.Pages()
-        for p in page_controller.get_pages():
-            self.generate_page(p)
+        for cf in page_controller.cfiles.values():
+            self.generate_page(cf)
         self.generate_statics()
     
-    def generate_page(self, page):
+    def generate_page(self, cfile):
         context = {}
-        for var, item in page['context'].items():
+        for var, item in cfile.info['context'].items():
             context[var] = item['value']
             if item['type'] == 'markdown':
                 context[var] = markdown2.markdown(item['value'])
-        r = tr.RenderTemplate(page['template'])
+        r = tr.RenderTemplate(cfile.info['template'], cfile.repo_path)
         content = r.render(context)
-        fn = os.path.join(self._base_dir, '%s.html' % page['name'])
+        fn = os.path.join(self._base_dir, '%s.html' % cfile.info['name'])
         open(fn, 'w').write(content)
         os.chmod(fn, 0666)
         fn2 = fn
         if len(fn2) > 40:
             fn2 = '...%s' % fn2[-37:]
-        self._output('Generated html file "%s" from page: %s, using template: %s' % (fn2, page['name'], page['template']))
+        self._output('Generated html file "%s" from page: %s, using template: %s' % \
+                     (fn2, cfile.info['name'], cfile.info['template']))
         
     def generate_statics(self):
         static_dst = self._get_static_dir()
         os.mkdir(static_dst)
         os.chmod(static_dst, 0777)
         s = con.Statics()
-        for i, src_name in enumerate(s.get_all_filenames()):
-            src = s.get_path(src_name)
-            dst = os.path.join(static_dst, src_name)
-            shutil.copy(src, dst)
+        for i, src_cfile in enumerate(s.cfiles.values()):
+            dst = os.path.join(static_dst, src_cfile.filename)
+            shutil.copy(src_cfile.path, dst)
             os.chmod(dst, 0666)
         self._output('copied %d static files from "%s" to "%s"' % (i + 1, STATIC_DIR, static_dst))
         

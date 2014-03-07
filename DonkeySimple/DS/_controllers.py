@@ -37,6 +37,10 @@ class _File(object):
         """ 
         return '%s :: %s' % (self.repo, self.filename)
     
+    @property
+    def repo_path(self):
+        return os.path.join(REPOS_DIR, self.repo)
+    
     def is_match(self, repo, name, ext=''):
         """
         Identifies whether or not this file matches the details provided.
@@ -183,7 +187,7 @@ class Pages(_File_Controller):
     
     def get_empty_context(self):
         repo_path = os.path.join(REPOS_DIR, self.active_cfile.repo)
-        r = tr.RenderTemplate(self.active_cfile.info['template'], repo_path)
+        r = tr.RenderTemplate(self.active_cfile.info['template'], self.active_cfile.repo_path)
         return r.get_empty_context()
     
     def load_file(self, cfile):

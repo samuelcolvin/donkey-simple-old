@@ -15,7 +15,7 @@ To do:
 * link generation, static-dir tag
 * default variables eg author, title
 * add fields to page if template has changed - DONE
-* python sessions, user management and site settings - DONE (MOSTLY)
+* python sessions, user management and site settings - DONE
 * deal with more complex types eg. lists for templates
 * download zip of everything option.
 * build script.

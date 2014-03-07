@@ -9,6 +9,21 @@
 	</div>
 </form>
 <div class="row">
+  
+  <!-- Repos -->
+  <div class="col-md-4">
+  	<h3>Repos</h3>
+  	<div class="pad btn-group">
+		<a href="add-repo" class="btn btn-default">Add Repo</a>
+	</div>
+	<div class="list-group">
+		{% for repo in repos %}
+	  		<a href="edit-repo-{{ repo }}" class="list-group-item">{{ repo }}</a>
+	  	{% endfor %}
+	</div>
+  </div>
+  
+  <!-- Pages -->
   <div class="col-md-4">
   	<h3>Pages</h3>
   	<div class="pad">
@@ -20,6 +35,8 @@
 	  	{% endfor %}
 	</div>
   </div>
+  
+  <!-- Templates -->
   <div class="col-md-4">
   	<h3>Templates</h3>
   	<div class="pad btn-group">
@@ -32,6 +49,8 @@
 	  	{% endfor %}
 	</div>
   </div>
+  
+  <!-- Static Files -->
   <div class="col-md-4">
   	<h3>Static Files</h3>
   	<div class="pad btn-group">
@@ -44,6 +63,8 @@
 	  	{% endfor %}
 	</div>
   </div>
+  
+  <!-- Users -->
   {% if admin %}
   <div class="col-md-4">
   	<h3>Users</h3>

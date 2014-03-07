@@ -11,6 +11,8 @@ EDITOR_TEMPLATE_DIR = os.path.join(THIS_PATH, 'templates')
 
 urls = (
     ('logout$', 'logout'),
+    ('add-repo', 'edit_repo'),
+    ('edit-repo-(.+)$', 'edit_repo'),
     ('add-page$', 'edit_page'),
     ('edit-page-last$', 'edit_last_page'),
     ('edit-page-(.+)$', 'edit_page'),

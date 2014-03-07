@@ -1,7 +1,8 @@
 import jinja2, os, cgi, re, httplib, traceback
 import Cookie
-import forms
-import ds
+import DonkeySimple.DS as ds
+from _forms import ProcessForm, AnonFormProcessor
+from _auth import Auth
 
 sg = ds.SiteGenerator
 
@@ -11,16 +12,16 @@ EDITOR_TEMPLATE_DIR = os.path.join(THIS_PATH, 'templates')
 urls = (
     ('logout$', 'logout'),
     ('add-page$', 'edit_page'),
-    ('edit-page-(.+)$', 'edit_page'),
     ('edit-page-last$', 'edit_last_page'),
+    ('edit-page-(.+)$', 'edit_page'),
     ('add-template$', 'edit_template'),
     ('edit-template-(.+)$', 'edit_template'),
     ('add-static$', 'edit_static'),
     ('edit-static-(.+)$', 'edit_static'),
     ('add-user$', 'edit_user'),
     ('user$', 'edit_this_user'),
-    ('edit-user-(.+)$', 'edit_user'),
     ('edit-user-last$', 'edit_last_user'),
+    ('edit-user-(.+)$', 'edit_user'),
     ('set-password-(.+)$', 'set_user_password'),
 )
 
@@ -40,16 +41,16 @@ class View(object):
         self._site_uri = uri[:uri.index('/edit/')]
         e_index = uri.index('/edit/') + 5
         self._site_edit_uri = uri[:e_index] + '/'
-        self._edit_static_uri = join_uri(self._site_edit_uri, 'web_interface/static/')
+        self._edit_static_uri = join_uri(self._site_edit_uri, 'static/')
         fields = cgi.FieldStorage()
         valid_user = self._auth(fields)
         if valid_user:
-            proc_form = forms.ProcessForm(self._add_msg, fields, self.isadmin, self.username)
+            proc_form = ProcessForm(self._add_msg, fields, self.isadmin, self.username)
             if proc_form.regen_users:
                 valid_user = self._auth(fields)
             self.created_item = proc_form.created_item
         else:
-            forms.AnonFormProcessor(self._add_msg, fields)
+            AnonFormProcessor(self._add_msg, fields)
         self._generate_page(uri, loggedin = valid_user)
         
     def _generate_page(self, uri, loggedin = False):
@@ -87,7 +88,7 @@ class View(object):
     def _auth(self, fields):
 #         for name in fields:
 #             print '%s:' % name, fields[name].value
-        auth = ds.Auth()
+        auth = Auth()
         if 'username' in fields and 'password' in fields:
             username = fields['username'].value
             password = fields['password'].value
@@ -154,7 +155,9 @@ class View(object):
         """
         if tid is not None:
             t = ds.con.Templates()
-            self.context['file_name'], self.context['active_repo'], template_text = t.get_file_content(fid=tid)
+            cfile, template_text = t.get_file_content(fid=tid)
+            self.context['file_name'] = cfile.filename
+            self.context['active_repo'] = cfile.repo
             self.context['file_text'] = cgi.escape(template_text)
         else:
             self.context['new_file'] = True
@@ -166,18 +169,19 @@ class View(object):
         self.context['file_type'] = 'Text'
         if sid is not None:
             static = ds.con.Statics()
-            filename, active_repo, content = static.get_file_content(fid=sid)
-            self.context['file_name'] = filename
-            self.context['active_repo'] = active_repo
+            cfile, content = static.get_file_content(fid=sid)
+            self.context['file_name'] = cfile.filename
+            self.context['file_id'] = cfile.id
+            self.context['active_repo'] = cfile.repo
             self.context['file_type'] = static.get_file_type(self.context['file_name'])
-            static_uri = join_uri(self._site_edit_uri, ds.REPOS_DIR, active_repo, static.DIR, filename)
+            static_uri = join_uri(self._site_edit_uri, ds.REPOS_DIR, cfile.repo, static.DIR, cfile.filename)
             if self.context['file_type'] == 'Text':
                 self.context['file_text'] = cgi.escape(content)
             elif self.context['file_type'] == 'Image':
                 self.context['file_image_path'] = static_uri
             elif self.context['file_type'] == 'Font':
                 self.context['font_path'] = static_uri
-                self.context['font_name'] = get_font_name(static.get_path(active_repo, filename))
+                self.context['font_name'] = get_font_name(static.get_path(cfile.repo, cfile.filename))
         else:
             self.context['new_file'] = True
         self.context['action'] = 'edit-static'
@@ -185,22 +189,21 @@ class View(object):
         self._template = self._env.get_template('edit_file.html')
     
     def edit_last_page(self, _):
-        page_con = ds.con.Pages()
-        page, _ = page_con.get_page(name = self.created_item)
-        self.edit_page(page['id'])
+        self.edit_page(self.created_item)
     
     def edit_page(self, pid):
+        print 'pid:', pid
         t_con = ds.con.Templates()
         self.context['page_templates'] = t_con.cfiles.values()
         self.context['other_formats'] = ['markdown', 'html']
         self.context['action_uri'] = self._site_edit_uri + 'edit-page-last'
         if pid is not None:
             page_con = ds.con.Pages()
-            cfile = page_con.get_cfile_pid(pid)
-#             try:
-#                 page, repo = page_con.get_page(pid=pid)
-#             except:
-#                 return self._error_occurred('Page not found', code=httplib.BAD_REQUEST)
+#             cfile = page_con.get_cfile_fid(pid)
+            try:
+                cfile = page_con.get_cfile_fid(pid)
+            except:
+                return self._error_occurred('Page not found', code=httplib.BAD_REQUEST)
             self.context['page_name'] = cfile.info['name']
             self.context['page_templates'] = [fc for fc in t_con.cfiles.values() if fc.repo == cfile.repo]
             self.context['page_context_str'] = []

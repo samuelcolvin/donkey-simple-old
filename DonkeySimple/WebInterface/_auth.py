@@ -11,7 +11,7 @@ import binascii
 from collections import OrderedDict
 import time
 import json, datetime
-from _common import *
+from DonkeySimple.DS import *
 
 UNUSABLE_PASSWORD_PREFIX = '!'
 UNUSABLE_PASSWORD_SUFFIX_LENGTH = 40

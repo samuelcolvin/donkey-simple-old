@@ -103,20 +103,23 @@ class _File_Controller(object):
             cfile = self.get_cfile_name(name, repo)
         with open(cfile.path, 'r') as handle:
             content = handle.read()
-        return cfile.filename, cfile.repo, content
+        return cfile, content
     
-#     def copy_file(self, src, dst):
-#         dst_path = self._get_path_extension(dst)
-#         _, src_path = self.get_cfile(src)
-#         shutil.copy(src_path, dst_path)
-#         self.set_mod(dst_path)
-#         return dst_path
+    def copy_file(self, src_cfile, dst_cfile):
+        shutil.copy(src_cfile.path, dst_cfile.path)
+        dst_cfile.set_mod()
+        self.cfiles.pop(src_cfile.id)
+        return dst_cfile
     
     def write_file(self, content, repo, name):
-        cfile = _File(repo, self.DIR, self._extension_name(name))
+        cfile = self.create_cfile(repo, name)
         cfile.write_file(content)
-        self.cfiles[cfile.id] = cfile
         return cfile
+    
+    def create_cfile(self, repo, name):
+        self.active_cfile = _File(repo, self.DIR, self._extension_name(name))
+        self.cfiles[self.active_cfile.id] = self.active_cfile
+        return self.active_cfile
     
     def delete_file(self, path = None, repo = None, filename = None):
         if path is None:
@@ -124,10 +127,10 @@ class _File_Controller(object):
         cfile.delete_file()
         return self.cfiles.pop(cfile.id)
     
-#     def new_file_path(self, name):
-#         name = name.strip('.')
-#         name = re.sub(r'[\\/]', '', name)
-#         return self.get_path(self._new_name(name))
+    def new_file_path(self, repo, name):
+        name = name.strip('.')
+        name = re.sub(r'[\\/]', '', name)
+        return self.get_path(self._new_name(repo, name))
     
     def _new_name(self, name, repo, num=1):
         def not_existing(name):
@@ -146,7 +149,7 @@ class _File_Controller(object):
             return new_name
         return self._new_name(name, repo, num + 1)
     
-    def get_cfile_pid(self, pid):
+    def get_cfile_fid(self, pid):
         self.active_cfile = self.cfiles[pid]
         return self.active_cfile 
     
@@ -168,15 +171,15 @@ class _File_Controller(object):
 class Pages(_File_Controller):
     DIR = PAGE_DIR
     EXTENSION = '.json'
-    _page = {}
     type_sets = [['string'], ['list'], ['html', 'markdown']]
     
     def __init__(self, *args, **kw):
         super(Pages, self).__init__(*args, **kw)
         self._generate_pages()
     
-    def set_name(self, name, template):
-        self.active_cfile.info.update({'name': name, 'template': template})
+    def create_cfile(self, repo, name, template):
+        super(Pages, self).create_cfile(repo, name)
+        self.active_cfile.info = {'name': name, 'template': template}
     
     def get_empty_context(self):
         repo_path = os.path.join(REPOS_DIR, self.active_cfile.repo)
@@ -184,7 +187,7 @@ class Pages(_File_Controller):
         return r.get_empty_context()
     
     def load_file(self, cfile):
-        _, _, text = self.get_file_content(cfile.id)
+        _, text = self.get_file_content(cfile.id)
         return json.loads(text)
     
     def _generate_pages(self):
@@ -227,9 +230,10 @@ class Pages(_File_Controller):
         return self._write()
         
     def _write(self):
-        self.active_cfile.info['id'] = max([p['id'] for p, cf in self.pages]) + 1
+        self.active_cfile.info['id'] = max([cf.info['id'] for cf in self.cfiles.values() if 'id' in cf.info]) + 1
         content = json.dumps(self.active_cfile.info, sort_keys=True, indent=4, separators=(',', ': '))
-        return self.write_file(content, self._repo, self.active_cfile.info['name'])
+        self.active_cfile.write_file(content)
+        return self.active_cfile
 
 class Templates(_File_Controller):
     DIR = TEMPLATES_DIR

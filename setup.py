@@ -8,7 +8,7 @@ setup(name='DonkeySimple',
       author='Samuel Colvin',
       author_email='S@muelColvin.com',
       url='http://www.scolvin.com',
-      packages=['DonkeySimple', 'DonkeySimple.Build', 'DonkeySimple.WebInterface'],
+      packages=['DonkeySimple', 'DonkeySimple.DS', 'DonkeySimple.WebInterface'],
       package_data={'DonkeySimple': [
         'site-template/*.*',
         'site-template/static/*.*',

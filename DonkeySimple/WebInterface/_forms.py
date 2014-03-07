@@ -1,5 +1,5 @@
 import os
-import ds
+import DonkeySimple.DS as ds
 import HTMLParser
 
 class UniversalProcessor(object):
@@ -62,20 +62,19 @@ class ProcessForm(UniversalProcessor):
             return
         page_name = self.fields['page-name'].value
         t_con = ds.con.Templates()
-        template = t_con.get_cfile(int(self.fields['page-template-id'].value))
-        page_con.set_name(page_name, template.filename)
+        template = t_con.get_cfile_fid(self.fields['page-template-id'].value)
+        page_con.create_cfile(template.repo, page_name, template.filename)
         context = dict([(name, self.fields[name].value) for name in self.fields])
         ftypes = dict([(name.replace('contype-', ''), self.fields[name].value) for name in self.fields if name.startswith('contype-')])
         page_con.update_context(context, ftypes)
         page = page_con.generate_page()
-        print 'page.id:', page.id
         self.created_item = page.id
         self._add_msg('"%s" successfully saved' % page.filename, 'success')
         
     def delete_page(self):
         page = ds.con.Pages()
         t_con = ds.con.Templates()
-        template = t_con.get_cfile(int(self.fields['page-template-id'].value))
+        template = t_con.get_cfile_fid(self.fields['page-template-id'].value)
         self._delete_file(page, None, 'page-name', repo = template.repo)
         
     def edit_template(self):
@@ -95,16 +94,20 @@ class ProcessForm(UniversalProcessor):
         
     def edit_static(self):
         static = ds.con.Statics()
+        repo = self.fields['repo'].value
         if self.fields['file-type'].value == 'Text':
             text = self._unescape_file_text()
-            fname = static.write_file(text, self.fields['file-name'].value)
+            name = self.fields['file-name'].value
+            cfile = static.write_file(text, repo, name)
         else:
-            src = self.fields['previous-file-name'].value
-            dst = self.fields['file-name'].value
-            if src == dst:
+            src_id = self.fields['previous-file-id'].value
+            src_cfile = static.cfiles[src_id]
+            dst_name = self.fields['file-name'].value
+            dst_cfile = static.create_cfile(repo, dst_name)
+            if src_id == dst_cfile.id:
                 return
-            fname = static.copy_file(src, dst)
-        self._add_msg('"%s" successfully saved' % fname, 'success')
+            cfile = static.copy_file(src_cfile, dst_cfile)
+        self._add_msg('"%s" successfully saved' % cfile.filename, 'success')
             
     def delete_static(self):
         static = ds.con.Statics()

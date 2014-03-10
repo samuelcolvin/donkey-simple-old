@@ -26,14 +26,14 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{{ edit_uri }}">{{title}}</a>
+          <a class="navbar-brand" href="{{ edit_uri }}">{{ site_title }}</a>
         </div>
         <div class="navbar-collapse collapse">
-          <!-- <ul class="nav navbar-nav">
+          {# <ul class="nav navbar-nav">
             <li class="active"><a href="#">Link</a></li>
             <li><a href="#">Link</a></li>
             <li><a href="#">Link</a></li>
-          </ul> -->
+          </ul> #}
           <ul class="nav navbar-nav navbar-right">
             <li><a href="user">{{ username }}</a></li>
             <li><a href="logout">Logout</a></li>
@@ -43,7 +43,8 @@
     
     
       	<div class="page-header">
-	        <p>{% block page_tag %}{% endblock %}</p>
+	        <h3>{% block page_tag %}{% endblock %}</h3>
+	        <div>{% block page_comment %}{% endblock %}</div>
 	    </div>
 		{% if info %}
 		<div class="alert alert-info">
@@ -69,6 +70,13 @@
 		<div class="alert alert-danger" style="display:none"></div>
 		{% endif %}
 		
+		{% if warnings %}
+		<div class="alert alert-warning">
+			{% for warning in warnings %} <p> {{warning}} </p> {% endfor %}
+		</div>
+		{% else %}
+		<div class="alert alert-warning" style="display:none"></div>
+		{% endif %}
 	  	{% block content %}Content not defined.{% endblock %}
 	</div>
 	{% block js %}

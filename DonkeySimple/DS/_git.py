@@ -1,53 +1,85 @@
-import git, os
+import git, os, subprocess, traceback
 
 class Git(object):
     """
-    Similar git controller class.
+    Simple git controller class.
     """
-    def __init__(self, gdir, url=None):
+    def __init__(self, gdir, output=None):
         self.gdir = gdir
-        self.url = url
-        if os.path.exists(gdir):
-            self._pull()
+        self.dot_gdir = os.path.join(gdir, '.git')
+        if output is not None:
+            self._output = output
+                
+    def pull_clone_create(self, url = None):
+        """
+        Pulls, clones or creates based status of repo and url.
+        """
+        if os.path.exists(self.gdir):
+            if os.path.exists(self.dot_gdir):
+                self._output('Pulling:')
+                self.pull()
+            else:
+                self._output('Not a git repo, not initialising')
+                self.create_repo()
         else:
             if url:
-                self._clone()
+                self._output('Cloning:')
+                self.clone(url)
             else:
-                self._create_repo()
-    
-    def _clone(self, url):
-        print git.Git().clone(self.url, self.gdir)
-        # or self.repo.clone(folder)
-        self.repo = self._open_repo()
+                self._output('Creating Repo:')
+                self.create_repo()
+                
+    def open_create(self):
+        """
+        Open repo or create if it doesn't exist.
         
-    def _pull(self):
-        print git.cmd.Git(self.gdir).pull()
-        self.repo = self._open_repo()
+        returns whether or not repo already existed.
+        """
+        if os.path.exists(self.dot_gdir):
+            self._output('Opening Repo')
+            self.open_repo()
+            return True
+        else:
+            self._output('Creating Repo')
+            self.create_repo()
+            return False
+    
+    def clone(self, url):
+        self._output(git.Git().clone(url, self.gdir))
+        # or self.repo.clone(folder)
+        self.open_repo()
+        
+    def pull(self):
+        response = None
+        if self.has_remotes(self._open_repo()):
+            response = self._output(git.cmd.Git(self.gdir).pull())
+        else:
+            self._output('No remotes, not pulling.')
+        self.open_repo()
+        return response
         # (or self.repo.remotes.origin.pull(), but cmd gives more details)
     
-    def _create_repo(self):
+    def create_repo(self):
         self.repo = git.Repo.init(self.gdir)
+        
+    def open_repo(self):
+        self.repo = self._open_repo()
     
     def _open_repo(self):
         return git.Repo(self.gdir)
-    
-    def add_all(self, do_untracked=True):
-        """
-        Stage modified and (optionally) untracked files.
-        """
-        # or could use self.repo.git.commit(m="message", a=True)
-        if self.repo.is_dirty():
-            modified = self.modified_files()
-            print 'staging modified:', modified
-            self.add(modified)
-        if do_untracked:
-            untracked = self.repo.untracked_files
-            if len(untracked) > 0:
-                print 'adding untracked:', untracked
-                self.add(untracked)
                 
-    def get_status(self):
-        return sel.repo.git.status()
+    def status(self):
+        return self._output(self.repo.git.status())
+    
+    def uptodate(self, status = None):
+        """
+        whether or not the repo is up-to-date eg. matches remotes
+        with no untracked or modified files.
+        """
+        if status is None:
+            status = self.status()
+        return 'nothing to commit, working directory clean' in status \
+                and 'Your branch is ahead' not in status
         
     def tracked_files(self):
         return [name for name, _ in self.repo.index.entries.keys()]
@@ -58,15 +90,69 @@ class Git(object):
     def modified_files(self):
         return [diff.a_blob.name for diff in self.repo.index.diff(None)]
     
-    def add(self, rel_paths):
+    
+    def add_all(self, do_untracked=True):
         """
-        Stage list of files.
+        Stage modified and (optionally) untracked files.
         """
-        self.repo.index.add(rel_paths)
+        return self._chdir_ex(self._add_all, do_untracked)
+
+    def _add_all(self, do_untracked):
+        p=self._do_command('git add %s' % ('', '-A')[do_untracked])
         
-    def commit(self, msg):
-        return self.repo.index.commit(msg)
+    def commit(self, message, all=True):
+        return self._chdir_ex(self._commit, message, all)
+        
+    def _commit(self, message, all=True):
+        p=self._do_command('git commit %s -m "%s"' % (('', '-a')[all], message))
+        return self._output(p.stdout.read())
+#         return self._output(self.repo.git.commit(m= ' "%s"' % message, a=''))
+#         return self._output(self.repo.index.commit(message))
         
     def push(self):
-        return self.repo.remotes.origin.push()
-        # or git.cmd.Git('testing2.git').push() gives no more details
+        #return self._output(self.repo.remotes.origin.push())
+        return self._output(git.cmd.Git(self.gdir).push())
+        
+    def has_remotes(self, repo = None):
+        if repo is None:
+            repo = self.repo
+        return len(repo.remotes) > 0
+        
+    def _output(self, *args):
+        if len(args) == 1:
+            print args[0]
+            return args[0]
+        for arg in args:
+            print arg
+        return args
+    
+    def set_user(self, email, name):
+        self._chdir_ex(self._set_user, email, name)
+            
+    def _set_user(self, email, name):
+        commands = ('git config user.email "%s"' % email,
+                    'git config user.name "%s"' % name)
+        for c in commands:
+            self._do_command(c)
+    
+    def _chdir_ex(self, execute_func, *args):
+        """
+        execute function after changing working directory
+        """
+        working_path = os.getcwd()
+        os.chdir(self.gdir)
+        response = None
+        try:
+            response = execute_func(*args)
+        except Exception, e:
+            traceback.print_exc()
+            raise(e)
+        finally:
+            os.chdir(working_path)
+        return response
+            
+    def _do_command(self, command):
+        return subprocess.Popen(command, 
+                               stdout=subprocess.PIPE, 
+                               stderr=subprocess.PIPE, 
+                               shell=True)

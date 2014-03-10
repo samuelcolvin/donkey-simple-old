@@ -5,11 +5,11 @@ from _common import *
 import os, shutil, json
 import HTMLParser
 import _template_renderer as tr
-import re, base64, hashlib
+import re, base64, hashlib, pwd
 
 def get_all_repos():
     """
-    Generator for all repos in this site.
+    Generator for all repos in the site.
     """
     for repo in os.listdir(REPOS_DIR):
         repo_path = os.path.join(REPOS_DIR, repo)
@@ -65,8 +65,7 @@ class _File(object):
         self.set_mod()
     
     def set_mod(self):
-        os.chmod(self.path, 0666)
-        
+        chmod_own(self.path, 0666)
 
 class _File_Controller(object):
     """
@@ -93,6 +92,9 @@ class _File_Controller(object):
         """
         for repo, repo_path in get_all_repos():
             directory = os.path.join(repo_path, self.DIR)
+            if not os.path.exists(directory):
+                os.mkdir(directory)
+                chmod_own(directory, 0777)
             for fn in os.listdir(directory):
                 if self._file_test(fn) and fn not in self.perm_files:
                     yield _File(repo, self.DIR, fn)
@@ -267,4 +269,10 @@ class Statics(_File_Controller):
             if file_name.endswith(ext):
                 return True
         return False
+    
+def chmod_own(path, perms):
+#     http_id = pwd.getpwnam(HTTP_USER).pw_uid
+#     local_id = pwd.getpwnam(LOCAL_USER).pw_uid
+    os.chmod(path, perms)
+#     os.lchown(path, -1, local_id)
     

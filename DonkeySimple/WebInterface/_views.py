@@ -12,7 +12,7 @@ EDITOR_TEMPLATE_DIR = os.path.join(THIS_PATH, 'templates')
 urls = (
     ('logout$', 'logout'),
     ('add-repo', 'edit_repo'),
-    ('edit-repo-(.+)$', 'edit_repo'),
+    ('view-repo-(.+)$', 'view_repo'),
     ('add-page$', 'edit_page'),
     ('edit-page-last$', 'edit_last_page'),
     ('edit-page-(.+)$', 'edit_page'),
@@ -56,12 +56,16 @@ class View(object):
         self._generate_page(uri, loggedin = valid_user)
         
     def _generate_page(self, uri, loggedin = False):
-        self.context = {'title': '%s Editor' % ds.SITE_NAME, 'static_uri': self._edit_static_uri, 
-                   'edit_uri': self._site_edit_uri, 'site_uri': self._site_uri}
+        self.context = {'title': '%s Editor' % ds.SITE_NAME, 'site_title': '%s Editor' % ds.SITE_NAME, 
+                        'static_uri': self._edit_static_uri, 'edit_uri': self._site_edit_uri,
+                        'site_uri': self._site_uri}
         if loggedin:
             self.context.update({'username': self.username, 'admin': self.user['admin']})
         self.context.update(ds.SETTINGS_DICT)
-        self.context['repos'] = [r for r, _ in ds.con.get_all_repos()]
+        self.repo_paths = list(ds.con.get_all_repos())
+        self.context['repos'] = [r for r, _ in self.repo_paths]
+        if len(self.context['repos']) == 0:
+            self._add_msg('REPOS directory is empty: there are no repos, pages, templates or static files')
         print 'uri: %r' % uri
         if not loggedin:
             if 'reset-password' in uri:
@@ -132,23 +136,49 @@ class View(object):
         self.location = 'Location: %s\n' % self._site_edit_uri
     
     def index(self):
-        self._template = self._env.get_template('edit_index.html')
-        page_con = ds.con.Pages()
-        self.context['pages'] = []
-        for cf in page_con.cfiles.values():
-            self.context['pages'].append({'link': 'edit-page-%s' % cf.id, 'name': cf.display})
-        self.context['templates'] = []
-        t = ds.con.Templates()
-        for cf in t.cfiles.values():
-            self.context['templates'].append({'link': 'edit-template-%s' % cf.id, 'name': cf.display})
-        self.context['static_files'] = []
-        s = ds.con.Statics()
-        for cf in s.cfiles.values():
-            self.context['static_files'].append({'link': 'edit-static-%s' % cf.id, 'name': cf.display})
-        if self.isadmin:
-            self.context['users'] = []
-            for u in self.all_users:
-                self.context['users'].append({'link': 'edit-user-%s' % u, 'name': u})
+        self._template = self._env.get_template('index.html')
+        try:
+            page_con = ds.con.Pages()
+            self.context['pages'] = []
+            for cf in page_con.cfiles.values():
+                self.context['pages'].append({'link': 'edit-page-%s' % cf.id, 'name': cf.display})
+            self.context['templates'] = []
+            t = ds.con.Templates()
+            for cf in t.cfiles.values():
+                self.context['templates'].append({'link': 'edit-template-%s' % cf.id, 'name': cf.display})
+            self.context['static_files'] = []
+            s = ds.con.Statics()
+            for cf in s.cfiles.values():
+                self.context['static_files'].append({'link': 'edit-static-%s' % cf.id, 'name': cf.display})
+            if self.isadmin:
+                self.context['users'] = []
+                for u in self.all_users:
+                    self.context['users'].append({'link': 'edit-user-%s' % u, 'name': u})
+        except Exception, e:
+            return self._error_page(e, traceback.format_exc())
+        
+    def view_repo(self, repo_name):
+        self.context['repo_name'] = repo_name
+        self.context['title'] = repo_name
+        self.context['action_uri'] = self._site_edit_uri + 'view-repo-' + repo_name
+        
+        repo_path = (p for r, p in self.repo_paths if r == repo_name).next()
+        git_repo = ds.Git(repo_path)
+        if not git_repo.open_create():
+            self._add_msg('Repo created from scratch')
+        
+        self.context['has_remotes'] = git_repo.has_remotes()
+        if not self.context['has_remotes']:
+            self._add_msg('Repo has no Remotes. To add one, run "git remote add origin &lt;giturl&gt;"')
+        self.context['untracked_files'] = git_repo.untracked_files()
+        self.context['modified_files'] = git_repo.modified_files()
+        self.context['tracked_files'] = git_repo.tracked_files()
+        self.context['status'] = git_repo.status()
+        if git_repo.uptodate(self.context['status']):
+            self._add_msg('Repo is up-to-date')
+        else:
+            self._add_msg('Repo not up-to-date', 'errors')
+        self._template = self._env.get_template('repos.html')
     
     def edit_template(self, tid):
         self.context['help_statement'] = """
@@ -205,7 +235,7 @@ class View(object):
             try:
                 cfile = page_con.get_cfile_fid(pid)
             except:
-                return self._error_occurred('Page not found', code=httplib.BAD_REQUEST)
+                return self._error_page('Page not found', code=httplib.BAD_REQUEST)
             self.context['page_name'] = cfile.info['name']
             self.context['page_templates'] = [fc for fc in t_con.cfiles.values() if fc.repo == cfile.repo]
             self.context['page_context_str'] = []
@@ -262,15 +292,15 @@ class View(object):
     def _permission_denied(self):
         self._bad('You do not have permission to view this page.', code=httplib.FORBIDDEN)
         
-    def _error_occurred(self, e, code = httplib.INTERNAL_SERVER_ERROR):
-        self._bad(str(e),error=e, code=code)
+    def _error_page(self, e, error_details = None, code = httplib.INTERNAL_SERVER_ERROR):
+        self._bad(str(e),error_details=error_details, code=code)
         
-    def _bad(self, error_description, error = None, code = httplib.BAD_REQUEST):
+    def _bad(self, error_name, error_details = None, code = httplib.BAD_REQUEST):
         self.context['error'] = '%d %s' % (code, httplib.responses[code])
         self.response_code = 'Status: %s\n' % self.context['error']
-        self.context['description'] = error_description
-        if error:
-            self.context['error_details'] = str(error)
+        self.context['error_name'] = error_name
+        if error_details:
+            self.context['error_details'] = str(error_details)
             traceback.print_exc()
         self._template = self._env.get_template('bad.html')
     

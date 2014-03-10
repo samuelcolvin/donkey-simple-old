@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block page_tag %}{{ error }}{% endblock %}
 {% block content %}
-<h2>{{ error }}: {{ description }}</h2>
+<h2>{{ error }}: {{ error_name }}</h2>
 {% if error_details %}
 <pre>{{ error_details }}</pre>
 {% endif %}

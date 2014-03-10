@@ -55,6 +55,39 @@ class ProcessForm(UniversalProcessor):
         ds.SiteGenerator(self._add_msg).generate_entire_site()
         self._add_msg('Site generated successfully', 'success')
         
+    def pull_repo(self):
+        repo_name = self.fields['repo'].value
+        repo_path = self._get_repo_path(repo_name)
+        git_repo = ds.Git(repo_path)
+        self._add_msg('Pull Response: ' + str(git_repo.pull()))
+    
+    def push_repo(self):
+        repo_name = self.fields['repo'].value
+        repo_path = self._get_repo_path(repo_name)
+        git_repo = ds.Git(repo_path)
+        git_repo.open_repo()
+        try:
+            response = str(git_repo.push())
+        except Exception, e:
+            [self._add_msg(l, 'errors') for l in str(e).split('\n')]
+        else:
+            self._add_msg('Push successful, response: ' + response)
+            
+    def commit_repo(self):
+        repo_name = self.fields['repo'].value
+        repo_path = self._get_repo_path(repo_name)
+        git_repo = ds.Git(repo_path)
+        git_repo.open_repo()
+        msg = 'empty'
+        if 'commit-msg' in self.fields:
+            msg = self.fields['commit-msg'].value
+        git_repo.add_all()
+        git_repo.set_user(ds.GIT_EMAIL, ds.GIT_NAME)
+        [self._add_msg(line) for line in git_repo.commit(msg).split('\n')]
+        
+    def _get_repo_path(self, name):
+        return (p for r, p in ds.con.get_all_repos() if r == name).next()
+        
     def edit_page(self):
         page_con = ds.con.Pages()
         if 'page-name' not in self.fields:
@@ -69,7 +102,7 @@ class ProcessForm(UniversalProcessor):
         page_con.update_context(context, ftypes)
         page = page_con.generate_page()
         self.created_item = page.id
-        self._add_msg('"%s" successfully saved' % page.filename, 'success')
+        self._add_msg('"%s" successfully saved' % page.display, 'success')
         
     def delete_page(self):
         page = ds.con.Pages()
@@ -82,8 +115,8 @@ class ProcessForm(UniversalProcessor):
         text = self._unescape_file_text()
         filename = self.fields['file-name'].value
         repo = self.fields['repo'].value
-        fname = t.write_file(text, repo, filename)
-        self._add_msg('"%s" successfully saved' % fname, 'success')
+        template = t.write_file(text, repo, filename)
+        self._add_msg('"%s" successfully saved' % template.display, 'success')
         
     def delete_template(self):
         t = ds.con.Templates()
@@ -107,7 +140,7 @@ class ProcessForm(UniversalProcessor):
             if src_id == dst_cfile.id:
                 return
             cfile = static.copy_file(src_cfile, dst_cfile)
-        self._add_msg('"%s" successfully saved' % cfile.filename, 'success')
+        self._add_msg('"%s" successfully saved' % cfile.display, 'success')
             
     def delete_static(self):
         static = ds.con.Statics()

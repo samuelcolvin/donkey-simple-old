@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block page_tag %}{{ title }}{% endblock %}
+{% block content %}
+
+<form id="form" action="{{ action_uri }}" method="post" class="pad">
+	<input name="action" type="hidden" value="repo"/>
+	<input name="repo" type="hidden" value="{{ repo_name }}"/>
+	<div class="btn-group form-group">
+	  <input altaction="pull-repo" type="submit" class="btn btn-default" 
+	  	{% if not has_remotes %}disabled="disabled"{% endif %} value="Pull">
+	  <button class="btn btn-default" data-toggle="modal" data-target="#commit-modal">
+	  	Add All &amp; Commit
+	  </button>
+	  {# (Push is disabled as no safe password solution is easily available)
+	  <input altaction="push-repo" type="submit" class="btn btn-default"
+	    {% if not has_remotes %}disabled="disabled"{% endif %} value="Push">
+	  #}
+	</div>
+	<div class="help-block">
+	<p>Pushing (and Pulling from private repositories) is not supported from the web interface as there's 
+		no safe and easy way to authenticate. Use the command line interface instead.</p>
+	</div>
+
+	<div class="modal fade" id="commit-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" id="modal-title">Commit Message</h4>
+	      </div>
+	      <div class="modal-body">
+	        <textarea name="commit-msg" class="form-control" rows="3" placeholder="commit message..."></textarea>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+	        <input altaction="commit-repo" type="submit" class="btn btn-primary" value="Commit">
+	      </div>
+	    </div>
+	  </div>
+	</div>
+</form>
+
+{% if untracked_files %}
+	<h4>Untracked Files</h4>
+	<div class="list-group">
+		{% for file in untracked_files %}
+	  		<div class="list-group-item">{{ file }}</div>
+	  	{% endfor %}
+	</div>
+{% endif %}
+
+
+{% if modified_files %}
+	<h4>Modified Files</h4>
+	<div class="list-group">
+		{% for file in modified_files %}
+	  		<div class="list-group-item">{{ file }}</div>
+	  	{% endfor %}
+	</div>
+{% endif %}
+
+{% if tracked_files %}
+	<h4>Tracked Files</h4>
+	<div class="list-group">
+		{% for file in tracked_files %}
+	  		<div class="list-group-item">{{ file }}</div>
+	  	{% endfor %}
+	</div>
+{% endif %}
+
+{% if status %}
+<h4>Status:</h4>
+<pre>{{ status }}</pre>
+{% endif %}
+
+{% endblock %}
+
+{% block js %}
+{{ super() }}
+<script src="{{ static_uri }}editor.js"></script>
+{% endblock %}

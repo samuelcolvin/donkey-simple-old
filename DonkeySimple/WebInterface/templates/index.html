@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block page_tag %}Site Editor - edit, add and delete templates, pages and static files.{% endblock %}
+{% block page_tag %}Site Editor{% endblock %}
+{% block page_comment %}Edit, add and delete templates, pages and static files.{% endblock %}
 {% block content %}
 <form action="" method="post">
 	<input name="action" type="hidden" value="generate-site"/>
@@ -18,7 +19,7 @@
 	</div>
 	<div class="list-group">
 		{% for repo in repos %}
-	  		<a href="edit-repo-{{ repo }}" class="list-group-item">{{ repo }}</a>
+	  		<a href="view-repo-{{ repo }}" class="list-group-item">{{ repo }}</a>
 	  	{% endfor %}
 	</div>
   </div>

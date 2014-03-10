@@ -3,6 +3,10 @@ SITE_NAME = 'Site'
 PASSWORD_EXPIRE_HOURS = 24
 SHORT_RANDOM = 'adjeods'
 COOKIE_NAME = 'ds-' + SHORT_RANDOM
+HTTP_USER = 'www-data'
+LOCAL_USER = 'samuel'
+GIT_EMAIL = 'donkey-simple@example.com'
+GIT_NAME = 'DONKEY'
 
 # # email settings
 # EMAIL_HOST = 'localhost'

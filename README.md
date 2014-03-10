@@ -10,12 +10,15 @@ To do:
 * fix markdown/html rendering based on dropdown - DONE
 * add static files - upload, move into place - DONE
 * allow editing of static files- DONE
-* get pull and push to git working
+* get pull and push to git working - DONE
+* global variables eg author, title, checkbox for override on pages
+* global vars to include static-dir, list of pages etc.
+* glboal vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?)
 * static file compression and organising
-* link generation, static-dir tag
-* default variables eg author, title
+* link generation (link to a specific page), static-dir tag
+* allow pages to use template from different repo (save repo in page)
+* library static files should be downloaded
 * add fields to page if template has changed - DONE
 * python sessions, user management and site settings - DONE
-* deal with more complex types eg. lists for templates
 * download zip of everything option.
 * build script.

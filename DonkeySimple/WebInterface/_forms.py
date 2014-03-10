@@ -4,7 +4,7 @@ import HTMLParser
 
 class UniversalProcessor(object):
     def process(self, fields):
-        if 'action' in fields:
+        if 'function' in fields:
             for name in fields:
                 print '%s:' % name, 
                 if hasattr(fields[name], 'value'):
@@ -14,7 +14,7 @@ class UniversalProcessor(object):
                         print fields[name].value
                 else:
                     print fields[name]
-            action_func = fields['action'].value.replace('-', '_')
+            action_func = fields['function'].value.replace('-', '_')
             if hasattr(self, action_func):
                 self.fields = fields
                 getattr(self, action_func)()
@@ -55,11 +55,32 @@ class ProcessForm(UniversalProcessor):
         ds.SiteGenerator(self._add_msg).generate_entire_site()
         self._add_msg('Site generated successfully', 'success')
         
+    def add_repo(self):
+        repo_name = self.fields['repo'].value
+        repo_name, repo_path = ds.con.new_repo_path(repo_name)
+        git_repo = ds.Git(repo_path)
+        url = None
+        if 'repo-url' in self.fields:
+            url = self.fields['repo-url'].value
+        git_repo.pull_clone_create(url)
+        ds.con.repeat_owners_permission()
+        self._add_msg('Repo successfully created')
+        
+    def delete_repo(self):
+        repo_name = self.fields['repo'].value
+        repo_path = self._get_repo_path(repo_name)
+        ds.con.delete_tree(repo_path)
+        self._add_msg('Repo Deleted', 'success')
+        
+        
     def pull_repo(self):
         repo_name = self.fields['repo'].value
         repo_path = self._get_repo_path(repo_name)
         git_repo = ds.Git(repo_path)
-        self._add_msg('Pull Response: ' + str(git_repo.pull()))
+        response = str(git_repo.pull())
+        ds.con.repeat_owners_permission()
+        self._add_msg('Pull Response: ')
+        [self._add_msg(l) for l in response.split('\n')]
     
     def push_repo(self):
         repo_name = self.fields['repo'].value
@@ -83,6 +104,7 @@ class ProcessForm(UniversalProcessor):
             msg = self.fields['commit-msg'].value
         git_repo.add_all()
         git_repo.set_user(ds.GIT_EMAIL, ds.GIT_NAME)
+        ds.con.repeat_owners_permission()
         [self._add_msg(line) for line in git_repo.commit(msg).split('\n')]
         
     def _get_repo_path(self, name):

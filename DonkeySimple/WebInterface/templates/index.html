@@ -3,26 +3,13 @@
 {% block page_comment %}Edit, add and delete templates, pages and static files.{% endblock %}
 {% block content %}
 <form action="" method="post">
-	<input name="action" type="hidden" value="generate-site"/>
+	<input name="function" type="hidden" value="generate-site"/>
 	<div class="btn-group">
 	  <button class="btn btn-default">Generate Site</button>
 	  <a class="btn btn-default" href="{{ site_uri }}">Go to {{ SITE_NAME }}</a>
 	</div>
 </form>
 <div class="row">
-  
-  <!-- Repos -->
-  <div class="col-md-4">
-  	<h3>Repos</h3>
-  	<div class="pad btn-group">
-		<a href="add-repo" class="btn btn-default">Add Repo</a>
-	</div>
-	<div class="list-group">
-		{% for repo in repos %}
-	  		<a href="view-repo-{{ repo }}" class="list-group-item">{{ repo }}</a>
-	  	{% endfor %}
-	</div>
-  </div>
   
   <!-- Pages -->
   <div class="col-md-4">
@@ -61,6 +48,47 @@
 	<div class="list-group">
 		{% for item in static_files %}
 	  		<a href="{{item.link}}" class="list-group-item">{{item.name}}</a>
+	  	{% endfor %}
+	</div>
+  </div>
+</div>
+<div class="row">
+  
+  <!-- Repos -->
+  <div class="col-md-4">
+  	<h3>Repos</h3>
+  	<div class="pad btn-group">
+		<button class="btn btn-default" data-toggle="modal" data-target="#repo-modal">Add Repo</button>
+	</div>
+	<div class="modal fade" id="repo-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <form class="modal-content" action="{{ edit_uri }}" method="post">
+	      <input name="function" type="hidden" value="add-repo"/>
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" id="modal-title">Add Git Repository</h4>
+	      </div>
+	      <div class="modal-body">
+			  <div class="form-group">
+			    <label for="repo-dir">Directory</label>
+			    <input type="text" class="form-control" id="repo-dir" name="repo" placeholder="directory name">
+			  </div>
+			  <div class="form-group">
+			    <label for="repo-url">Url</label>
+			    <input type="text" class="form-control" id="repo-url" name="repo-url" placeholder="http://...">
+			    <p class="help-block">Leave blank for no remote origin or to add origin later.</p>
+			  </div>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+	        <input type="submit" class="btn btn-primary" value="Add Repo">
+	      </div>
+	    </form>
+	  </div>
+	</div>
+	<div class="list-group">
+		{% for repo in repos %}
+	  		<a href="view-repo-{{ repo }}" class="list-group-item">{{ repo }}</a>
 	  	{% endfor %}
 	</div>
   </div>

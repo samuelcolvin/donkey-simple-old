@@ -193,7 +193,7 @@ class View(object):
             self.context['file_text'] = cgi.escape(template_text)
         else:
             self.context['new_file'] = True
-        self.context['action'] = 'edit-template'
+        self.context['function'] = 'edit-template'
         self.context['delete_action'] = 'delete-template'
         self._template = self._env.get_template('edit_file.html')
     
@@ -216,7 +216,7 @@ class View(object):
                 self.context['font_name'] = get_font_name(static.get_path(cfile.repo, cfile.filename))
         else:
             self.context['new_file'] = True
-        self.context['action'] = 'edit-static'
+        self.context['function'] = 'edit-static'
         self.context['delete_action'] = 'delete-static'
         self._template = self._env.get_template('edit_file.html')
     

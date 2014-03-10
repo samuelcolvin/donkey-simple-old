@@ -95,17 +95,13 @@ class Git(object):
         """
         Stage modified and (optionally) untracked files.
         """
-        return self._chdir_ex(self._add_all, do_untracked)
-
-    def _add_all(self, do_untracked):
-        p=self._do_command('git add %s' % ('', '-A')[do_untracked])
+        with Change2Directory(self.gdir):
+            self._do_command('git add %s' % ('', '-A')[do_untracked])
         
     def commit(self, message, all=True):
-        return self._chdir_ex(self._commit, message, all)
-        
-    def _commit(self, message, all=True):
-        p=self._do_command('git commit %s -m "%s"' % (('', '-a')[all], message))
-        return self._output(p.stdout.read())
+        with Change2Directory(self.gdir):
+            p=self._do_command('git commit %s -m "%s"' % (('', '-a')[all], message))
+            return self._output(p.stdout.read())
 #         return self._output(self.repo.git.commit(m= ' "%s"' % message, a=''))
 #         return self._output(self.repo.index.commit(message))
         
@@ -127,32 +123,28 @@ class Git(object):
         return args
     
     def set_user(self, email, name):
-        self._chdir_ex(self._set_user, email, name)
-            
-    def _set_user(self, email, name):
-        commands = ('git config user.email "%s"' % email,
-                    'git config user.name "%s"' % name)
-        for c in commands:
-            self._do_command(c)
-    
-    def _chdir_ex(self, execute_func, *args):
-        """
-        execute function after changing working directory
-        """
-        working_path = os.getcwd()
-        os.chdir(self.gdir)
-        response = None
-        try:
-            response = execute_func(*args)
-        except Exception, e:
-            traceback.print_exc()
-            raise(e)
-        finally:
-            os.chdir(working_path)
-        return response
+        with Change2Directory(self.gdir):
+            commands = ('git config user.email "%s"' % email,
+                        'git config user.name "%s"' % name)
+            for c in commands:
+                self._do_command(c)
             
     def _do_command(self, command):
         return subprocess.Popen(command, 
                                stdout=subprocess.PIPE, 
                                stderr=subprocess.PIPE, 
                                shell=True)
+        
+class Change2Directory(object):
+    """
+    change working directory and always return
+    """
+    def __init__(self, change_to):
+        self.change_to = change_to
+    
+    def __enter__(self):
+        self.working_path = os.getcwd()
+        os.chdir(self.change_to)
+    
+    def __exit__(self, type, value, traceback):
+        os.chdir(self.working_path)

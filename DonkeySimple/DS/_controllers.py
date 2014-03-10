@@ -5,7 +5,7 @@ from _common import *
 import os, shutil, json
 import HTMLParser
 import _template_renderer as tr
-import re, base64, hashlib, pwd
+import re, base64, hashlib, pwd, subprocess
 
 def get_all_repos():
     """
@@ -15,6 +15,22 @@ def get_all_repos():
         repo_path = os.path.join(REPOS_DIR, repo)
         if os.path.isdir(repo_path):
             yield repo, repo_path
+            
+def new_repo_path(repo):
+    """
+    Generate path for a new repo, throw error if it exists
+    """
+    repo = re.sub(r'[\\/]', '', repo)
+    repo_path = os.path.join(REPOS_DIR, repo)
+    if os.path.exists(repo_path):
+        raise(Exception('path "%s" already exists, cannot create repo' % repo_path))
+    return repo, repo_path
+
+def repeat_owners_permission():
+    subprocess.call('chmod -R a+u %s' % REPOS_DIR, shell=True)
+    
+def delete_tree(repo_path):
+    shutil.rmtree(repo_path)
             
 class _File(object):
     """

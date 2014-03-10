@@ -1,8 +1,12 @@
 // change action for alternative submit buttons
 $('[type=submit]').click(function(){
-	var action = $(this).attr('altaction');
-	if (typeof(action) != 'undefined'){
-		$('[name="action"]').val(action);
+	var altfunction = $(this).attr('altfunction');
+	if (typeof(altfunction) != 'undefined'){
+		$('[name="function"]').val(altfunction);
+	}
+	var altaction = $(this).attr('altaction');
+	if (typeof(altaction) != 'undefined'){
+		$(this).closest('form').attr("action", altaction);
 	}
 });
 

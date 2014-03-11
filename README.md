@@ -17,8 +17,8 @@ To do:
 * static file compression and organising
 * link generation (link to a specific page), static-dir tag
 * allow pages to use template from different repo (save repo in page)
-* library static files should be downloaded
+* library static files should be downloaded (implement zip bit)
 * add fields to page if template has changed - DONE
 * python sessions, user management and site settings - DONE
 * download zip of everything option.
-* build script.
+* build script - DONE

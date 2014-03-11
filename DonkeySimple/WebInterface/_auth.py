@@ -12,7 +12,7 @@ from collections import OrderedDict
 import time
 import json, datetime
 from DonkeySimple.DS import *
-import settings
+settings = get_settings()
 
 UNUSABLE_PASSWORD_PREFIX = '!'
 UNUSABLE_PASSWORD_SUFFIX_LENGTH = 40

@@ -124,7 +124,7 @@ class View(object):
         
     def login(self):
         self._template = self._env.get_template('login.html')
-        self.context['title'] =  ds.SITE_NAME + ' login'
+        self.context['title'] =  settings.SITE_NAME + ' login'
         self.context['reset_password'] = 'reset-password'
         
     def reset_password(self):

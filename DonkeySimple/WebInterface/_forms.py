@@ -1,7 +1,9 @@
 import os
 import DonkeySimple.DS as ds
+from _auth import Auth
 import HTMLParser
 from DonkeySimple.DS.send_emails import password_email
+settings = ds.get_settings()
 
 class UniversalProcessor(object):
     def process(self, fields):
@@ -23,7 +25,7 @@ class UniversalProcessor(object):
                 raise Exception('ProcessForm has no function called %s' % action_func)
             
     def _password_reset_email(self, username):
-        auth = ds.Auth()
+        auth = Auth()
         if username not in auth.users:
             return False
         user = auth.pop_user(username)
@@ -33,7 +35,7 @@ class UniversalProcessor(object):
         e_index = url.index('/edit/') + 5
         url = url[:e_index] + '/'
         if '@' in email:
-            success, msg = ds.password_email(user['email'], url, username, pw)
+            success, msg = password_email(user['email'], url, username, pw)
             if success:
                 auth.add_user(username, user, pw)
                 self._add_msg('Password email sent', 'success')
@@ -104,7 +106,7 @@ class ProcessForm(UniversalProcessor):
         if 'commit-msg' in self.fields:
             msg = self.fields['commit-msg'].value
         git_repo.add_all()
-        git_repo.set_user(ds.GIT_EMAIL, ds.GIT_NAME)
+        git_repo.set_user(settings.GIT_EMAIL, settings.GIT_NAME)
         ds.con.repeat_owners_permission()
         [self._add_msg(line) for line in git_repo.commit(msg).split('\n')]
         
@@ -179,7 +181,7 @@ class ProcessForm(UniversalProcessor):
         username = self.fields['username'].value
         formuser = {'email': self.fields['email'].value}
         formuser['admin'] = self.isadmin and 'admin' in self.fields and self.fields['admin'].value == 'on'
-        auth = ds.Auth()
+        auth = Auth()
         msg_type = 'success'
         if 'previous-username' not in self.fields:
             if username in auth.users:
@@ -209,7 +211,7 @@ class ProcessForm(UniversalProcessor):
         if not self.isadmin:
             return self._add_msg('Permission Denied', 'errors')
         username = self.fields['previous-username'].value
-        auth = ds.Auth()
+        auth = Auth()
         auth.pop_user(username, save=True)
         self.regen_users = True
         self._add_msg('deleted "%s"' % username, 'success')
@@ -234,7 +236,7 @@ class ProcessForm(UniversalProcessor):
         if len(pw) < ds.MIN_PASSWORD_LENGTH:
             self._add_msg('Password must be at least %d characters in length' % ds.MIN_PASSWORD_LENGTH, 'errors')
             return
-        auth = ds.Auth()
+        auth = Auth()
         user = auth.pop_user(username)
         auth.add_user(username, user, pw)
         self._add_msg('"%s" password updated' % username, 'success')

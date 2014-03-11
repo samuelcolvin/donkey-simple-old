@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys, argparse, os
-sys.path.append("/home/samuel/Dropbox/dev/eclipse_workspace_ub/donkey-simple/")
+# sys.path.append("/home/samuel/Dropbox/dev/eclipse_workspace_ub/donkey-simple/")
     
 DEFAULT_SITE = 'donkey_simple_site'
 import DonkeySimple.CmdInterface as dscmd
@@ -16,15 +16,19 @@ class Actions:
             raise Exception('Actions does not contain function "%s"' % func_name)
     
     def build(self):
-        print 'building'
+        dscmd.create_ds(self.path)
         
     def status(self):
-        dscmd.chdir(DEFAULT_SITE, self.path)
-        dscmd.get_status()
+        if self.path == DEFAULT_SITE: self.path = None
+        dscmd.get_status(self.path)
         
     def generate(self):
-        dscmd.chdir(DEFAULT_SITE, self.path)
-        dscmd.generate_site()
+        if self.path == DEFAULT_SITE: self.path = None
+        dscmd.generate_site(self.path)
+        
+    def edituser(self):
+        if self.path == DEFAULT_SITE: self.path = None
+        dscmd.edituser(self.path)
 
 parser = argparse.ArgumentParser(description="""Donkey Simple Controller.
 Utility for building and controlling donkey-simple websites 
@@ -34,14 +38,16 @@ Utility for building and controlling donkey-simple websites
     build - builds a new site with edit interface at the specified, default is "%s".
     generate - generates the site.
 """ % DEFAULT_SITE, formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('action', metavar='action', choices=['build', 'status', 'generate'],
-                   help='action to perform: status|build|generate (defaults to status)')
+parser.add_argument('action', metavar='action', choices=['build', 'status', 'generate', 'edituser'],
+                   help='action to perform: status|build|generate|edituser (defaults to status)')
 parser.add_argument('path', metavar='site-path', nargs='?', default=DEFAULT_SITE,
                    help='Relative path of donkey simple site.')
-if len(sys.argv) == 1:
-    args = parser.parse_args(['status'])
-else:
-    args = parser.parse_args()
+# if len(sys.argv) == 1:
+#     args = parser.parse_args(['status'])
+# else:
+#     args = parser.parse_args()
+    
+args = parser.parse_args()
 
 try:
     actions = Actions(args.path)

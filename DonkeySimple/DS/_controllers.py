@@ -26,8 +26,8 @@ def new_repo_path(repo):
         raise(Exception('path "%s" already exists, cannot create repo' % repo_path))
     return repo, repo_path
 
-def repeat_owners_permission():
-    subprocess.call('chmod -R a+u %s' % REPOS_DIR, shell=True)
+def repeat_owners_permission(path = REPOS_DIR):
+    subprocess.call('chmod -R a+u %s' % path, shell=True)
     
 def delete_tree(repo_path):
     shutil.rmtree(repo_path)

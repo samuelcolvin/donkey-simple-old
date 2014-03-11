@@ -10,6 +10,7 @@ setup(name='DonkeySimple',
       url='http://www.scolvin.com',
       packages=['DonkeySimple', 'DonkeySimple.DS', 'DonkeySimple.WebInterface'],
       package_data={'DonkeySimple': [
+        'static_libraries.json',
         'site-template/*.*',
         'site-template/static/*.*',
         'site-template/edit/*.*',

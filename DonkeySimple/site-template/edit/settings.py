@@ -4,7 +4,7 @@ PASSWORD_EXPIRE_HOURS = 24
 SHORT_RANDOM = 'adjeods'
 COOKIE_NAME = 'ds-' + SHORT_RANDOM
 HTTP_USER = 'www-data'
-LOCAL_USER = 'samuel'
+LOCAL_USER = 'donkey'
 GIT_EMAIL = 'donkey-simple@example.com'
 GIT_NAME = 'DONKEY'
 

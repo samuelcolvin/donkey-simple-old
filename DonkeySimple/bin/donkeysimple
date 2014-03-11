@@ -1,0 +1,71 @@
+#!/usr/bin/python
+import sys, argparse, os
+sys.path.append("/home/samuel/Dropbox/dev/eclipse_workspace_ub/donkey-simple/")
+    
+DEFAULT_SITE = 'donkey_simple_site'
+
+class Actions:
+    def __init__(self, path):
+        self.path = path
+    
+    def call_func(self, func_name):
+        if hasattr(self, func_name):
+            getattr(self, func_name)()
+        else:
+            raise Exception('Actions does not contain function "%s"' % func_name)
+    
+    def build(self):
+        print 'building'
+        
+    def status(self):
+        self._chdir_import()
+        import DonkeySimple.CmdInterface as dscmd
+        dscmd.get_status()
+        
+    def generate(self):
+        self._chdir_import()
+        import DonkeySimple.DS as ds
+        sg = ds.SiteGenerator()
+        sg.generate_entire_site()
+        print 'generate'
+        
+    def _chdir_import(self):
+        self.path = self._find_path()
+        if self.path != '.':
+            print 'changing working directory to %s' % self.path
+            os.chdir(self.path)
+    
+    def _find_path(self):
+        look_for = ('index.cgi', 'settings.py')
+        if self.path != DEFAULT_SITE:
+            if not all([os.path.exists(os.path.join(self.path,f)) for f in look_for]):
+                raise Exception(
+                'Path supplied "%s" does not appear to be the "edit" folder of a donkey simple site tree.'\
+                % self.path)
+            return self.path
+        else:
+            search_dirs = ('edit', '.', '..', '../..', '../../..')
+            for d in search_dirs:
+                if all([os.path.exists(os.path.join(d,f)) for f in look_for]):
+                    return d
+            raise Exception("No path supplied and you don't appear to be in a site tree now.")
+
+parser = argparse.ArgumentParser(description="""Donkey Simple Controller.
+Utility for building and controlling donkey-simple websites (https://github.com/samuelcolvin/donkey-simple).
+""")
+parser.add_argument('action', choices=['build', 'status', 'generate'],
+                   help="action to perform: build|status|generate")
+parser.add_argument('path', metavar='site-path', nargs='?', default=DEFAULT_SITE,
+                   help="""Relative path of donkey simple site. 
+For status and generate, this may be left empty if you're in an existing site.
+For build, a default site name of "%s" will be used if this is empty.""" % DEFAULT_SITE)
+if len(sys.argv) == 1:
+    args = parser.parse_args(['status'])
+else:
+    args = parser.parse_args()
+
+try:
+    actions = Actions(args.path)
+    actions.call_func(args.action)
+except Exception, e:
+    print 'Error: %s' % str(e)

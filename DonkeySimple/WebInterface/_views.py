@@ -131,7 +131,7 @@ class View(object):
         self._template = self._env.get_template('reset_password.html')
         
     def logout(self, fid):
-        auth = ds.Auth()
+        auth = Auth()
         auth.logout(self.username)
         self.location = 'Location: %s\n' % self._site_edit_uri
     

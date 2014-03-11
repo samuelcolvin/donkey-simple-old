@@ -1,7 +1,6 @@
 import smtplib
 from email.mime.text import MIMEText
-# import settings
-from _common import *
+import settings
     
 def send_email(send_to, subject, body):
     msg = MIMEText(body)

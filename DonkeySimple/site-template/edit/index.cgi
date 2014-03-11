@@ -39,7 +39,8 @@ debug = Debug()
 try:
     from DonkeySimple.WebInterface import View 
     import DonkeySimple.DS as ds
-    debug.active = ds.DEBUG
+    import settings
+    debug.active = settings.DEBUG
     wi = View()
     response = wi.response_code
     response += wi.location

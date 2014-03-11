@@ -12,6 +12,7 @@ from collections import OrderedDict
 import time
 import json, datetime
 from DonkeySimple.DS import *
+import settings
 
 UNUSABLE_PASSWORD_PREFIX = '!'
 UNUSABLE_PASSWORD_SUFFIX_LENGTH = 40
@@ -92,8 +93,8 @@ class Auth(object):
         self._save_users()
     
     def _get_user(self, cookies):
-        if SETTINGS.COOKIE_NAME in cookies:
-            cookie_value = cookies[SETTINGS.COOKIE_NAME].value
+        if settings.COOKIE_NAME in cookies:
+            cookie_value = cookies[settings.COOKIE_NAME].value
             for username, user in self.users.items():
                 if user['cookie'] == cookie_value:
                     self.username = username
@@ -105,13 +106,13 @@ class Auth(object):
         if value is None:
             value = _get_random_string(length=15)
         cook = {'version': 1}
-        expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=SETTINGS.PASSWORD_EXPIRE_HOURS)
+        expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=settings.PASSWORD_EXPIRE_HOURS)
         cook['expires'] = expiration.strftime(self.dt_format)
-        if hasattr(SETTINGS, 'COOKIE_DOMAIN'):
-            cook['domain'] = SETTINGS.COOKIE_DOMAIN
-        if hasattr(SETTINGS, 'COOKIE_PATH'):
-            cook['path'] = SETTINGS.COOKIE_PATH
-        return {'name': SETTINGS.COOKIE_NAME, 'value': value, 'extra_values': cook}
+        if hasattr(settings, 'COOKIE_DOMAIN'):
+            cook['domain'] = settings.COOKIE_DOMAIN
+        if hasattr(settings, 'COOKIE_PATH'):
+            cook['path'] = settings.COOKIE_PATH
+        return {'name': settings.COOKIE_NAME, 'value': value, 'extra_values': cook}
             
     def _update_user(self, username, cookie):
         self.users[username]['cookie'] = cookie['value']

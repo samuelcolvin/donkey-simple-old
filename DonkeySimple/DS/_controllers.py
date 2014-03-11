@@ -38,10 +38,11 @@ class _File(object):
     """
     info = None
     active_cfile = None
-    def __init__(self, repo, file_type, filename):
+    def __init__(self, repo, file_type, filename, ext = ''):
         self.repo = repo
         self.file_type = file_type
         self.filename = filename
+        self.ext = ext
         self.path = os.path.join(REPOS_DIR, repo, file_type, filename)
         self.sort_on = (repo, file_type, filename)
         self.id = base64.urlsafe_b64encode(hashlib.md5(self.path).digest()[:10]).strip('=')
@@ -51,7 +52,8 @@ class _File(object):
         """
         Display property for the file.
         """ 
-        return '%s :: %s' % (self.repo, self.filename)
+        name = self.filename.replace(self.ext, '')
+        return '%s :: %s' % (self.repo, name)
     
     @property
     def repo_path(self):
@@ -113,7 +115,7 @@ class _File_Controller(object):
                 chmod_own(directory, 0777)
             for fn in os.listdir(directory):
                 if self._file_test(fn) and fn not in self.perm_files:
-                    yield _File(repo, self.DIR, fn)
+                    yield _File(repo, self.DIR, fn, self.EXTENSION)
     
     def get_file_content(self, fid = None, name=None, repo=None):
         """

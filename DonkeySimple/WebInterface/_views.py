@@ -3,6 +3,7 @@ import Cookie
 import DonkeySimple.DS as ds
 from _forms import ProcessForm, AnonFormProcessor
 from _auth import Auth
+import settings
 
 sg = ds.SiteGenerator
 
@@ -56,12 +57,11 @@ class View(object):
         self._generate_page(uri, loggedin = valid_user)
         
     def _generate_page(self, uri, loggedin = False):
-        self.context = {'title': '%s Editor' % ds.SITE_NAME, 'site_title': '%s Editor' % ds.SITE_NAME, 
+        self.context = {'title': '%s Editor' % settings.SITE_NAME, 'site_title': '%s Editor' % settings.SITE_NAME, 
                         'static_uri': self._edit_static_uri, 'edit_uri': self._site_edit_uri,
                         'site_uri': self._site_uri}
         if loggedin:
             self.context.update({'username': self.username, 'admin': self.user['admin']})
-        self.context.update(ds.SETTINGS_DICT)
         self.repo_paths = list(ds.con.get_all_repos())
         self.context['repos'] = [r for r, _ in self.repo_paths]
         if len(self.context['repos']) == 0:

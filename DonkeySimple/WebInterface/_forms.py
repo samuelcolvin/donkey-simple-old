@@ -1,6 +1,7 @@
 import os
 import DonkeySimple.DS as ds
 import HTMLParser
+from DonkeySimple.DS.send_emails import password_email
 
 class UniversalProcessor(object):
     def process(self, fields):

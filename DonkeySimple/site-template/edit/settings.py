@@ -1,7 +1,7 @@
 DEBUG = True
 SITE_NAME = 'Site'
 PASSWORD_EXPIRE_HOURS = 24
-SHORT_RANDOM = 'adjeods'
+SHORT_RANDOM = 'short_random_var'
 COOKIE_NAME = 'ds-' + SHORT_RANDOM
 HTTP_USER = 'www-data'
 LOCAL_USER = 'donkey'

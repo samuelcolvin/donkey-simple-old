@@ -12,6 +12,7 @@ from collections import OrderedDict
 import time
 import json, datetime
 from DonkeySimple.DS import *
+from DonkeySimple.DS.random_string import get_random_string
 settings = get_settings()
 
 UNUSABLE_PASSWORD_PREFIX = '!'
@@ -24,6 +25,7 @@ try:
 except NotImplementedError:
     print 'A secure pseudo-random number generator is not available on your system. Falling back to Mersenne Twister.'
     using_sysrandom = False
+
 class Auth(object):
     dt_format = '%a, %d-%b-%Y %H:%M:%S UTC'
     cookie = None
@@ -69,7 +71,7 @@ class Auth(object):
         return sorted(self.users.keys())
     
     def new_random_password(self, length=10):
-        return _get_random_string(length=length)
+        return get_random_string(length=length)
     
     def pop_user(self, username, save=False):
         user = self.users.pop(username)
@@ -104,7 +106,7 @@ class Auth(object):
     
     def _generate_cookie(self, value=None):
         if value is None:
-            value = _get_random_string(length=15)
+            value = get_random_string(length=15)
         cook = {'version': 1}
         expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=settings.PASSWORD_EXPIRE_HOURS)
         cook['expires'] = expiration.strftime(self.dt_format)
@@ -149,8 +151,8 @@ class Password(object):
 
     def make_hash(self, password):
         if password is None:
-            return UNUSABLE_PASSWORD_PREFIX + _get_random_string(UNUSABLE_PASSWORD_SUFFIX_LENGTH)
-        salt = _get_random_string()
+            return UNUSABLE_PASSWORD_PREFIX + get_random_string(UNUSABLE_PASSWORD_SUFFIX_LENGTH)
+        salt = get_random_string()
         return self._encode(password, salt)
         return "%s$%d$%s$%s" % (self.algorithm, self.iterations, salt, hash)
 
@@ -207,30 +209,6 @@ def _mask_hash(hash, show=6, char="*"):
     masked = hash[:show]
     masked += char * len(hash[show:])
     return masked
-
-
-def _get_random_string(length=12,
-                      allowed_chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
-    """
-    based on django version but edited to avoid need for secret key
-    Returns a securely generated random string.
-    
-    The default length of 12 with the a-z, A-Z, 0-9 character set returns
-    a 71-bit value. log_2((26+26+10)^12) =~ 71 bits
-    """
-    if not using_sysrandom:
-        # This is ugly, and a hack, but it makes things better than
-        # the alternative of predictability. This re-seeds the PRNG
-        # using a value that is hard for an attacker to predict, every
-        # time a random string is required. This may change the
-        # properties of the chosen random sequence slightly, but this
-        # is better than absolute predictability.
-        random.seed(
-            hashlib.sha256(
-                ("%s%s" % (
-                    random.getstate(), time.time())).encode('utf-8')
-            ).digest())
-    return ''.join(random.choice(allowed_chars) for i in range(length))
 
 def _pbkdf2(password, salt, iterations, dklen=0, digest=None):
     """

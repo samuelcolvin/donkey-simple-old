@@ -8,7 +8,7 @@ setup(name='DonkeySimple',
       author='Samuel Colvin',
       author_email='S@muelColvin.com',
       url='http://www.scolvin.com',
-      packages=['DonkeySimple', 'DonkeySimple.DS', 'DonkeySimple.WebInterface'],
+      packages=['DonkeySimple', 'DonkeySimple.DS', 'DonkeySimple.WebInterface', 'DonkeySimple.CmdInterface'],
       package_data={'DonkeySimple': [
         'static_libraries.json',
         'site-template/*.*',
@@ -17,6 +17,9 @@ setup(name='DonkeySimple',
         'site-template/edit/repos/default/pages/*.*',
         'site-template/edit/repos/default/static/*.*',
         'site-template/edit/repos/default/templates/*.*',
+      ],
+      'DonkeySimple.WebInterface':[
+        'templates/*.*',
       ]},
-      scripts=['DonkeySimple/bin/donkey-simple.py']
+      scripts=['DonkeySimple/bin/donkeysimple']
 )

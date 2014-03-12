@@ -39,6 +39,7 @@ class View(object):
     
     def __init__(self,):
         self._msgs = {}
+        print 'EDITOR_TEMPLATE_DIR:', EDITOR_TEMPLATE_DIR
         self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
         uri = os.environ['REQUEST_URI']
         self._site_uri = uri[:uri.index('/edit/')]

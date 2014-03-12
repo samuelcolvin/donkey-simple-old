@@ -209,13 +209,12 @@ class Pages(_File_Controller):
         super(Pages, self).__init__(*args, **kw)
         self._generate_pages()
     
-    def create_cfile(self, repo, name, template):
+    def create_cfile(self, repo, name, template, template_repo):
         super(Pages, self).create_cfile(repo, name)
-        self.active_cfile.info = {'name': name, 'template': template}
+        self.active_cfile.info = {'name': name, 'template': template, 'template_repo': template_repo}
     
     def get_empty_context(self):
-        repo_path = os.path.join(REPOS_DIR, self.active_cfile.repo)
-        r = tr.RenderTemplate(self.active_cfile.info['template'], self.active_cfile.repo_path)
+        r = tr.RenderTemplate(self.active_cfile.info['template'], self.active_cfile.info['template_repo'])
         return r.get_empty_context()
     
     def load_file(self, cfile):

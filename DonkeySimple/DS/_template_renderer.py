@@ -4,9 +4,9 @@ import re, os
 from _common import *
 
 class RenderTemplate(object):
-    def __init__(self, name, repo_path):
-        self._repo_path = repo_path
-        self._template_path = os.path.join(repo_path, TEMPLATES_DIR)
+    def __init__(self, name, repo):
+        self._repo_path = os.path.join(REPOS_DIR, repo)
+        self._template_path = os.path.join(self._repo_path, TEMPLATES_DIR)
         self._env = jinja2.Environment(loader= jinja2.FileSystemLoader(self._template_path))
         self._template = self._env.get_template(name)
     

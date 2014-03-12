@@ -257,13 +257,12 @@ class View(object):
         self.context['action_uri'] = self._site_edit_uri + 'edit-page-last'
         if pid is not None:
             page_con = ds.con.Pages()
-#             cfile = page_con.get_cfile_fid(pid)
             try:
                 cfile = page_con.get_cfile_fid(pid)
             except:
                 return self._error_page('Page not found', code=httplib.BAD_REQUEST)
             self.context['page_name'] = cfile.info['name']
-            self.context['page_templates'] = [fc for fc in t_con.cfiles.values() if fc.repo == cfile.repo]
+            self.context['page_templates'] = t_con.cfiles.values()
             self.context['page_context_str'] = []
             self.context['page_context_other'] = []
             for name, value in page_con.get_true_context().items():
@@ -272,7 +271,7 @@ class View(object):
                     self.context['page_context_str'].append({'name': name, 'value': value['value'], 'type': value['type']})
                 else:
                     self.context['page_context_other'].append({'name': name, 'value': cgi.escape(value['value']), 'type': value['type']})
-            self.context['active_page_template_id'] = t_con.get_cfile_name(filename = cfile.info['template'], repo = cfile.repo).id
+            self.context['active_page_template_id'] = t_con.get_cfile_name(filename = cfile.info['template'], repo = cfile.info['template_repo']).id
             self.context['action_uri'] = self.context['edit_uri']
         self._template = self._env.get_template('edit_page.html')
         

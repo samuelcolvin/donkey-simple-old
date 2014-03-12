@@ -23,5 +23,6 @@
     },
     "id": 1,
     "name": "index",
-    "template": "simple_site.template.html"
+    "template": "simple_site.template.html",
+    "template_repo": "default"
 }

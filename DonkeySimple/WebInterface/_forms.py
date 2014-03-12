@@ -120,7 +120,8 @@ class ProcessForm(UniversalProcessor):
         page_name = self.fields['page-name'].value
         t_con = ds.con.Templates()
         template = t_con.get_cfile_fid(self.fields['page-template-id'].value)
-        page_con.create_cfile(template.repo, page_name, template.filename)
+        repo = self.fields['repo'].value
+        page_con.create_cfile(repo, page_name, template.filename, template.repo)
         context = dict([(name, self.fields[name].value) for name in self.fields])
         ftypes = dict([(name.replace('contype-', ''), self.fields[name].value) for name in self.fields if name.startswith('contype-')])
         page_con.update_context(context, ftypes)

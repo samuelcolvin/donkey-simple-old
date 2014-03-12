@@ -10,13 +10,13 @@
 	</span>
 	
 	<div class="row">
-	  <div class="col-lg-6 form-group">
+	  <div class="col-lg-4 form-group">
 	  	<div class="input-group">
 		  <span class="input-group-addon">Page Name</span>
 	  	  <input type="text" name="page-name" class="form-control" placeholder="Page Name" value="{{ page_name }}" required>
 		</div>
 	  </div>
-	  <div class="col-lg-6 form-group">
+	  <div class="col-lg-4 form-group">
 	  	<div class="input-group">
 		  <span class="input-group-addon">Page Template</span>
 		  <input name="original-template-id" type="hidden" value="{{ active_page_template_id }}"/>
@@ -24,6 +24,15 @@
 			{% for pt in page_templates %}<option value="{{ pt.id }}" {% if pt.id == active_page_template_id %}selected{% endif %}>{{ pt.display }}</option>
 			{% endfor %}
 		  </select>
+		</div>
+	  </div>
+	  <div class="col-lg-4 form-group">
+	  	<div class="input-group">
+		  <span class="input-group-addon">Repo</span>
+			<select name="repo" class="form-control" {% if active_repo %}readonly{% endif %}>
+			  {% for repo in repos %}<option value="{{ repo }}" {% if repo == active_repo %}selected{% endif %}>{{ repo }}</option>
+			  {% endfor %}
+			</select>
 		</div>
 	  </div>
 	</div>

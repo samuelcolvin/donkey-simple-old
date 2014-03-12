@@ -23,7 +23,7 @@ class SiteGenerator(object):
             context[var] = item['value']
             if item['type'] == 'markdown':
                 context[var] = markdown2.markdown(item['value'])
-        r = tr.RenderTemplate(cfile.info['template'], cfile.repo_path)
+        r = tr.RenderTemplate(cfile.info['template'], cfile.info['template_repo'])
         content = r.render(context)
         fn = os.path.join(self._base_dir, '%s.html' % cfile.info['name'])
         open(fn, 'w').write(content)

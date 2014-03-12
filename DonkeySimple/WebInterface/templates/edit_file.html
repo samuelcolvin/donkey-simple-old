@@ -51,11 +51,11 @@
 
 {% block js %}
 {{ super() }}
-<script src="{{ static_uri }}ace_modes/ace.js"></script>
-<script src="{{ static_uri }}ace_modes/mode-html.js"></script>
-<script src="{{ static_uri }}ace_modes/mode-markdown.js"></script>
-<script src="{{ static_uri }}ace_modes/mode-javascript.js"></script>
-<script src="{{ static_uri }}ace_modes/mode-json.js"></script>
-<script src="{{ static_uri }}ace_modes/mode-css.js"></script>
+<script src="{{ static_uri }}external/ace/ace.js"></script>
+<script src="{{ static_uri }}external/ace/mode-html.js"></script>
+<script src="{{ static_uri }}external/ace/mode-markdown.js"></script>
+<script src="{{ static_uri }}external/ace/mode-javascript.js"></script>
+<script src="{{ static_uri }}external/ace/mode-json.js"></script>
+<script src="{{ static_uri }}external/ace/mode-css.js"></script>
 <script src="{{ static_uri }}editor.js"></script>
 {% endblock %}

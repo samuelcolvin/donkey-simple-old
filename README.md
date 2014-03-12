@@ -14,10 +14,10 @@ To do:
 * global variables eg author, title, checkbox for override on pages
 * global vars to include static-dir, list of pages etc.
 * glboal vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?)
-* static file compression and organising
 * link generation (link to a specific page), static-dir tag
+* static file compression and organising
 * allow pages to use template from different repo (save repo in page)
-* library static files should be downloaded (implement zip bit)
+* library static files should be downloaded (implement zip bit) - DONE
 * add fields to page if template has changed - DONE
 * python sessions, user management and site settings - DONE
 * download zip of everything option.

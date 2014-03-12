@@ -1,12 +1,12 @@
 {
-  "https://raw.github.com/twbs/bootstrap/v3.1.1/dist/css/bootstrap.min.css": "bootstrap.min.css",
-  "https://raw.github.com/twbs/bootstrap/v3.1.1/dist/js/bootstrap.min.js": "bootstrap.min.js",
-  "http://code.jquery.com/jquery-1.11.0.min.js": "jquery-1.11.0.min.js",
-  "https://github.com/makeusabrew/bootbox/releases/download/v4.2.0/bootbox.min.js": "bootbox.min.js",
-  "https://raw.github.com/aFarkas/html5shiv/3.7.0/dist/html5shiv.js": "html5shiv.js",
-  "https://raw.github.com/scottjehl/Respond/1.4.2/dest/respond.min.js": "respond.min.js",
+  "https://raw.github.com/twbs/bootstrap/v3.1.1/dist/css/bootstrap.min.css": "{{ filename }}",
+  "https://raw.github.com/twbs/bootstrap/v3.1.1/dist/js/bootstrap.min.js": "{{ filename }}",
+  "http://code.jquery.com/jquery-1.11.0.min.js": "jquery.min.js",
+  "https://github.com/makeusabrew/bootbox/releases/download/v4.2.0/bootbox.min.js": "{{ filename }}",
+  "https://raw.github.com/aFarkas/html5shiv/3.7.0/dist/html5shiv.js": "{{ filename }}",
+  "https://raw.github.com/scottjehl/Respond/1.4.2/dest/respond.min.js": "{{ filename }}",
   "https://github.com/ajaxorg/ace-builds/archive/v1.1.3.zip":
   {
-  	"source-min": "ace"
+    ".*/src-min/(?!snippets/)(?P<file>.+\\.js)": "ace"
   }
 }

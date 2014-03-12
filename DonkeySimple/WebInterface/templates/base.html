@@ -6,11 +6,11 @@
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 		<title>{{title}}</title>
 		<link rel="icon" type="image/png" href="{{ static_uri }}favicon.png" />
-		<link rel="stylesheet" href="{{ static_uri }}bootstrap.min.css">
+		<link rel="stylesheet" href="{{ static_uri }}external/bootstrap.min.css">
 		<link rel="stylesheet" href="{{ static_uri }}editor_styles.css?">
 	    <!--[if lt IE 9]>
-	      <script src="{{ static_uri }}html5shiv.js"></script>
-	      <script src="{{ static_uri }}respond.min.js"></script>
+	      <script src="{{ static_uri }}external/html5shiv.js"></script>
+	      <script src="{{ static_uri }}external/respond.min.js"></script>
 	    <![endif]-->
 	{% endblock head %}
   </head>
@@ -80,9 +80,9 @@
 	  	{% block content %}Content not defined.{% endblock %}
 	</div>
 	{% block js %}
-  	<script src="{{ static_uri }}jquery-1.10.2.min.js"></script>
-  	<script src="{{ static_uri }}bootstrap.min.js"></script>
-  	<script src="{{ static_uri }}bootbox.min.js"></script>
+  	<script src="{{ static_uri }}external/jquery.min.js"></script>
+  	<script src="{{ static_uri }}external/bootstrap.min.js"></script>
+  	<script src="{{ static_uri }}external/bootbox.min.js"></script>
   	{% endblock %}
   </body>
 </html>

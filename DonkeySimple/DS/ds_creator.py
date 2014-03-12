@@ -1,4 +1,4 @@
-import shutil, os, json, urllib2
+import shutil, os, json, urllib2, zipfile, cStringIO, re
 import _controllers as con
 
 def create_ds(path):
@@ -10,45 +10,80 @@ def create_ds(path):
     this_dir = os.path.dirname(os.path.realpath(__file__))
     site_template = os.path.realpath(os.path.join(this_dir, '../site-template'))
     shutil.copytree(site_template, path)
-    con.repeat_owners_permission(path)
     full_path = os.path.realpath(path)
+    print 'Site template copied, Downloading static files:'
+    external_static_dir = os.path.join(path, 'edit', 'static', 'external')
+    libs_json_path = os.path.join(os.path.dirname(__file__), '../static_libraries.json')
+    download_libraries(libs_json_path, external_static_dir)
+    con.repeat_owners_permission(path)
     print 'Site generated at:\n%s' % full_path
     print 'default username: donkey, password: simple'
     print 'run "donkeysimple edituser" to change the password, or login and change.'
     
 def download_libraries(libs_json_path, target, output = None):
+    def generate_path(*path_args):
+        dest = os.path.join(*path_args)
+        if os.path.exists(dest):
+            return True, None
+        dest_dir = os.path.dirname(dest)
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+        return False, dest
+    
+    def get_url(url):
+        try:
+            response = urllib2.urlopen(url)
+            return response.read()
+        except Exception, e:
+            raise Exception('URL: %s\nProblem occurred during download: %r\n*** ABORTING ***' % (url, e))
     
     if output:
         outfunc = output
     else:
         outfunc = _output
-#     libs_json_path = os.path.join(THIS_PATH, 'libraries.json')
     url_files = json.load(open(libs_json_path, 'r'))
     downloaded = 0
     ignored = 0
-    for url, path in url_files.items():
-        #self._output('DOWNLOADING: %s\n             --> %s...' % (url, path))
-        dest = os.path.join(target, 'external', path)
-        if os.path.exists(dest):
-            #self._output('file already exists at ./%s' % path)
-            #self._output('*** IGNORING THIS DOWNLOAD ***\n')
-            ignored += 1
-            continue
-        dest_dir = os.path.dirname(dest)
-        if not os.path.exists(dest_dir):
-            # self._output('mkdir: %s' % dest_dir)
-            os.makedirs(dest_dir)
-        try:
-            response = urllib2.urlopen(url)
-            content = response.read()
-        except Exception, e:
-            outfunc('\nURL: %s\nProblem occured during download: %r' % (url, e))
-            outfunc('*** ABORTING ***')
-            return False
-        open(dest, 'w').write(content.encode('utf8'))
+    for url, value in url_files.items():
+        if url.endswith('zip') and type(value) == dict:
+            if all([os.path.exists(os.path.join(target, p)) for p in value.values()]):
+                ignored += 1
+                continue
+            outfunc('DOWNLOADING ZIP: %s...' % url)
+            content = get_url(url)
+            zipinmemory = cStringIO.StringIO(content)
+            with zipfile.ZipFile(zipinmemory) as zipf:
+                print '%d file in zip archive' % len(zipf.namelist())
+                zcopied = 0
+                for fn in zipf.namelist():
+                    for regex, dest_path in value.items():
+                        m = re.search(regex, fn)
+                        if not m:
+                            continue
+                        new_fn = m.groupdict()['file']
+                        _, dest = generate_path(target, dest_path, new_fn)
+                        open(dest, 'w').write(zipf.read(fn))
+                        zcopied += 1
+                        break
+            outfunc('%d files copied from zip archive to target' % zcopied)
+        else:
+            fn_replace = '{{ *filename *}}'
+            if re.search(fn_replace, value):
+                filename = re.search('.*/(.*)',url).groups()[0]
+                path = re.sub(fn_replace, filename, value)
+            else:
+                path = value
+            exists, dest = generate_path(target, path)
+            if exists:
+                ignored += 1
+                continue
+            outfunc('DOWNLOADING: %s' % path)
+            content = get_url(url)
+            try: content = content.encode('utf8')
+            except: pass
+            open(dest, 'w').write(content)
         downloaded += 1
-        #self._output('Successfully downloaded %s\n' % os.path.basename(path))
-    outfunc('library download finish: %d files downloaded, %d existing and ignored' % (downloaded, ignored))
+    outfunc('library download finished: %d files downloaded, %d existing and ignored' % (downloaded, ignored))
     return True
 
 def _output(line):

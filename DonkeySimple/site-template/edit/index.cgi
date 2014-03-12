@@ -1,6 +1,11 @@
 #!/usr/bin/python
+"""
+This is the recieving script for all page requests to the donkeys simple edit site.
+
+You Shouldn't have to change anything in here unless there is a bug, for settings look in settings.py
+"""
 import sys
-sys.path.append("../../../")
+sys.path.append("/home/samuel/Dropbox/dev/eclipse_workspace_ub/donkey-simple/")
 
 class Debug:
     _text = ''

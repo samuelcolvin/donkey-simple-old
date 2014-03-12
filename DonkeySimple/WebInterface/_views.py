@@ -308,10 +308,10 @@ class View(object):
         self._template = self._env.get_template('edit_user.html')
         
     def set_user_password(self, uid):
-        edit_username = self.o_usernames[uid]
+        edit_username = self.all_users[uid]
         if not self.isadmin and edit_username != self.username:
             return self._permission_denied()
-        self.context['edit_username'] = edit_username
+        self.context['edit_username'] = uid
         self._template = self._env.get_template('set_password.html')
         
     def _permission_denied(self):

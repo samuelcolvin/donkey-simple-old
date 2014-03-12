@@ -261,7 +261,12 @@ class Pages(_File_Controller):
         return self._write()
         
     def _write(self):
-        self.active_cfile.info['id'] = max([cf.info['id'] for cf in self.cfiles.values() if 'id' in cf.info]) + 1
+        print self.cfiles
+        cf_id = 1
+        existing_cf_ids = [cf.info['id'] for cf in self.cfiles.values() if 'id' in cf.info]
+        if len(existing_cf_ids) > 0:
+            cf_id = max(existing_cf_ids) + 1
+        self.active_cfile.info['id'] = cf_id
         content = json.dumps(self.active_cfile.info, sort_keys=True, indent=4, separators=(',', ': '))
         self.active_cfile.write_file(content)
         return self.active_cfile
@@ -313,8 +318,8 @@ class LibraryFiles(_File_Controller):
             download_libraries(cf.path, target, output = output)
 
 def chmod_own(path, perms):
-#     http_id = pwd.getpwnam(HTTP_USER).pw_uid
-#     local_id = pwd.getpwnam(LOCAL_USER).pw_uid
+#     http_id = pwd.getpwnam(settings.HTTP_USER).pw_uid
+#     local_id = pwd.getpwnam(settings.LOCAL_USER).pw_uid
     os.chmod(path, perms)
 #     os.lchown(path, -1, local_id)
     

@@ -54,6 +54,19 @@
 </div>
 <div class="row">
   
+  <!-- Library Files -->
+  <div class="col-md-4">
+  	<h3>External Libraries Config</h3>
+  	<div class="pad btn-group">
+		<a href="add-libfile" class="btn btn-default">Add Library Config</a>
+	</div>
+	<div class="list-group">
+		{% for item in library_files %}
+	  		<a href="{{item.link}}" class="list-group-item">{{item.name}}</a>
+	  	{% endfor %}
+	</div>
+  </div>
+  
   <!-- Repos -->
   <div class="col-md-4">
   	<h3>Repos</h3>

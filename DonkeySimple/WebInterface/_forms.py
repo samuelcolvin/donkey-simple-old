@@ -1,4 +1,4 @@
-import os
+import os, json
 import DonkeySimple.DS as ds
 from _auth import Auth
 import HTMLParser
@@ -74,7 +74,6 @@ class ProcessForm(UniversalProcessor):
         repo_path = self._get_repo_path(repo_name)
         ds.con.delete_tree(repo_path)
         self._add_msg('Repo Deleted', 'success')
-        
         
     def pull_repo(self):
         repo_name = self.fields['repo'].value
@@ -170,6 +169,22 @@ class ProcessForm(UniversalProcessor):
     def delete_static(self):
         static = ds.con.Statics()
         self._delete_file(static, 'repo', 'file-name')
+        
+    def edit_libfile(self):
+        lf = ds.con.LibraryFiles()
+        text = self._unescape_file_text()
+        try:
+            json.loads(text)
+        except Exception, e:
+            self._add_msg('JSON Invalid: %s' % str(e), 'errors')
+        else:
+            repo = self.fields['repo'].value
+            cf = lf.write_file(text, repo, ds.LIBRARY_JSON_FILE)
+            self._add_msg('"%s" successfully saved' % cf.display, 'success')
+            
+    def delete_libfile(self):
+        lf = ds.con.LibraryFiles()
+        self._delete_file(lf, 'repo', 'file-name')
         
     def edit_user(self):
         if 'previous-username' in self.fields:

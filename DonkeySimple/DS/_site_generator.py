@@ -37,13 +37,15 @@ class SiteGenerator(object):
     def generate_statics(self):
         static_dst = self._get_static_dir()
         os.mkdir(static_dst)
-        os.chmod(static_dst, 0777)
         s = con.Statics()
         for i, src_cfile in enumerate(s.cfiles.values()):
             dst = os.path.join(static_dst, src_cfile.filename)
             shutil.copy(src_cfile.path, dst)
-            os.chmod(dst, 0666)
         self._output('copied %d static files from "%s" to "%s"' % (i + 1, STATIC_DIR, static_dst))
+        external_statics = os.path.join(static_dst, 'libs')
+        libfiles = con.LibraryFiles()
+        libfiles.download(external_statics, self._output)
+        con.repeat_owners_permission(static_dst)
         
     def _get_static_dir(self):
         return os.path.join(self._base_dir, STATIC_DIR)

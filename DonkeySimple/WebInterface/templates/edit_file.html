@@ -16,7 +16,8 @@
 	  <div class="col-lg-6 form-group">
 	  	<div class="input-group">
 		  <span class="input-group-addon">Name</span>
-	  	<input type="text" name="file-name" id="name-input" class="form-control" placeholder="File Filename" value="{{ file_name }}" required>
+	  	<input type="text" name="file-name" id="name-input" class="form-control" 
+	  		placeholder="File Filename" value="{{ file_name }}" required {% if fname_readonly %}readonly{% endif %}>
 		</div>
 	  </div>
 	  <div class="col-lg-6 form-group">
@@ -51,11 +52,11 @@
 
 {% block js %}
 {{ super() }}
-<script src="{{ static_uri }}external/ace/ace.js"></script>
-<script src="{{ static_uri }}external/ace/mode-html.js"></script>
-<script src="{{ static_uri }}external/ace/mode-markdown.js"></script>
-<script src="{{ static_uri }}external/ace/mode-javascript.js"></script>
-<script src="{{ static_uri }}external/ace/mode-json.js"></script>
-<script src="{{ static_uri }}external/ace/mode-css.js"></script>
+<script src="{{ static_uri }}libs/ace/ace.js"></script>
+<script src="{{ static_uri }}libs/ace/mode-html.js"></script>
+<script src="{{ static_uri }}libs/ace/mode-markdown.js"></script>
+<script src="{{ static_uri }}libs/ace/mode-javascript.js"></script>
+<script src="{{ static_uri }}libs/ace/mode-json.js"></script>
+<script src="{{ static_uri }}libs/ace/mode-css.js"></script>
 <script src="{{ static_uri }}editor.js"></script>
 {% endblock %}

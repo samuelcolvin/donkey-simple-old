@@ -6,6 +6,7 @@ import os, shutil, json
 import HTMLParser
 import _template_renderer as tr
 import re, base64, hashlib, pwd, subprocess
+from download import download_libraries
 
 def get_all_repos():
     """
@@ -106,7 +107,7 @@ class _File_Controller(object):
     
     def _get_all_files(self):
         """
-        Generates list of _File objects of all files in self.DIR.
+        Generates list of _File objects of all files in self.DIR in each repo.
         """
         for repo, repo_path in get_all_repos():
             directory = os.path.join(repo_path, self.DIR)
@@ -141,7 +142,7 @@ class _File_Controller(object):
         return cfile
     
     def create_cfile(self, repo, name):
-        self.active_cfile = _File(repo, self.DIR, self._extension_name(name))
+        self.active_cfile = _File(repo, self.DIR, self._valid_name(name))
         self.cfiles[self.active_cfile.id] = self.active_cfile
         return self.active_cfile
     
@@ -189,9 +190,16 @@ class _File_Controller(object):
     def get_path(self, repo, name):
         return os.path.join(REPOS_DIR, repo, self.DIR, name)
     
-    def _extension_name(self, name):
-        return '%s%s' % (name, self.EXTENSION)
-    
+    def _valid_name(self, name):
+        """
+        add the file extension if needed and make sure this is just a filename not a path.
+        """
+        name = os.path.basename(name)
+        if name.endswith(self.EXTENSION):
+            return name
+        else:
+            return '%s%s' % (name, self.EXTENSION)
+
 class Pages(_File_Controller):
     DIR = PAGE_DIR
     EXTENSION = '.json'
@@ -287,7 +295,24 @@ class Statics(_File_Controller):
             if file_name.endswith(ext):
                 return True
         return False
+
+class LibraryFiles(_File_Controller):
+    DIR = ''
+    EXTENSION = '.json'
     
+    def _get_all_files(self):
+        """
+        Generates list of _File objects of all lib json files.
+        """
+        for repo, repo_path in get_all_repos():
+            lib_file_path = os.path.join(repo_path, LIBRARY_JSON_FILE)
+            if os.path.exists(lib_file_path):
+                yield _File(repo, self.DIR, LIBRARY_JSON_FILE, self.EXTENSION)
+
+    def download(self, target, output):
+        for cf in self.cfiles.values():
+            download_libraries(cf.path, target, output = output)
+
 def chmod_own(path, perms):
 #     http_id = pwd.getpwnam(HTTP_USER).pw_uid
 #     local_id = pwd.getpwnam(LOCAL_USER).pw_uid

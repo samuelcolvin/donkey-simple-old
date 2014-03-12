@@ -21,6 +21,8 @@ urls = (
     ('edit-template-(.+)$', 'edit_template'),
     ('add-static$', 'edit_static'),
     ('edit-static-(.+)$', 'edit_static'),
+    ('add-libfile', 'edit_libfile'),
+    ('edit-libfile-(.+)$', 'edit_libfile'),
     ('add-user$', 'edit_user'),
     ('user$', 'edit_this_user'),
     ('edit-user-last$', 'edit_last_user'),
@@ -39,7 +41,6 @@ class View(object):
     
     def __init__(self,):
         self._msgs = {}
-        print 'EDITOR_TEMPLATE_DIR:', EDITOR_TEMPLATE_DIR
         self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
         uri = os.environ['REQUEST_URI']
         self._site_uri = uri[:uri.index('/edit/')]
@@ -151,6 +152,10 @@ class View(object):
             s = ds.con.Statics()
             for cf in s.cfiles.values():
                 self.context['static_files'].append({'link': 'edit-static-%s' % cf.id, 'name': cf.display})
+            self.context['library_files'] = []
+            s = ds.con.LibraryFiles()
+            for cf in s.cfiles.values():
+                self.context['library_files'].append({'link': 'edit-libfile-%s' % cf.id, 'name': cf.display})
             if self.isadmin:
                 self.context['users'] = []
                 for u in self.all_users:
@@ -219,6 +224,26 @@ class View(object):
             self.context['new_file'] = True
         self.context['function'] = 'edit-static'
         self.context['delete_action'] = 'delete-static'
+        self._template = self._env.get_template('edit_file.html')
+        
+    def edit_libfile(self, lid):
+        self.context['help_statement'] = """
+            <p>JSON file containing list of external libraries (eg. css &amp; json) to download and include in static folder.</p>
+            <p>See 
+            <a href="https://github.com/samuelcolvin/donkey-simple/blob/master/DonkeySimple/static_libraries.json">github DonkeySimple/static_libraries.json</a>
+            for an example.<p>
+        """
+        if lid is not None:
+            t = ds.con.LibraryFiles()
+            cfile, libfile_text = t.get_file_content(fid=lid)
+            self.context['active_repo'] = cfile.repo
+            self.context['file_text'] = cgi.escape(libfile_text)
+        else:
+            self.context['new_file'] = True
+        self.context['file_name'] = ds.LIBRARY_JSON_FILE
+        self.context['fname_readonly'] = True
+        self.context['function'] = 'edit-libfile'
+        self.context['delete_action'] = 'delete-libfile'
         self._template = self._env.get_template('edit_file.html')
     
     def edit_last_page(self, _):

@@ -4,6 +4,7 @@ PAGE_DIR = 'pages'
 REPOS_DIR = 'repos'
 SETTINGS_FILE = 'settings.py'
 USERS_FILE = 'users.json'
+LIBRARY_JSON_FILE = 'libraries.json'
 MIN_PASSWORD_LENGTH = 6
 
 def get_settings():

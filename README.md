@@ -29,4 +29,5 @@ To do:
 * python sessions, user management and site settings - DONE
 * download zip of everything option.
 * build script - DONE
+* check install_requires in setup.py
 * think about multiple repos for templates directory - DONE

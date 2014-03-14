@@ -10,9 +10,10 @@ sg = ds.SiteGenerator
 THIS_PATH = os.path.dirname(os.path.realpath(__file__))
 EDITOR_TEMPLATE_DIR = os.path.join(THIS_PATH, 'templates') 
 
+static_urls = ('static/(.+)$', 'static_file')
 urls = (
     ('logout$', 'logout'),
-    ('static/(.+)$', 'static_file'),
+    static_urls,
     ('add-repo', 'edit_repo'),
     ('view-repo-(.+)$', 'view_repo'),
     ('add-page$', 'edit_page'),
@@ -83,7 +84,11 @@ class View(object):
             if 'reset-password' in uri:
                 self.reset_password()
             else:
-                self.login()
+                m = re.search(static_urls[0], uri)
+                if m:
+                    self.static_file(m.group(1))
+                else:
+                    self.login()
         else:
             found = False
             for reg, func in urls:

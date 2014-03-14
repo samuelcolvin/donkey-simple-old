@@ -50,3 +50,14 @@ h1 a:link, h1 a:visited, h1 a:hover, h1 a:active{
 .context-item {
 	padding-top: 10px;
 }
+
+.ace_search {
+	max-width: 330px !important;
+}
+
+.divider {
+	height: 1px;
+	margin: 9px 0;
+	overflow: hidden;
+	background-color: #ccc;
+}

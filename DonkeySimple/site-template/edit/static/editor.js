@@ -10,18 +10,35 @@ $('[type=submit]').click(function(){
 	}
 });
 
+// set textarea to readonly for none override context
+function set_vis_override(){
+	var textarea = $('#value_' + $(this).attr('custom-field'));
+	var hidden = $('#hidden_' + $(this).attr('custom-field'));
+	console.log(this);
+	textarea.prop("disabled", !this.checked);
+	if (!this.checked){
+		hidden.val(textarea.val());
+		textarea.val('');
+	}
+	else{
+		textarea.val(hidden.val());
+	}
+}
+$('.override-context').click(set_vis_override);
+$('.override-context').each(set_vis_override);
+
 // generic editor setup
 var editors = [];
-function setup_editor(ace_id, format){
-	console.log('Changing #' + ace_id + ' ace div to format: "' + format + '"');
+var ace_modes;
+function setup_editor(ace_id, mode){
+	console.log('Changing #' + ace_id + ' ace div to format: "' + mode.name + '"');
 	var editor = ace.edit(ace_id);
-	if (format != ''){
-		var mode = require(format).Mode;
-		editor.getSession().setMode(new mode());
-	}
+	editor.getSession().setMode(mode.mode);
 	editor.setShowPrintMargin(false);
 	editor.getSession().setUseWrapMode(true);
-	editors.push({editor:editor, div:$('#' + ace_id)});
+	var ace_div = $('#' + ace_id);
+	editors.push({editor:editor, div:ace_div});
+	ace_div.show();
 }
 
 // generic update textbox function
@@ -35,17 +52,10 @@ function update_code_tb(){
 
 // setup the editor when there is one #editor item - eg file editor
 function setup_with_extension(){
-	var format = '';
-	var ext = $('[name="file-name"]').val().split('.').pop();
-	var formats = ['html', 'js', 'json', 'css', 'md'];
-	if ($.inArray(ext, formats) != -1){
-		if (ext == 'js')
-			ext = 'javascript';
-		if (ext == 'md')
-			ext = 'markdown';
-		format = 'ace/mode/' + ext;
-	}
-	setup_editor('editor', format);
+	ace_modes = ace.require('ace/ext/modelist');
+	var fname = $('[name="file-name"]').val();
+	var mode = ace_modes.getModeForPath(fname);
+	setup_editor('editor', mode);
 }
 if ($('#editor').length > 0){
 	setup_with_extension();
@@ -57,10 +67,12 @@ function get_dropdown(t){
 	return $('[name="' + $(t).attr('format-type-input') + '"]');
 }
 function setup_from_dropdown(d){
+	if (typeof(ace_modes) == 'undefined')
+		ace_modes = ace.require('ace/ext/modelist');
 	var ace_id = $(d).attr('id');
 	var format = get_dropdown(d).val();
-	format = 'ace/mode/' + format;
-	setup_editor(ace_id, format);
+	var mode = ace_modes.modesByName[format];
+	setup_editor(ace_id, mode);
 }
 $.each($('.ace-editor'), function(){
 	setup_from_dropdown(this);

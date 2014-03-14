@@ -3,12 +3,37 @@ from jinja2 import meta as jinja2_meta
 import re, os
 from _common import *
 
+def _get_template_path(repo_template):
+    try:
+        path_parts = tuple(repo_template.split('/'))
+        template = path_parts[-1]
+        repo = path_parts[0]
+        if repo == REPOS_DIR: repo = path_parts[1]
+    except Exception, e:
+        raise jinja2.TemplateNotFound('Problem getting template path, got "%s", error: %s' % (repo_template, str(e)))
+    return os.path.join(repo, TEMPLATES_DIR, template)
+
+class DSFileSystemLoader(jinja2.FileSystemLoader):
+    def __init__(self, **kwargs):
+        super(DSFileSystemLoader, self).__init__(REPOS_DIR, **kwargs)
+    
+    def get_source(self, environment, repo_template):
+        template_path = _get_template_path(repo_template)
+        return super(DSFileSystemLoader, self).get_source(environment, template_path)
+    
+def get_env(global_context = None):
+    env = jinja2.Environment(loader= DSFileSystemLoader())
+    if global_context:
+        env.globals = global_context
+    return env
+
 class RenderTemplate(object):
-    def __init__(self, name, repo):
-        self._repo_path = os.path.join(REPOS_DIR, repo)
-        self._template_path = os.path.join(self._repo_path, TEMPLATES_DIR)
-        self._env = jinja2.Environment(loader= jinja2.FileSystemLoader(self._template_path))
-        self._template = self._env.get_template(name)
+    def __init__(self, name, repo, env=None):
+        if env:
+            self._env = env
+        else:
+            self._env = get_env()
+        self._template = self._env.get_template('/'.join([repo, name]))
     
     def render(self, context):
         return self._template.render(**context)
@@ -31,20 +56,19 @@ class RenderTemplate(object):
     def _code_vars(self):
         self._codes = []
         self._t_vars = []
-        self._process_file(self._template.filename)
+        self._process_file(self._template.name)
         return self._codes, self._t_vars
     
-    def _process_file(self, path):
-        code = open(path, 'r').read()
+    def _process_file(self, repo_template):
+        template_path = os.path.join(REPOS_DIR, _get_template_path(repo_template))
+        code = open(template_path, 'r').read()
         ast = self._env.parse(code)
         t_vars = jinja2_meta.find_undeclared_variables(ast)
         finds = re.findall('{%.*?extends(.*?)%}', code)
         self._codes.append(code)
         self._t_vars.extend(t_vars)
-        if len(finds) > 0:
-            for f in finds:
-                p = '%s/%s' % (self._template_path, f.strip('" '))
-                self._process_file(p)
+        for f in finds:
+            self._process_file(f.strip(' "'))
     
     def _get_var(self, codes, var):
         for code in codes:

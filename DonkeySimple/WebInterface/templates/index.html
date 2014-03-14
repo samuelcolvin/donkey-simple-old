@@ -6,6 +6,7 @@
 	<input name="function" type="hidden" value="generate-site"/>
 	<div class="btn-group">
 	  <button class="btn btn-default">Generate Site</button>
+	  <button type="submit" class="btn btn-default" altfunction="clear-download-libs"> Clear &amp; Download Libraries</button>
 	  <a class="btn btn-default" href="{{ site_uri }}">Go to {{ SITE_NAME }}</a>
 	</div>
 </form>
@@ -67,6 +68,19 @@
 	</div>
   </div>
   
+  <!-- Global Context -->
+  <div class="col-md-4">
+  	<h3>Global Context</h3>
+  	<div class="pad btn-group">
+		<a href="add-globcon" class="btn btn-default">Add Global Context</a>
+	</div>
+	<div class="list-group">
+		{% for item in globcon_files %}
+	  		<a href="{{item.link}}" class="list-group-item">{{item.name}}</a>
+	  	{% endfor %}
+	</div>
+  </div>
+  
   <!-- Repos -->
   <div class="col-md-4">
   	<h3>Repos</h3>
@@ -105,6 +119,8 @@
 	  	{% endfor %}
 	</div>
   </div>
+</div>
+<div class="row">
   
   <!-- Users -->
   {% if admin %}
@@ -146,8 +162,8 @@
 {% endblock %}
 {% block js %}
 {{ super() }}
+<script src="{{ static_uri }}editor.js"></script>
 <script>
-	
 	$('.upload-modal-btn').click(function(){
 		$('#upload-name').text($(this).text());
 		$('[name="action"]').val($(this).attr('upload_action'));

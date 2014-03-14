@@ -1,4 +1,4 @@
-DEBUG = False
+DEBUG = True
 SITE_NAME = 'Site'
 PASSWORD_EXPIRE_HOURS = 24
 SHORT_RANDOM = 'short_random_var'

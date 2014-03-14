@@ -1,0 +1,8 @@
+{
+    "context": {},
+    "extension": "xml",
+    "id": 4,
+    "name": "sitemap",
+    "template": "sitemap.template.xml",
+    "template_repo": "default"
+}

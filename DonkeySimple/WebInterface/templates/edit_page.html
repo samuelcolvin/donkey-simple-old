@@ -35,31 +35,53 @@
 			</select>
 		</div>
 	  </div>
+	  <div class="col-lg-4 form-group">
+	  	<div class="input-group">
+		  <span class="input-group-addon">Extension</span>
+	  	  <input type="text" name="extension" class="form-control" placeholder="Leave Blank for HTML" value="{{ extension }}">
+		</div>
+	  </div>
+	  <div class="col-lg-4 form-group">
+	  	<div class="input-group">
+		  <span class="input-group-addon">Sitemap Priority</span>
+	  	  <input type="text" name="sitemap" class="form-control" placeholder="Leave blank to exclude" value="{{ sitemap }}">
+		</div>
+	  </div>
 	</div>
-<div class="help-block">
-</div>
-<div class="row">
-{% for input in page_context_str %}
-	<div class="col-md-6 context-item">
-		<div class="context-item-title">{{ input.name }} ({{ input.type }})</div>
-		<textarea name="{{ input.name }}" class="form-control context-input" rows="3">{{ input.value }}</textarea>
+	
+	<div class="help-block">
 	</div>
-{% endfor %}
-</div>
-<div class="context-input">
-{% for input in page_context_other %}
-	<div class="context-item">
-		<div class="context-item-title">{{ input.name }}</div>
-		<select name="contype-{{ input.name }}" class="form-control pad max-width-input">
-			{% for f in other_formats %}<option value="{{ f }}" {% if f == input.type %}selected{% endif %}>{{ f }}</option>
-			<!-- f: {{f}}, type: {{ input.type}} -->
-			{% endfor %}
-		</select>
-		<div id="ace_editor_{{ input.name }}" format-type-input="contype-{{ input.name }}" class="ace-editor context-input" tb_name="{{ input.name }}">{{ input.value }}</div>
-		<input type="hidden" name="{{ input.name }}" value="empty"/>
+	<div class="divider"></div>
+	
+	
+	<div class="row">
+	{% for input in page_context_str %}
+		<div class="col-md-6 context-item">
+			<div class="context-item-title">{{ input.name }} ({{ input.type }})</div>
+		    <div class="checkbox">
+		    	<label><input id="override_{{ input.name }}" type="checkbox" class="override-context"
+		    	 custom-field="{{ input.name }}" {% if input.override %}checked{% endif %}>
+		    	 	Override Global {% if input.global_var %}<strong>(Global Variable Defined)</strong>{% endif %}
+		    	 </label>
+		    </div>
+		    <input type="hidden" id="hidden_{{ input.name }}" value="{{ input.value }}">
+			<textarea id="value_{{ input.name }}" name="{{ input.name }}" class="form-control context-input" rows="3">{{ input.value }}</textarea>
+		</div>
+	{% endfor %}
 	</div>
-{% endfor %}
-</div>
+	<div class="context-input">
+	{% for input in page_context_other %}
+		<div class="context-item">
+			<div class="context-item-title">{{ input.name }}</div>
+			<select name="contype-{{ input.name }}" class="form-control pad max-width-input">
+				{% for f in other_formats %}<option value="{{ f }}" {% if f == input.type %}selected{% endif %}>{{ f }}</option>
+				{% endfor %}
+			</select>
+			<div id="ace_editor_{{ input.name }}" style="display:none;" format-type-input="contype-{{ input.name }}" class="ace-editor context-input" tb_name="{{ input.name }}">{{ input.value }}</div>
+			<input type="hidden" name="{{ input.name }}" value="empty"/>
+		</div>
+	{% endfor %}
+	</div>
 </form>
 <div id="blank" style="display:none"></div>
 {% endblock %}
@@ -67,7 +89,6 @@
 {% block js %}
 {{ super() }}
 <script src="{{ static_uri }}libs/ace/ace.js"></script>
-<script src="{{ static_uri }}libs/ace/mode-markdown.js"></script>
-<script src="{{ static_uri }}libs/ace/mode-html.js"></script>
+<script src="{{ static_uri }}libs/ace/ext-modelist.js"></script>
 <script src="{{ static_uri }}editor.js"></script>
 {% endblock %}

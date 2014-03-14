@@ -1,9 +1,10 @@
 import git, os, subprocess, traceback
 
-class Git(object):
+class _Git(object):
     """
     Simple git controller class.
     """
+    DEFAULT_FILES = {}
     def __init__(self, gdir, output=None):
         self.gdir = gdir
         self.dot_gdir = os.path.join(gdir, '.git')
@@ -61,6 +62,9 @@ class Git(object):
     
     def create_repo(self):
         self.repo = git.Repo.init(self.gdir)
+        for fname, content in self.DEFAULT_FILES.items():
+            path = os.path.join(self.gdir, fname)
+            open(path, 'w').write(content)
         
     def open_repo(self):
         self.repo = self._open_repo()
@@ -135,6 +139,9 @@ class Git(object):
                                stderr=subprocess.PIPE, 
                                shell=True)
         
+class Git(_Git):
+    DEFAULT_FILES = {'.gitignore': '/static/libs/'}
+    
 class Change2Directory(object):
     """
     change working directory and always return

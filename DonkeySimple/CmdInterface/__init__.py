@@ -23,7 +23,7 @@ def get_status(path):
     print '  ================'
     print '  %s Status' % settings.SITE_NAME
     print '  ================'
-    repros = [r for r, _ in ds.con.get_all_repos()]
+    repros = [r for r, _ in ds.get_all_repos()]
     print_list('Repos', repros)
     print_con('Pages', ds.con.Pages())
     print_con('Templates', ds.con.Templates())

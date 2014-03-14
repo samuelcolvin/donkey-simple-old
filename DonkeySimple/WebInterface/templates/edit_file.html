@@ -39,7 +39,7 @@
 {% endif %}
 
 {% if file_text or new_file %}
-<div id="editor" tb_name="file-text" class="pad">{{ file_text }}</div>
+<div id="editor" tb_name="file-text" class="pad" style="display:none;">{{ file_text }}</div>
 {% endif %}
 {% if file_image_path %}
 <img class="pad" src="{{ file_image_path }}" alt="{{ file_image_path }}">
@@ -53,10 +53,6 @@
 {% block js %}
 {{ super() }}
 <script src="{{ static_uri }}libs/ace/ace.js"></script>
-<script src="{{ static_uri }}libs/ace/mode-html.js"></script>
-<script src="{{ static_uri }}libs/ace/mode-markdown.js"></script>
-<script src="{{ static_uri }}libs/ace/mode-javascript.js"></script>
-<script src="{{ static_uri }}libs/ace/mode-json.js"></script>
-<script src="{{ static_uri }}libs/ace/mode-css.js"></script>
+<script src="{{ static_uri }}libs/ace/ext-modelist.js"></script>
 <script src="{{ static_uri }}editor.js"></script>
 {% endblock %}

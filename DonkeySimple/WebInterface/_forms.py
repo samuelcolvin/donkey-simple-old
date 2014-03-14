@@ -58,6 +58,9 @@ class ProcessForm(UniversalProcessor):
         ds.SiteGenerator(self._add_msg).generate_entire_site()
         self._add_msg('Site generated successfully', 'success')
         
+    def clear_download_libs(self):
+        ds.download_lib_statics(self._add_msg, delete_first = True)
+        
     def add_repo(self):
         repo_name = self.fields['repo'].value
         repo_name, repo_path = ds.con.new_repo_path(repo_name)
@@ -110,7 +113,7 @@ class ProcessForm(UniversalProcessor):
         [self._add_msg(line) for line in git_repo.commit(msg).split('\n')]
         
     def _get_repo_path(self, name):
-        return (p for r, p in ds.con.get_all_repos() if r == name).next()
+        return (p for r, p in ds.get_all_repos() if r == name).next()
         
     def edit_page(self):
         page_con = ds.con.Pages()
@@ -121,7 +124,7 @@ class ProcessForm(UniversalProcessor):
         t_con = ds.con.Templates()
         template = t_con.get_cfile_fid(self.fields['page-template-id'].value)
         repo = self.fields['repo'].value
-        page_con.create_cfile(repo, page_name, template.filename, template.repo)
+        page_con.create_cfile(repo, page_name, template.name, template.repo)
         context = dict([(name, self.fields[name].value) for name in self.fields])
         ftypes = dict([(name.replace('contype-', ''), self.fields[name].value) for name in self.fields if name.startswith('contype-')])
         page_con.update_context(context, ftypes)
@@ -138,9 +141,9 @@ class ProcessForm(UniversalProcessor):
     def edit_template(self):
         t = ds.con.Templates()
         text = self._unescape_file_text()
-        filename = self.fields['file-name'].value
+        name = self.fields['file-name'].value
         repo = self.fields['repo'].value
-        template = t.write_file(text, repo, filename)
+        template = t.write_file(text, repo, name)
         self._add_msg('"%s" successfully saved' % template.display, 'success')
         
     def delete_template(self):
@@ -171,8 +174,23 @@ class ProcessForm(UniversalProcessor):
         static = ds.con.Statics()
         self._delete_file(static, 'repo', 'file-name')
         
+    def edit_globcon(self):
+        con = ds.con.GlobConFiles()
+        self.edit_json(con, ds.GLOBCON_JSON_FILE)
+            
+    def delete_globcon(self):
+        gc = ds.con.GlobConFiles()
+        self._delete_file(gc, 'repo', 'file-name')
+        
     def edit_libfile(self):
+        con = ds.con.LibraryFiles()
+        self.edit_json(con, ds.LIBRARY_JSON_FILE)
+            
+    def delete_libfile(self):
         lf = ds.con.LibraryFiles()
+        self._delete_file(lf, 'repo', 'file-name')
+        
+    def edit_json(self, con, file_name):
         text = self._unescape_file_text()
         try:
             json.loads(text)
@@ -180,12 +198,8 @@ class ProcessForm(UniversalProcessor):
             self._add_msg('JSON Invalid: %s' % str(e), 'errors')
         else:
             repo = self.fields['repo'].value
-            cf = lf.write_file(text, repo, ds.LIBRARY_JSON_FILE)
+            cf = con.write_file(text, repo, file_name)
             self._add_msg('"%s" successfully saved' % cf.display, 'success')
-            
-    def delete_libfile(self):
-        lf = ds.con.LibraryFiles()
-        self._delete_file(lf, 'repo', 'file-name')
         
     def edit_user(self):
         if 'previous-username' in self.fields:
@@ -285,9 +299,8 @@ class ProcessForm(UniversalProcessor):
     def _delete_file(self, controller, repo_field_name, file_field_name, repo = None):
         if repo is None:
             repo = self.fields[repo_field_name].value
-        filename = self.fields[file_field_name].value
-        print repo, filename
-        fname = controller.delete_file(repo = repo, filename = filename)
+        name = self.fields[file_field_name].value
+        fname = controller.delete_file(repo = repo, name = name)
         self._add_msg('"%s" successfully deleted' % fname.display, 'success')
     
     def _unescape_file_text(self):

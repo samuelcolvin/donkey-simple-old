@@ -7,15 +7,6 @@ import HTMLParser
 import _template_renderer as tr
 import re, base64, hashlib, pwd, subprocess
 from download import download_libraries
-
-def get_all_repos():
-    """
-    Generator for all repos in the site.
-    """
-    for repo in os.listdir(REPOS_DIR):
-        repo_path = os.path.join(REPOS_DIR, repo)
-        if os.path.isdir(repo_path):
-            yield repo, repo_path
             
 def new_repo_path(repo):
     """
@@ -39,13 +30,13 @@ class _File(object):
     """
     info = None
     active_cfile = None
-    def __init__(self, repo, file_type, filename, ext = ''):
+    def __init__(self, repo, file_type, name, ext = ''):
         self.repo = repo
         self.file_type = file_type
-        self.filename = filename
+        self.name = name
         self.ext = ext
-        self.path = os.path.join(REPOS_DIR, repo, file_type, filename)
-        self.sort_on = (repo, file_type, filename)
+        self.path = os.path.join(REPOS_DIR, repo, file_type, name)
+        self.sort_on = (repo, file_type, name)
         self.id = base64.urlsafe_b64encode(hashlib.md5(self.path).digest()[:10]).strip('=')
         
     @property
@@ -53,7 +44,7 @@ class _File(object):
         """
         Display property for the file.
         """ 
-        name = self.filename.replace(self.ext, '')
+        name = self.name.replace(self.ext, '')
         return '%s :: %s' % (self.repo, name)
     
     @property
@@ -65,10 +56,10 @@ class _File(object):
         Identifies whether or not this file matches the details provided.
         """
         if (repo is None or self.repo == repo):
-            if name == self.filename:
+            if name == self.name:
                 return True
-            filename = name+ext
-            if filename == self.filename:
+            name = name+ext
+            if name == self.name:
                 return True
         return False
     
@@ -115,7 +106,8 @@ class _File_Controller(object):
                 os.mkdir(directory)
                 chmod_own(directory, 0777)
             for fn in os.listdir(directory):
-                if self._file_test(fn) and fn not in self.perm_files:
+                file_path = os.path.join(directory, fn)
+                if os.path.isfile(file_path) and self._file_test(fn) and fn not in self.perm_files:
                     yield _File(repo, self.DIR, fn, self.EXTENSION)
     
     def get_file_content(self, fid = None, name=None, repo=None):
@@ -146,9 +138,9 @@ class _File_Controller(object):
         self.cfiles[self.active_cfile.id] = self.active_cfile
         return self.active_cfile
     
-    def delete_file(self, path = None, repo = None, filename = None):
+    def delete_file(self, path = None, repo = None, name = None):
         if path is None:
-            cfile = self.get_cfile_name(filename, repo)
+            cfile = self.get_cfile_name(name, repo)
         cfile.delete_file()
         return self.cfiles.pop(cfile.id)
     
@@ -178,21 +170,21 @@ class _File_Controller(object):
         self.active_cfile = self.cfiles[pid]
         return self.active_cfile 
     
-    def get_cfile_name(self, filename, repo):
+    def get_cfile_name(self, name, repo):
         """
         File a cfile based on name and repo.
         """
         for cf in self.cfiles.values():
-            if cf.is_match(repo, filename, self.EXTENSION):
+            if cf.is_match(repo, name, self.EXTENSION):
                 return cf
-        raise Exception('File %s : %s does not exist' % (repo, filename))
+        raise Exception('File %s : %s does not exist' % (repo, name))
     
     def get_path(self, repo, name):
         return os.path.join(REPOS_DIR, repo, self.DIR, name)
     
     def _valid_name(self, name):
         """
-        add the file extension if needed and make sure this is just a filename not a path.
+        add the file extension if needed and make sure this is just a file name not a path.
         """
         name = os.path.basename(name)
         if name.endswith(self.EXTENSION):
@@ -234,24 +226,31 @@ class Pages(_File_Controller):
             context[name] = item
             if name in self.active_cfile.info['context']:
                 context[name]['value'] = self.active_cfile.info['context'][name]['value']
-            if self.active_cfile.info['context'][name]['type'] != item['type']:
-                for ts in self.type_sets:
-                    if self.active_cfile.info['context'][name]['type'] in ts and item['type'] in ts:
-                        context[name]['type'] = self.active_cfile.info['context'][name]['type']
-                        break
+                if self.active_cfile.info['context'][name]['type'] != item['type']:
+                    for ts in self.type_sets:
+                        if self.active_cfile.info['context'][name]['type'] in ts and item['type'] in ts:
+                            context[name]['type'] = self.active_cfile.info['context'][name]['type']
+                            break
+            else:
+                context[name]['value'] = None
         return context
     
     def update_context(self, fields, f_types):
+        print fields
         context = {}
+        if 'extension' in fields:
+            self.active_cfile.info['extension'] = fields['extension']
+        if 'sitemap' in fields:
+            self.active_cfile.info['sitemap'] = fields['sitemap']
         for name, item in self.get_empty_context().items():
-            context[name] = item
             if name in fields:
+                context[name] = item
                 text = fields[name]
                 if item['type'] in ['html', 'markdown']:
                     text = HTMLParser.HTMLParser().unescape(text)
                 context[name]['value'] = text
-            if name in f_types:
-                context[name]['type'] = f_types[name]
+                if name in f_types:
+                    context[name]['type'] = f_types[name]
         self.active_cfile.info['context'] = context
         
     def _file_test(self, fn):
@@ -300,22 +299,50 @@ class Statics(_File_Controller):
                 return True
         return False
 
-class LibraryFiles(_File_Controller):
+class _SingleJSONFile(_File_Controller):
     DIR = ''
     EXTENSION = '.json'
+    FILE_NAME = 'unknown.json'
     
     def _get_all_files(self):
         """
         Generates list of _File objects of all lib json files.
         """
         for repo, repo_path in get_all_repos():
-            lib_file_path = os.path.join(repo_path, LIBRARY_JSON_FILE)
+            lib_file_path = os.path.join(repo_path, self.FILE_NAME)
             if os.path.exists(lib_file_path):
-                yield _File(repo, self.DIR, LIBRARY_JSON_FILE, self.EXTENSION)
+                yield _File(repo, self.DIR, self.FILE_NAME, self.EXTENSION)
 
-    def download(self, target, output):
+class LibraryFiles(_SingleJSONFile):
+    FILE_NAME = LIBRARY_JSON_FILE
+                
+    def delete_libs(self, output):
+        output('deleting old static libraries...')
         for cf in self.cfiles.values():
-            download_libraries(cf.path, target, output = output)
+            path = self.libs_dir(cf)
+            if os.path.exists(path):
+                shutil.rmtree(path)
+        
+    def download(self, output):
+        libs_path = None
+        for cf in self.cfiles.values():
+            libs_path = self.libs_dir(cf)
+            download_libraries(cf.path, libs_path, output = output)
+        if libs_path:
+            repeat_owners_permission(libs_path)
+    
+    def libs_dir(self, cf):
+        return os.path.join(REPOS_DIR, cf.repo, STATIC_DIR, 'libs')
+
+class GlobConFiles(_SingleJSONFile):
+    FILE_NAME = GLOBCON_JSON_FILE
+    
+    def get_entire_context(self):
+        context = {}
+        for cf in self.cfiles.values():
+            with open(cf.path, 'r') as fhandler:
+                context.update(json.load(fhandler))
+        return context
 
 def chmod_own(path, perms):
 #     http_id = pwd.getpwnam(settings.HTTP_USER).pw_uid

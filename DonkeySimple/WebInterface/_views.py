@@ -23,6 +23,8 @@ urls = (
     ('edit-static-(.+)$', 'edit_static'),
     ('add-libfile', 'edit_libfile'),
     ('edit-libfile-(.+)$', 'edit_libfile'),
+    ('add-globcon', 'edit_globcon'),
+    ('edit-globcon-(.+)$', 'edit_globcon'),
     ('add-user$', 'edit_user'),
     ('user$', 'edit_this_user'),
     ('edit-user-last$', 'edit_last_user'),
@@ -44,32 +46,39 @@ class View(object):
         self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
         uri = os.environ['REQUEST_URI']
         self._site_uri = uri[:uri.index('/edit/')]
+        print 'site_uri:', self._site_uri
         e_index = uri.index('/edit/') + 5
         self._site_edit_uri = uri[:e_index] + '/'
         self._edit_static_uri = join_uri(self._site_edit_uri, 'static/')
         fields = cgi.FieldStorage()
         valid_user = self._auth(fields)
-        if valid_user:
-            proc_form = ProcessForm(self._add_msg, fields, self.isadmin, self.username)
-            if proc_form.regen_users:
-                valid_user = self._auth(fields)
-            self.created_item = proc_form.created_item
-        else:
-            AnonFormProcessor(self._add_msg, fields)
-        self._generate_page(uri, loggedin = valid_user)
+        processing_error = None
+        try:
+            if valid_user:
+                proc_form = ProcessForm(self._add_msg, fields, self.isadmin, self.username)
+                if proc_form.regen_users:
+                    valid_user = self._auth(fields)
+                self.created_item = proc_form.created_item
+            else:
+                AnonFormProcessor(self._add_msg, fields)
+        except Exception, e:
+            processing_error = e
+        self._generate_page(uri, loggedin = valid_user, error = processing_error)
         
-    def _generate_page(self, uri, loggedin = False):
+    def _generate_page(self, uri, loggedin = False, error = None):
         self.context = {'title': '%s Editor' % settings.SITE_NAME, 'site_title': '%s Editor' % settings.SITE_NAME, 
                         'static_uri': self._edit_static_uri, 'edit_uri': self._site_edit_uri,
                         'site_uri': self._site_uri}
         if loggedin:
             self.context.update({'username': self.username, 'admin': self.user['admin']})
-        self.repo_paths = list(ds.con.get_all_repos())
+        self.repo_paths = list(ds.get_all_repos())
         self.context['repos'] = [r for r, _ in self.repo_paths]
         if len(self.context['repos']) == 0:
             self._add_msg('REPOS directory is empty: there are no repos, pages, templates or static files')
         print 'uri: %r' % uri
-        if not loggedin:
+        if error:
+            self._error_page(error, code = httplib.BAD_REQUEST)
+        elif not loggedin:
             if 'reset-password' in uri:
                 self.reset_password()
             else:
@@ -156,12 +165,16 @@ class View(object):
             s = ds.con.LibraryFiles()
             for cf in s.cfiles.values():
                 self.context['library_files'].append({'link': 'edit-libfile-%s' % cf.id, 'name': cf.display})
+            self.context['globcon_files'] = []
+            gc = ds.con.GlobConFiles()
+            for cf in gc.cfiles.values():
+                self.context['globcon_files'].append({'link': 'edit-globcon-%s' % cf.id, 'name': cf.display})
             if self.isadmin:
                 self.context['users'] = []
                 for u in self.all_users:
                     self.context['users'].append({'link': 'edit-user-%s' % u, 'name': u})
         except Exception, e:
-            return self._error_page(e, traceback.format_exc())
+            return self._error_page(e)
         
     def view_repo(self, repo_name):
         self.context['repo_name'] = repo_name
@@ -186,66 +199,6 @@ class View(object):
             self._add_msg('Repo not up-to-date', 'errors')
         self._template = self._env.get_template('repos.html')
     
-    def edit_template(self, tid):
-        self.context['help_statement'] = """
-            <p>Template names should contain <span class="code">.template.</span> in their name, eg. <span class="code">my_template.template.html</span>.</p>
-            <p>Templates are rendered using <a href="http://jinja.pocoo.org/docs/">Jinja2</a> which is a "Django like" template engine. See their site for Documentation.</p>
-        """
-        if tid is not None:
-            t = ds.con.Templates()
-            cfile, template_text = t.get_file_content(fid=tid)
-            self.context['file_name'] = cfile.filename
-            self.context['active_repo'] = cfile.repo
-            self.context['file_text'] = cgi.escape(template_text)
-        else:
-            self.context['new_file'] = True
-        self.context['function'] = 'edit-template'
-        self.context['delete_action'] = 'delete-template'
-        self._template = self._env.get_template('edit_file.html')
-    
-    def edit_static(self, sid):
-        self.context['file_type'] = 'Text'
-        if sid is not None:
-            static = ds.con.Statics()
-            cfile, content = static.get_file_content(fid=sid)
-            self.context['file_name'] = cfile.filename
-            self.context['file_id'] = cfile.id
-            self.context['active_repo'] = cfile.repo
-            self.context['file_type'] = static.get_file_type(self.context['file_name'])
-            static_uri = join_uri(self._site_edit_uri, ds.REPOS_DIR, cfile.repo, static.DIR, cfile.filename)
-            if self.context['file_type'] == 'Text':
-                self.context['file_text'] = cgi.escape(content)
-            elif self.context['file_type'] == 'Image':
-                self.context['file_image_path'] = static_uri
-            elif self.context['file_type'] == 'Font':
-                self.context['font_path'] = static_uri
-                self.context['font_name'] = get_font_name(static.get_path(cfile.repo, cfile.filename))
-        else:
-            self.context['new_file'] = True
-        self.context['function'] = 'edit-static'
-        self.context['delete_action'] = 'delete-static'
-        self._template = self._env.get_template('edit_file.html')
-        
-    def edit_libfile(self, lid):
-        self.context['help_statement'] = """
-            <p>JSON file containing list of external libraries (eg. css &amp; json) to download and include in static folder.</p>
-            <p>See 
-            <a href="https://github.com/samuelcolvin/donkey-simple/blob/master/DonkeySimple/static_libraries.json">github DonkeySimple/static_libraries.json</a>
-            for an example.<p>
-        """
-        if lid is not None:
-            t = ds.con.LibraryFiles()
-            cfile, libfile_text = t.get_file_content(fid=lid)
-            self.context['active_repo'] = cfile.repo
-            self.context['file_text'] = cgi.escape(libfile_text)
-        else:
-            self.context['new_file'] = True
-        self.context['file_name'] = ds.LIBRARY_JSON_FILE
-        self.context['fname_readonly'] = True
-        self.context['function'] = 'edit-libfile'
-        self.context['delete_action'] = 'delete-libfile'
-        self._template = self._env.get_template('edit_file.html')
-    
     def edit_last_page(self, _):
         self.edit_page(self.created_item)
     
@@ -262,18 +215,105 @@ class View(object):
             except:
                 return self._error_page('Page not found', code=httplib.BAD_REQUEST)
             self.context['page_name'] = cfile.info['name']
+            if 'sitemap' in cfile.info:
+                self.context['sitemap'] = cfile.info['sitemap']
+            if 'extension' in cfile.info:
+                self.context['extension'] = cfile.info['extension']
             self.context['page_templates'] = t_con.cfiles.values()
             self.context['page_context_str'] = []
             self.context['page_context_other'] = []
+            global_context = ds.SiteGenerator().global_context()
             for name, value in page_con.get_true_context().items():
-                print name, value
+                override = True
+                global_var = name in global_context
+                if value['value'] == None:
+                    value['value'] = ''
+                    if global_var:
+                        override = False
+                con_settings = {'name': name, 
+                                'value': value['value'], 
+                                'type': value['type'], 
+                                'override': override,
+                                'global_var': global_var}
                 if value['type'] == 'string':
-                    self.context['page_context_str'].append({'name': name, 'value': value['value'], 'type': value['type']})
+                    self.context['page_context_str'].append(con_settings)
                 else:
-                    self.context['page_context_other'].append({'name': name, 'value': cgi.escape(value['value']), 'type': value['type']})
-            self.context['active_page_template_id'] = t_con.get_cfile_name(filename = cfile.info['template'], repo = cfile.info['template_repo']).id
+                    con_settings['value'] = cgi.escape(value['value'])
+                    self.context['page_context_other'].append(con_settings)
+            self.context['active_page_template_id'] = t_con.get_cfile_name(name = cfile.info['template'], repo = cfile.info['template_repo']).id
             self.context['action_uri'] = self.context['edit_uri']
         self._template = self._env.get_template('edit_page.html')
+    
+    def edit_template(self, tid):
+        self.context['help_statement'] = """
+            <p>Template names should contain <span class="code">.template.</span> in their name, eg. <span class="code">my_template.template.html</span>.</p>
+            <p>Templates are rendered using <a href="http://jinja.pocoo.org/docs/">Jinja2</a> which is a "Django like" template engine. See their site for Documentation.</p>
+        """
+        if tid is not None:
+            t = ds.con.Templates()
+            cfile, template_text = t.get_file_content(fid=tid)
+            self.context['file_name'] = cfile.name
+            self.context['active_repo'] = cfile.repo
+            self.context['file_text'] = cgi.escape(template_text)
+        else:
+            self.context['new_file'] = True
+        self.context['function'] = 'edit-template'
+        self.context['delete_action'] = 'delete-template'
+        self._template = self._env.get_template('edit_file.html')
+    
+    def edit_static(self, sid):
+        self.context['file_type'] = 'Text'
+        if sid is not None:
+            static = ds.con.Statics()
+            cfile, content = static.get_file_content(fid=sid)
+            self.context['file_name'] = cfile.name
+            self.context['file_id'] = cfile.id
+            self.context['active_repo'] = cfile.repo
+            self.context['file_type'] = static.get_file_type(self.context['file_name'])
+            static_uri = join_uri(self._site_edit_uri, ds.REPOS_DIR, cfile.repo, static.DIR, cfile.name)
+            if self.context['file_type'] == 'Text':
+                self.context['file_text'] = cgi.escape(content)
+            elif self.context['file_type'] == 'Image':
+                self.context['file_image_path'] = static_uri
+            elif self.context['file_type'] == 'Font':
+                self.context['font_path'] = static_uri
+                self.context['font_name'] = get_font_name(static.get_path(cfile.repo, cfile.name))
+        else:
+            self.context['new_file'] = True
+        self.context['function'] = 'edit-static'
+        self.context['delete_action'] = 'delete-static'
+        self._template = self._env.get_template('edit_file.html')
+        
+    def edit_globcon(self, gcid):
+        help_text = 'JSON file containing extra values for the global context used when rendering pages'
+        linkname = 'globcon'
+        con = ds.con.GlobConFiles()
+        return self.edit_json(gcid, con, help_text, linkname, ds.GLOBCON_JSON_FILE)
+        
+    def edit_libfile(self, lid):
+        help_text = """
+            <p>JSON file containing list of external libraries (eg. css &amp; json) to download and include in static folder.</p>
+            <p>See 
+            <a href="https://github.com/samuelcolvin/donkey-simple/blob/master/DonkeySimple/static_libraries.json">github DonkeySimple/static_libraries.json</a>
+            for an example.<p>
+        """
+        linkname = 'libfile'
+        con = ds.con.LibraryFiles()
+        return self.edit_json(lid, con, help_text, linkname, ds.LIBRARY_JSON_FILE)
+        
+    def edit_json(self, json_id, con, help_text, linkname, file_name):
+        self.context['help_statement'] = help_text
+        if json_id is not None:
+            cfile, libfile_text = con.get_file_content(fid=json_id)
+            self.context['active_repo'] = cfile.repo
+            self.context['file_text'] = cgi.escape(libfile_text)
+        else:
+            self.context['new_file'] = True
+        self.context['file_name'] = file_name
+        self.context['fname_readonly'] = True
+        self.context['function'] = 'edit-%s' % linkname
+        self.context['delete_action'] = 'delete-%s' % linkname
+        self._template = self._env.get_template('edit_file.html')
         
     def edit_last_user(self, _):
         uid = self.created_item
@@ -317,7 +357,10 @@ class View(object):
     def _permission_denied(self):
         self._bad('You do not have permission to view this page.', code=httplib.FORBIDDEN)
         
-    def _error_page(self, e, error_details = None, code = httplib.INTERNAL_SERVER_ERROR):
+    def _error_page(self, e, code = httplib.INTERNAL_SERVER_ERROR):
+        error_details = None
+        if settings.DEBUG:
+            error_details = traceback.format_exc()
         self._bad(str(e),error_details=error_details, code=code)
         
     def _bad(self, error_name, error_details = None, code = httplib.BAD_REQUEST):

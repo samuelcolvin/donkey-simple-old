@@ -11,12 +11,17 @@ To do:
 * add static files - upload, move into place - DONE
 * allow editing of static files- DONE
 * get pull and push to git working - DONE
-* fix ace find & replace box problems from bootstrap
-* global variables eg author, title, checkbox for override on pages
-* global vars to include static-dir, list of pages etc.
+* Sitemap, add sitemap ranking to pages, and extension field to pages - DONE
+* "clear and download libraries" button so generate only downloads new libs, .gitignore file for repos - DONE
+* fix ace find & replace box problems from bootstrap - DONE
+* global variables eg author, title, checkbox for override on pages - Done
+* get "override global" working for ace editors
+* global vars to include static-dir, list of pages etc. - DONE
 * glboal vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?)
-* link generation (link to a specific page), static-dir tag
+* link generation (link to a specific page), static-dir tag - DONE
 * static file compression and organising
+* JSON editor in pages for lists etc.
+* JSON editor mode
 * allow pages to use template from different repo (save repo in page) - DONE
 * library static files should be downloaded (implement zip bit) - DONE
 * static library file webinterface - DONE
@@ -24,3 +29,4 @@ To do:
 * python sessions, user management and site settings - DONE
 * download zip of everything option.
 * build script - DONE
+* think about multiple repos for templates directory - DONE

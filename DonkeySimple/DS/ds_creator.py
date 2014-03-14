@@ -1,7 +1,6 @@
 import shutil, os
 import _controllers as con
 from random_string import get_random_string
-from download import download_libraries
 
 def create_ds(path):
     if os.path.exists(path):
@@ -13,14 +12,7 @@ def create_ds(path):
     site_template = os.path.realpath(os.path.join(this_dir, '../site-template'))
     shutil.copytree(site_template, path)
     full_path = os.path.realpath(path)
-    print 'Site template copied, Downloading static files...'
-    external_static_dir = os.path.join(path, 'edit', 'static', 'libs')
-    libs_json_path = os.path.join(os.path.dirname(__file__), '../static_libraries.json')
-    try:
-        download_libraries(libs_json_path, external_static_dir)
-    except Exception, e:
-        print 'ERROR: %s' % str(e)
-        print 'Problem downloading libraries, you may have problems with internet connection.\n\n'
+    print 'Site template copied'
     print 'Generating short random variable for cookies...'
     settings_file = os.path.join(path, 'edit', 'settings.py')
     text = open(settings_file, 'r').read()

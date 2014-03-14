@@ -14,10 +14,10 @@ To do:
 * Sitemap, add sitemap ranking to pages, and extension field to pages - DONE
 * "clear and download libraries" button so generate only downloads new libs, .gitignore file for repos - DONE
 * fix ace find & replace box problems from bootstrap - DONE
-* global variables eg author, title, checkbox for override on pages - Done
+* global variables eg author, title, checkbox for override on pages - DONE
 * get "override global" working for ace editors
 * global vars to include static-dir, list of pages etc. - DONE
-* glboal vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?)
+* global vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?)
 * link generation (link to a specific page), static-dir tag - DONE
 * static file compression and organising
 * JSON editor in pages for lists etc.

@@ -12,6 +12,7 @@ EDITOR_TEMPLATE_DIR = os.path.join(THIS_PATH, 'templates')
 
 urls = (
     ('logout$', 'logout'),
+    ('static/(.+)$', 'static_file'),
     ('add-repo', 'edit_repo'),
     ('view-repo-(.+)$', 'view_repo'),
     ('add-page$', 'edit_page'),
@@ -99,6 +100,8 @@ class View(object):
                     self._add_msg('%s not found' % uri, 'errors')
                 self.index()
         self.context.update(self._msgs)
+        if hasattr(self, '_static_file'):
+            self.page = self._static_file
         if hasattr(self, '_template'):
             self.page = self._template.render(**self.context)
         
@@ -132,6 +135,19 @@ class View(object):
         self.all_users = auth.users
 #         self.o_usernames = auth.get_sorted_users()
         return True
+    
+    def static_file(self, uri_path):
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        path = os.path.join(this_dir, 'static', uri_path.strip(' ?'))
+#         print path
+        if os.path.exists(path):
+            if path.endswith('.css'):
+                self.content_type = 'content-type: text/css\n'
+            if path.endswith('.js'):
+                self.content_type = 'content-type: text/javascript\n'
+            self._static_file =open(path, 'r').read()
+        else:
+            self._page_not_found()
         
     def login(self):
         self._template = self._env.get_template('login.html')
@@ -356,6 +372,9 @@ class View(object):
         
     def _permission_denied(self):
         self._bad('You do not have permission to view this page.', code=httplib.FORBIDDEN)
+        
+    def _page_not_found(self):
+        self._bad('Page not Found', 'Page not Found: %s' % os.environ['REQUEST_URI'], code=httplib.NOT_FOUND)
         
     def _error_page(self, e, code = httplib.INTERNAL_SERVER_ERROR):
         error_details = None

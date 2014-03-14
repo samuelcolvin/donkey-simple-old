@@ -53,6 +53,7 @@ try:
     response += wi.cookie
     response += '\n\n'
     response += wi.page
+    show_debug = 'html' in wi.content_type
 except Exception, e:
     debug.finish_debugging()
     print 'Status: 500 Internal Server Error\n'
@@ -68,6 +69,7 @@ except Exception, e:
 else:
     debug.finish_debugging()
     print response
-    print debug.html
+    if show_debug:
+        print debug.html
 
 

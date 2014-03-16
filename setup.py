@@ -22,6 +22,7 @@ setup(name='DonkeySimple',
         'templates/*.*',
         'static/*.*',
         'static/libs/*.*',
+        'static/libs/ace/*.*',
     ]},
     scripts=['DonkeySimple/bin/donkeysimple'],
     install_requires=[

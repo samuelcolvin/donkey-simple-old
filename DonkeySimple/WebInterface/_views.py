@@ -68,7 +68,7 @@ class View(object):
         self._generate_page(uri, loggedin = valid_user, error = processing_error)
         
     def _generate_page(self, uri, loggedin = False, error = None):
-        self.context = {'title': '%s Editor' % settings.SITE_NAME, 'site_title': '%s Editor' % settings.SITE_NAME, 
+        self.context = {'title': '%s Editor' % settings.SITE_NAME, 'site_name': settings.SITE_NAME, 'site_title': '%s Editor' % settings.SITE_NAME, 
                         'static_uri': self._edit_static_uri, 'edit_uri': self._site_edit_uri,
                         'site_uri': self._site_uri}
         if loggedin:
@@ -142,8 +142,19 @@ class View(object):
         return True
     
     def static_file(self, uri_path):
+        """
+        Render a static file from within the installed directory
+        have made sure the path is inside static.
+        """
         this_dir = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(this_dir, 'static', uri_path.strip(' ?'))
+        uri_path = uri_path.strip(' ?')
+        name = os.path.basename(uri_path)
+        d = ''
+        if os.path.dirname(uri_path).endswith('libs/ace'):
+            d = 'libs/ace'
+        elif os.path.dirname(uri_path).endswith('libs'):
+            d = 'libs'
+        path = os.path.join(this_dir, 'static', d, name)
 #         print path
         if os.path.exists(path):
             if path.endswith('.css'):

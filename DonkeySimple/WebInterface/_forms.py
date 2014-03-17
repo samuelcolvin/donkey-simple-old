@@ -299,7 +299,9 @@ class ProcessForm(UniversalProcessor):
         self._add_msg('"%s" successfully deleted' % fname.display, 'success')
     
     def _unescape_file_text(self):
-        return HTMLParser.HTMLParser().unescape(self.fields['file-text'].value)
+        if 'file-text' in self.fields:
+            return HTMLParser.HTMLParser().unescape(self.fields['file-text'].value)
+        return ''
     
 class _BinaryWriter(object):
     def __init__(self, file_ob):

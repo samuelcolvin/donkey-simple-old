@@ -67,11 +67,17 @@ class _File(object):
         os.remove(self.path)
     
     def write_file(self, content):
+        chunking = hasattr(content, 'next')
+        write_setting = ('w', 'wb')[chunking]
         try:
             self.delete_file()
         except: pass
-        with open(self.path, 'w') as handle:
-            handle.write(content)
+        with open(self.path, write_setting) as handle:
+            if chunking:
+                for chunk in content:
+                    handle.write(chunk)
+            else:
+                handle.write(content)
         self.set_mod()
     
     def set_mod(self):
@@ -147,11 +153,11 @@ class _File_Controller(object):
     def new_file_path(self, repo, name):
         name = name.strip('.')
         name = re.sub(r'[\\/]', '', name)
-        return self.get_path(self._new_name(repo, name))
+        return self.get_path(repo, self._new_name(repo, name))
     
     def _new_name(self, name, repo, num=1):
         def not_existing(name):
-            if self.get_cfile_name(name, repo) is None:
+            if self.get_cfile_name(name, repo, no_exist_error = False) is None:
                 return True
             return name not in self.perm_files
         if not_existing(name):
@@ -170,14 +176,15 @@ class _File_Controller(object):
         self.active_cfile = self.cfiles[pid]
         return self.active_cfile 
     
-    def get_cfile_name(self, name, repo):
+    def get_cfile_name(self, name, repo, no_exist_error = True):
         """
         File a cfile based on name and repo.
         """
         for cf in self.cfiles.values():
             if cf.is_match(repo, name, self.EXTENSION):
                 return cf
-        raise Exception('File %s : %s does not exist' % (repo, name))
+        if no_exist_error:
+            raise Exception('File %s : %s does not exist' % (repo, name))
     
     def get_path(self, repo, name):
         return os.path.join(REPOS_DIR, repo, self.DIR, name)
@@ -283,9 +290,6 @@ class Statics(_File_Controller):
         ('Image', ('.png', '.jpeg', '.jpg', '.gif', '.bmp')),
         ('Font', ('.ttf')),
     )
-    
-    def _file_test(self, fn):
-        return True
         
     def get_file_type(self, file_name):
         for name, extensions in self.extension_groups:

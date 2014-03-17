@@ -1,8 +1,8 @@
 #!/usr/bin/python
 import sys, argparse, os
-sys.path.append("/home/samuel/Dropbox/dev/eclipse_workspace_ub/donkey-simple/")
     
 DEFAULT_SITE = 'donkey_simple_site'
+import DonkeySimple
 import DonkeySimple.CmdInterface as dscmd
 
 class Actions:
@@ -29,6 +29,9 @@ class Actions:
     def edituser(self):
         if self.path == DEFAULT_SITE: self.path = None
         dscmd.edituser(self.path)
+    
+    def version(self):
+        print 'Version: %s' % DonkeySimple.__version__
 
 parser = argparse.ArgumentParser(description="""Donkey Simple Controller.
 Utility for building and controlling donkey-simple websites 
@@ -38,8 +41,9 @@ Utility for building and controlling donkey-simple websites
     build - builds a new site with edit interface at the specified, default is "%s".
     generate - generates the site.
     edituser - edit a users password.
+    version - print version of DonkeySimple.
 """ % DEFAULT_SITE, formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('action', metavar='action', choices=['build', 'status', 'generate', 'edituser'],
+parser.add_argument('action', metavar='action', choices=['build', 'status', 'generate', 'edituser', 'version'],
                    help='action to perform: status|build|generate|edituser (defaults to status)')
 parser.add_argument('path', metavar='site-path', nargs='?', default=DEFAULT_SITE,
                    help='Relative path of donkey simple site.')

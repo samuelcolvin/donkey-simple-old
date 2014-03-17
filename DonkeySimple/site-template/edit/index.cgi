@@ -4,8 +4,7 @@ This is the recieving script for all page requests to the donkeys simple edit si
 
 You Shouldn't have to change anything in here unless there is a bug, for settings look in settings.py
 """
-import sys
-sys.path.append("/home/samuel/Dropbox/dev/eclipse_workspace_ub/donkey-simple/")
+import sys, traceback, StringIO
 
 class Debug:
     _text = ''
@@ -39,7 +38,6 @@ class Debug:
             return ''
         return 'DEBUG OUTPUT:\n%s' % self._text.strip('\r\t\n ')
 
-import traceback, sys, StringIO
 debug = Debug()
 response = ''
 try:

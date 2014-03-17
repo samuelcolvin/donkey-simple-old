@@ -32,7 +32,6 @@ def create_ds(path):
     subprocess.call('ln -s %s %s' % (true_static_path, static_link), shell=True)
     print 'Generating default site...'
     os.chdir(edit_path)
-    print os.getcwd()
     sg = SiteGenerator()
     sg.generate_entire_site()
     print '==========================='

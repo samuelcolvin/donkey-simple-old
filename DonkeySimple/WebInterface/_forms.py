@@ -275,6 +275,7 @@ class ProcessForm(UniversalProcessor):
         self._process_files('files', ds.con.Statics())
     
     def _process_files(self, field_name, controller):
+        self._upload_repo = self.fields['repo'].value
         if isinstance(self.fields[field_name], list):
             for f in self.fields[field_name]:
                 self._process_file(f, controller)
@@ -283,18 +284,12 @@ class ProcessForm(UniversalProcessor):
     
     def _process_file(self, file_field, controller):
         if file_field.file:
-            name = file_field.filename
-            path = controller.new_file_path(name)
-            fout = file(path, 'wb')
-            while 1:
-                chunk = file_field.file.read(100000)
-                if not chunk: break
-                fout.write(chunk)
-            fout.close()
-            controller.set_mod(path)
-            self._add_msg('File successfully uploaded to "%s"' % path, 'success')
+            file_name = file_field.filename
+            bin_write = _BinaryWriter(file_field.file)
+            cf = controller.write_file(bin_write.get_chunk(), self._upload_repo, file_name)
+            self._add_msg('File successfully uploaded to "%s"' % cf.display, 'success')
         else:
-            self._add_msg('Error getting file from upload', 'error')
+            self._add_msg('Error getting file from upload', 'errors')
         
     def _delete_file(self, controller, repo_field_name, file_field_name, repo = None):
         if repo is None:
@@ -305,6 +300,15 @@ class ProcessForm(UniversalProcessor):
     
     def _unescape_file_text(self):
         return HTMLParser.HTMLParser().unescape(self.fields['file-text'].value)
+    
+class _BinaryWriter(object):
+    def __init__(self, file_ob):
+        self._file = file_ob
+    
+    def get_chunk(self):
+        chunk = self._file.read(100000)
+        if chunk:
+            yield chunk
     
 class AnonFormProcessor(UniversalProcessor):
     def __init__(self, add_msg, fields):

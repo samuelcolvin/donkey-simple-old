@@ -332,7 +332,7 @@ class View(object):
         help_text = """
             <p>JSON file containing list of external libraries (eg. css &amp; json) to download and include in static folder.</p>
             <p>See 
-            <a href="https://github.com/samuelcolvin/donkey-simple/blob/master/DonkeySimple/static_libraries.json">github DonkeySimple/static_libraries.json</a>
+            <a href="https://github.com/samuelcolvin/donkey-simple/blob/master/static_libraries.json">github static_libraries.json</a>
             for an example.<p>
         """
         linkname = 'libfile'

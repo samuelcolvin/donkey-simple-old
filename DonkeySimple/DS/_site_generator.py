@@ -70,6 +70,8 @@ class SiteGenerator(object):
         con.repeat_owners_permission(static_dst)
         
     def _copytree(self, src, dst, symlinks=False, ignore=None):
+        if not os.path.exists(dst):
+            os.mkdir(dst)
         for item in os.listdir(src):
             s = os.path.join(src, item)
             d = os.path.join(dst, item)

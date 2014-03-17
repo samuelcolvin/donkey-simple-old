@@ -14,11 +14,6 @@ def get_status(path):
             print ' '*new_indent, v
     def print_con(title, con, indent = 2):
         print_list(title, [cf.display for cf in con.cfiles.values()], indent)
-#     try:
-#         settings = imp.load_source('settings', ds.SETTINGS_FILE)
-#     except Exception, e:
-#         raise Exception('Error importing %s: %r' % (ds.SETTINGS_FILE, e))
-#     import settings
     settings = ds.get_settings()
     print '  ================'
     print '  %s Status' % settings.SITE_NAME

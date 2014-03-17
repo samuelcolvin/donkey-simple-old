@@ -15,7 +15,7 @@ To do:
 * "clear and download libraries" button so generate only downloads new libs, .gitignore file for repos - DONE
 * fix ace find & replace box problems from bootstrap - DONE
 * global variables eg author, title, checkbox for override on pages - DONE
-* get "override global" working for ace editors
+* get "override global" working for ace editors - DONE
 * global vars to include static-dir, list of pages etc. - DONE
 * global vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?)
 * link generation (link to a specific page), static-dir tag - DONE
@@ -29,5 +29,10 @@ To do:
 * python sessions, user management and site settings - DONE
 * download zip of everything option.
 * build script - DONE
-* check install_requires in setup.py
+* check install_requires in setup.py - DONE
 * think about multiple repos for templates directory - DONE
+
+* add docs - DONE
+* generate docs.txt from README.md - DONE
+* change donkeysimple utility to point out you need to be inside the site to run edituser - DONE
+* make sure index.cgi has execute permissions - DONE

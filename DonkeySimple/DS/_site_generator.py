@@ -82,7 +82,7 @@ class SiteGenerator(object):
         return os.path.join(self._base_dir, STATIC_DIR)
         
     def _delete_existing_files(self):
-        files = [os.path.join(self._base_dir, f) for f in os.listdir(self._base_dir) if f.endswith('.html')]
+        files = [os.path.join(self._base_dir, f) for f in os.listdir(self._base_dir) if f.endswith('.html') or f == 'sitemap.xml']
         [os.remove(f) for f in files]
         self._output('deleted %d html files' % len(files))
         static_path = self._get_static_dir()

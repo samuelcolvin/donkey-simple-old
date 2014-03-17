@@ -1,8 +1,8 @@
-Options +ExecCGI
+Options +ExecCGI +FollowSymLinks
 AddHandler cgi-script .cgi
 
 RewriteEngine On
 
 RewriteCond %{REQUEST_URI} !^.*/index.cgi$
+RewriteCond %{REQUEST_URI} !^.*/edit/static/.*$
 RewriteRule ^(.*) index.cgi
-

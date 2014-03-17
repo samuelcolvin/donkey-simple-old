@@ -7,7 +7,7 @@ with open('DonkeySimple/docs.txt') as file:
     long_description = file.read()
 
 setup(name='DonkeySimple',
-    version='0.11',
+    version='0.15',
     description='Super Simple python system for building and deploying static websites',
     long_description=long_description,
     author='Samuel Colvin',
@@ -20,8 +20,12 @@ setup(name='DonkeySimple',
     package_data={'DonkeySimple': [
         'docs.txt',
         'site-template/*.*',
+        'site-template/.htaccess',
         'site-template/static/*.*',
-        'site-template/edit/*.*',
+        'site-template/edit/index.cgi',
+        'site-template/edit/users.json',
+        'site-template/edit/settings.py',
+        'site-template/edit/.htaccess',
         'site-template/edit/repos/default/*.*',
         'site-template/edit/repos/default/pages/*.*',
         'site-template/edit/repos/default/static/*.*',

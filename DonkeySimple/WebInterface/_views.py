@@ -84,11 +84,13 @@ class View(object):
             if 'reset-password' in uri:
                 self.reset_password()
             else:
-                m = re.search(static_urls[0], uri)
-                if m:
-                    self.static_file(m.group(1))
-                else:
-                    self.login()
+                # currently unused as static files are handled with a symlink:
+#                 m = re.search(static_urls[0], uri)
+#                 if m:
+#                     self.static_file(m.group(1))
+#                 else:
+#                     self.login()
+                self.login()
         else:
             found = False
             for reg, func in urls:
@@ -145,6 +147,10 @@ class View(object):
         """
         Render a static file from within the installed directory
         having made sure the path is inside static.
+        
+        Currently unused as static files are handled with a symlink
+        for performance reasons (serving static files using cgi is a bit
+        mad and predicably slow).
         """
         this_dir = os.path.dirname(os.path.realpath(__file__))
         uri_path = uri_path.strip(' ?')

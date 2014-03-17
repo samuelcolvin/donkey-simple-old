@@ -41,6 +41,7 @@ class Debug:
 
 import traceback, sys, StringIO
 debug = Debug()
+response = ''
 try:
     from DonkeySimple.WebInterface import View 
     import DonkeySimple.DS as ds

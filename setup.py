@@ -1,15 +1,24 @@
 #!/usr/bin/python
 
-from distutils.core import setup
+from setuptools import setup
+
+
+with open('DonkeySimple/docs.txt') as file:
+    long_description = file.read()
 
 setup(name='DonkeySimple',
-    version='0.1',
+    version='0.11',
     description='Super Simple python system for building and deploying static websites',
+    long_description=long_description,
     author='Samuel Colvin',
+    license='MIT',
     author_email='S@muelColvin.com',
-    url='http://www.scolvin.com',
+    url='https://github.com/samuelcolvin/donkey-simple',
     packages=['DonkeySimple', 'DonkeySimple.DS', 'DonkeySimple.WebInterface', 'DonkeySimple.CmdInterface'],
+    zip_safe=False,
+    platforms='any',
     package_data={'DonkeySimple': [
+        'docs.txt',
         'site-template/*.*',
         'site-template/static/*.*',
         'site-template/edit/*.*',
@@ -26,8 +35,8 @@ setup(name='DonkeySimple',
     ]},
     scripts=['DonkeySimple/bin/donkeysimple'],
     install_requires=[
-        'Jinja2 >= 2.7.2',
-        'GitPython >= 0.3.2.RC1',
-        'markdown2 >= 2.1.0'
+        'Jinja2>=2.7.2',
+        'GitPython>=0.3.2.RC1',
+        'markdown2>=2.1.0'
     ],
 )

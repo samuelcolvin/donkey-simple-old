@@ -144,7 +144,7 @@ class View(object):
     def static_file(self, uri_path):
         """
         Render a static file from within the installed directory
-        have made sure the path is inside static.
+        having made sure the path is inside static.
         """
         this_dir = os.path.dirname(os.path.realpath(__file__))
         uri_path = uri_path.strip(' ?')

@@ -38,7 +38,7 @@
 <div class="pad">File Type: <strong>{{ file_type }}</strong></div>
 {% endif %}
 
-{% if file_text or new_file %}
+{% if show_file_text %}
 <div id="editor" tb_name="file-text" class="pad" style="display:none;">{{ file_text }}</div>
 {% endif %}
 {% if file_image_path %}

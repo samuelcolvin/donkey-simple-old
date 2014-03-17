@@ -293,8 +293,9 @@ class View(object):
             self.context['file_name'] = cfile.name
             self.context['active_repo'] = cfile.repo
             self.context['file_text'] = cgi.escape(template_text)
+            self.context['show_file_text'] = True
         else:
-            self.context['new_file'] = True
+            self.context['show_file_text'] = True
         self.context['function'] = 'edit-template'
         self.context['delete_action'] = 'delete-template'
         self._template = self._env.get_template('edit_file.html')
@@ -311,13 +312,14 @@ class View(object):
             static_uri = join_uri(self._site_edit_uri, ds.REPOS_DIR, cfile.repo, static.DIR, cfile.name)
             if self.context['file_type'] == 'Text':
                 self.context['file_text'] = cgi.escape(content)
+                self.context['show_file_text'] = True
             elif self.context['file_type'] == 'Image':
                 self.context['file_image_path'] = static_uri
             elif self.context['file_type'] == 'Font':
                 self.context['font_path'] = static_uri
                 self.context['font_name'] = get_font_name(static.get_path(cfile.repo, cfile.name))
         else:
-            self.context['new_file'] = True
+            self.context['show_file_text'] = True
         self.context['function'] = 'edit-static'
         self.context['delete_action'] = 'delete-static'
         self._template = self._env.get_template('edit_file.html')

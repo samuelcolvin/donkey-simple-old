@@ -24,5 +24,5 @@ s=re.search("version='(.+?)'", setup_text)
 v = s.groups()[0]
 print 'setting version to: %s' % v
 init_file = 'DonkeySimple/__init__.py'
-init_text = "__version__ = 'v%s'" % v
+init_text = "__version__ = 'v%s'\n" % v
 open(init_file,'w').write(init_text)

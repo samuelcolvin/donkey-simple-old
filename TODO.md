@@ -31,6 +31,8 @@ To do:
 * build script - DONE
 * check install_requires in setup.py - DONE
 * think about multiple repos for templates directory - DONE
+* catch ctrl+s and save
+* list global variables on templates page
 
 * add docs - DONE
 * generate docs.txt from README.md - DONE

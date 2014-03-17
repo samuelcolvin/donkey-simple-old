@@ -293,9 +293,7 @@ class View(object):
             self.context['file_name'] = cfile.name
             self.context['active_repo'] = cfile.repo
             self.context['file_text'] = cgi.escape(template_text)
-            self.context['show_file_text'] = True
-        else:
-            self.context['show_file_text'] = True
+        self.context['show_file_text'] = True
         self.context['function'] = 'edit-template'
         self.context['delete_action'] = 'delete-template'
         self._template = self._env.get_template('edit_file.html')
@@ -347,8 +345,7 @@ class View(object):
             cfile, libfile_text = con.get_file_content(fid=json_id)
             self.context['active_repo'] = cfile.repo
             self.context['file_text'] = cgi.escape(libfile_text)
-        else:
-            self.context['new_file'] = True
+        self.context['show_file_text'] = True
         self.context['file_name'] = file_name
         self.context['fname_readonly'] = True
         self.context['function'] = 'edit-%s' % linkname

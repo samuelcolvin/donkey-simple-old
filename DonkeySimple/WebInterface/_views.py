@@ -1,4 +1,4 @@
-import jinja2, os, cgi, re, httplib, traceback
+import jinja2, os, cgi, re, httplib, traceback, json
 import Cookie
 import DonkeySimple.DS as ds
 from _forms import ProcessForm, AnonFormProcessor
@@ -27,6 +27,7 @@ urls = (
     ('edit-libfile-(.+)$', 'edit_libfile'),
     ('add-globcon', 'edit_globcon'),
     ('edit-globcon-(.+)$', 'edit_globcon'),
+    ('submit.json', 'json_response'),
     ('add-user$', 'edit_user'),
     ('user$', 'edit_this_user'),
     ('edit-user-last$', 'edit_last_user'),
@@ -70,7 +71,7 @@ class View(object):
     def _generate_page(self, uri, loggedin = False, error = None):
         self.context = {'title': '%s Editor' % settings.SITE_NAME, 'site_name': settings.SITE_NAME, 'site_title': '%s Editor' % settings.SITE_NAME, 
                         'static_uri': self._edit_static_uri, 'edit_uri': self._site_edit_uri,
-                        'site_uri': self._site_uri}
+                        'site_uri': self._site_uri, 'json_submit_url': '%ssubmit.json' % self._site_edit_uri}
         if loggedin:
             self.context.update({'username': self.username, 'admin': self.user['admin']})
         self.repo_paths = list(ds.get_all_repos())
@@ -107,8 +108,8 @@ class View(object):
                     self._add_msg('%s not found' % uri, 'errors')
                 self.index()
         self.context.update(self._msgs)
-        if hasattr(self, '_static_file'):
-            self.page = self._static_file
+#         if hasattr(self, '_static_file'):
+#             self.page = self._static_file
         if hasattr(self, '_template'):
             self.page = self._template.render(**self.context)
         
@@ -170,6 +171,11 @@ class View(object):
             self._static_file =open(path, 'r').read()
         else:
             self._page_not_found()
+            
+    def json_response(self, rid):
+        self._template = self._env.get_template('json_response.json')
+        self.content_type = 'content-type: application/json\n'
+        self.context['json_response'] = json.dumps(self._msgs, sort_keys=True, indent=2, separators=(',', ': '))
         
     def login(self):
         self._template = self._env.get_template('login.html')
@@ -283,6 +289,25 @@ class View(object):
         self._template = self._env.get_template('edit_page.html')
     
     def edit_template(self, tid):
+        def generate_global_vars(var_tree):
+            print var_tree
+            for name, value in var_tree.items():
+                if type(value) == dict:
+                    for name2, value2 in value.items():
+                        yield {'name': '%s.%s' % (name, name2), 'value': str(value2)}
+                elif type(value) == list:
+                    yield {'name': '{%% for item in %s %%}' % name}
+                    for i, item in enumerate(value):
+                        if type(item) == dict:
+                            yield {'name': 'item %d' % i, 'indent': 20}
+                            for k, v in item.items():
+                                yield {'name': '{{ item.%s }}' % k, 'value': str(v), 'indent': 40}
+                        else:
+                            yield {'name': '{{ item }}', 'value': str(item), 'indent': 20}
+                    yield {}
+                else:
+                    yield {'name': '{{ %s }}' % name, 'value': str(value)}
+                
         self.context['help_statement'] = """
             <p>Template names should contain <span class="code">.template.</span> in their name, eg. <span class="code">my_template.template.html</span>.</p>
             <p>Templates are rendered using <a href="http://jinja.pocoo.org/docs/">Jinja2</a> which is a "Django like" template engine. See their site for Documentation.</p>
@@ -293,8 +318,10 @@ class View(object):
             self.context['file_name'] = cfile.name
             self.context['active_repo'] = cfile.repo
             self.context['file_text'] = cgi.escape(template_text)
+        self.context['global_variables'] = generate_global_vars(ds.SiteGenerator().global_context())
         self.context['show_file_text'] = True
         self.context['function'] = 'edit-template'
+        self.context['save_gen_func'] = 'edit-template-gen'
         self.context['delete_action'] = 'delete-template'
         self._template = self._env.get_template('edit_file.html')
     
@@ -319,6 +346,7 @@ class View(object):
         else:
             self.context['show_file_text'] = True
         self.context['function'] = 'edit-static'
+        self.context['save_gen_func'] = 'edit-static-gen'
         self.context['delete_action'] = 'delete-static'
         self._template = self._env.get_template('edit_file.html')
         

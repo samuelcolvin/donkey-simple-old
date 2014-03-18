@@ -97,3 +97,53 @@ $('[name="page-template-id"].warn-change').change(function(){
 	  }
 	});
 });
+
+// receive response from form ajax submit
+function fajax_response(response_text){
+	console.log('fajax_response');
+	console.log(response_text);
+	if (typeof(response_text.success) != 'undefined')
+		message_fade(response_text.success, 'success');
+	if (typeof(response_text.errors) != 'undefined'){
+		message_fade(response_text.errors, 'danger');
+		if (typeof(response_text.info) != 'undefined')
+			message_fade(response_text.info, 'info');		
+	}
+	if (typeof(response_text.warnings) != 'undefined')
+		message_fade(response_text.warnings, 'warning');
+}
+function message_fade(msg, msg_class){
+	var el_name = '.alert-' + msg_class;
+	var el = $(el_name);
+	el.show();
+	el.html('<p>' + msg.join('</p>\n<p>') + '</p>');
+	setTimeout("$('" + el_name + "').fadeOut()", 2000);
+}
+
+// submit ajax form => save and generate
+$('#fajax').click(function() {
+	update_code_tb();
+	$('[name="function"]').val($(this).attr('save_gen_func'));
+    $('#form').ajaxSubmit({
+	    success: fajax_response,
+	    url: json_submit_url,
+	    dataType: 'json'
+	}); 
+    return false; 
+}); 
+
+// catch ctrl+s and cmd+s and save
+$(document).ready(function(){
+	if ($('.save_shortcut').length > 0){
+		Mousetrap.bind(['command+s', 'ctrl+s'], function(e) {
+		    $('.save_shortcut').click();
+		    return false;
+		});
+		$.each(editors, function(){
+			this.editor.commands.addCommand({
+			    bindKey: {win: "Ctrl-s", mac: "Command-s"},
+			    exec: function() { $('.save_shortcut').click(); }
+			});
+		});
+	}
+});

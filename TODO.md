@@ -27,12 +27,15 @@ To do:
 * static library file webinterface - DONE
 * add fields to page if template has changed - DONE
 * python sessions, user management and site settings - DONE
-* download zip of everything option.
+* download zip of site - DONE
+* download zip of repos - DONE
 * build script - DONE
 * check install_requires in setup.py - DONE
 * think about multiple repos for templates directory - DONE
-* catch ctrl+s and save
-* list global variables on templates page
+* catch ctrl+s and save - DONE
+* list global variables on templates page - DONE
+* save and keep editting, undo - DONE
+* generate on save - DONE
 
 * add docs - DONE
 * generate docs.txt from README.md - DONE

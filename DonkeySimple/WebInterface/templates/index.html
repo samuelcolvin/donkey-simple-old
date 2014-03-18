@@ -5,9 +5,11 @@
 <form action="" method="post">
 	<input name="function" type="hidden" value="generate-site"/>
 	<div class="btn-group">
-	  <button class="btn btn-default">Generate Site</button>
-	  <button type="submit" class="btn btn-default" altfunction="clear-download-libs"> Clear &amp; Download Libraries</button>
-	  <a class="btn btn-default" href="{{ site_uri }}">Go to {{ site_name }}</a>
+	  <button class="btn btn-primary">Generate Site</button>
+	  <button type="submit" class="btn btn-primary" altfunction="clear-download-libs"> Clear &amp; Download Libraries</button>
+	  <button type="submit" class="btn btn-primary" altfunction="repos-zip"> Generate Repos Zip </button>
+	  <button type="submit" class="btn btn-primary" altfunction="site-zip"> Generate Site Zip </button>
+	  <a class="btn btn-primary" href="{{ site_uri }}">Go to {{ site_name }}</a>
 	</div>
 </form>
 <div class="row">

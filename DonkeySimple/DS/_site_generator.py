@@ -101,5 +101,15 @@ def download_lib_statics(output=None, delete_first=False):
     if delete_first:
         libfiles.delete_libs(output)
     libfiles.download(output)
+    
+def site_zip(zip_path):
+    def path_check(path):
+        if path.startswith('./%s/' % STATIC_DIR):
+            return True
+        path = path.lstrip('.' + os.path.sep)
+        if os.path.sep in path:
+            return False
+        return True
+    con.zip_dir('..', zip_path, 'site', path_check)
 
 

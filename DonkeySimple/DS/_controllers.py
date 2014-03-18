@@ -2,11 +2,12 @@
 File controller class with inheritted classes for each type of file.
 """
 from _common import *
-import os, shutil, json
+import os, shutil, json, zipfile
 import HTMLParser
 import _template_renderer as tr
 import re, base64, hashlib, pwd, subprocess
 from download import download_libraries
+from _git import Change2Directory
             
 def new_repo_path(repo):
     """
@@ -20,6 +21,23 @@ def new_repo_path(repo):
 
 def repeat_owners_permission(path = REPOS_DIR):
     subprocess.call('chmod -R a+u %s' % path, shell=True)
+    
+def zip_dir(path2zip, zip_file_path, arcfolder, path_check = None):
+    zipf = zipfile.ZipFile(zip_file_path, 'w')
+    with Change2Directory(path2zip):
+        for root, _, files in os.walk('.'):
+            for f in files:
+                file_path = os.path.join(root, f)
+                if path_check:
+                    if not path_check(file_path):
+                        continue
+                arc_name = os.path.join(arcfolder, file_path)
+                zipf.write(file_path, arc_name)
+    zipf.close()
+    repeat_owners_permission(zip_file_path)
+    
+def zip_repos(zip_file_path):
+    return zip_dir(REPOS_DIR, zip_file_path, REPOS_DIR)
     
 def delete_tree(repo_path):
     shutil.rmtree(repo_path)
@@ -353,4 +371,3 @@ def chmod_own(path, perms):
 #     local_id = pwd.getpwnam(settings.LOCAL_USER).pw_uid
     os.chmod(path, perms)
 #     os.lchown(path, -1, local_id)
-    

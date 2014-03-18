@@ -61,3 +61,31 @@ h1 a:link, h1 a:visited, h1 a:hover, h1 a:active{
 	overflow: hidden;
 	background-color: #ccc;
 }
+
+.page-header {
+	margin: 20px 0 20px;
+}
+
+.alert>p+p {
+	margin-top: 0px;
+}
+
+#tree {
+	font-weight: 700;
+}
+
+#tree .item {
+	min-height: 8px;
+}
+
+#tree .name {
+	color: #888;
+}
+
+#tree .eq {
+	margin: 0px 2px;
+}
+
+#tree .value {
+	color: red;
+}

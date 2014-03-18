@@ -58,6 +58,17 @@ class ProcessForm(UniversalProcessor):
         ds.SiteGenerator(self._add_msg).generate_entire_site()
         self._add_msg('Site generated successfully', 'success')
         
+    def repos_zip(self):
+        zip_file_name = 'repos.zip'
+        ds.con.zip_repos(zip_file_name)
+        self._add_msg('Repos zip Generated, click <a href="%s">here</a> to download' % zip_file_name, 'success')
+        
+    def site_zip(self):
+        self.generate_site()
+        zip_file_name = 'site.zip'
+        ds.site_zip(zip_file_name)
+        self._add_msg('Site zip Generated, click <a href="%s">here</a> to download' % zip_file_name, 'success')
+        
     def clear_download_libs(self):
         ds.download_lib_statics(self._add_msg, delete_first = True)
         
@@ -138,13 +149,22 @@ class ProcessForm(UniversalProcessor):
         template = t_con.get_cfile_fid(self.fields['page-template-id'].value)
         self._delete_file(page, None, 'page-name', repo = template.repo)
         
+    def edit_template_gen(self):
+        cfile = self._edit_template()
+        ds.SiteGenerator(self._add_msg).generate_entire_site()
+        self._add_msg('"%s" successfully saved, Site generated successfully' % cfile.display, 'success')
+        
     def edit_template(self):
+        cfile = self._edit_template()
+        self._add_msg('"%s" successfully saved' % cfile.display, 'success')
+        
+    def _edit_template(self):
         t = ds.con.Templates()
         text = self._unescape_file_text()
         name = self.fields['file-name'].value
         repo = self.fields['repo'].value
         template = t.write_file(text, repo, name)
-        self._add_msg('"%s" successfully saved' % template.display, 'success')
+        return template
         
     def delete_template(self):
         t = ds.con.Templates()
@@ -153,7 +173,16 @@ class ProcessForm(UniversalProcessor):
     def upload_template(self):
         self._process_files('files', ds.con.Templates())
         
+    def edit_static_gen(self):
+        cfile = self._edit_static()
+        ds.SiteGenerator(self._add_msg).generate_entire_site()
+        self._add_msg('"%s" successfully saved, Site generated successfully' % cfile.display, 'success')
+        
     def edit_static(self):
+        cfile = self._edit_static()
+        self._add_msg('"%s" successfully saved' % cfile.display, 'success')
+        
+    def _edit_static(self):
         static = ds.con.Statics()
         repo = self.fields['repo'].value
         if self.fields['file-type'].value == 'Text':
@@ -168,7 +197,7 @@ class ProcessForm(UniversalProcessor):
             if src_id == dst_cfile.id:
                 return
             cfile = static.copy_file(src_cfile, dst_cfile)
-        self._add_msg('"%s" successfully saved' % cfile.display, 'success')
+        return cfile
             
     def delete_static(self):
         static = ds.con.Statics()

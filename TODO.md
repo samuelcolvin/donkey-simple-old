@@ -41,7 +41,7 @@ To do:
 * add "donkysimple not installed message on ImportError: No module named DonkeySimple.WebInterface" - DONE
 * this_page variable on page - DONE
 * site index variable - DONE
-* page not found page pointed to by htaccess: "ErrorDocument 404 /notfound.html"
+* page not found page pointed to by htaccess: "ErrorDocument 404 /notfound.html" - DONE
 * deal with "TemplateNotFound" error after deleting template - DONE
 * deal with "UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 56: ordinal not in range(128) - DONE?
 * make errors visible on save & generate (eg. template errors) - DONE

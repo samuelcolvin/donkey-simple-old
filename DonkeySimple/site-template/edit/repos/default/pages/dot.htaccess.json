@@ -1,0 +1,8 @@
+{
+    "context": {},
+    "extension": "None",
+    "id": 13,
+    "name": "dot.htaccess",
+    "template": "htaccess.template.conf",
+    "template_repo": "default"
+}

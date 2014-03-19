@@ -26,10 +26,15 @@ class SiteGenerator(object):
                 context[var] = markdown2.markdown(item['value'])
         r = tr.RenderTemplate(cfile.info['template'], cfile.info['template_repo'], env = self._env)
         content = r.render(context)
-        ext = 'html'
+        ext = '.html'
         if 'extension' in cfile.info:
-            ext = cfile.info['extension']
-        fn = os.path.join(self._base_dir, '%s.%s' % (cfile.info['name'], ext))
+            ext = '.%s' % cfile.info['extension']
+            if cfile.info['extension'].lower() == 'none':
+                ext = ''
+        name = cfile.info['name']
+        if name.startswith('dot.'):
+            name = name[3:]
+        fn = os.path.join(self._base_dir, '%s%s' % (name, ext))
         open(fn, 'w').write(content)
         os.chmod(fn, 0666)
         fn2 = fn

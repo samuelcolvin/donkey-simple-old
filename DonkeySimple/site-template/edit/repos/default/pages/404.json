@@ -1,0 +1,16 @@
+{
+    "context": {
+        "main_article": {
+            "type": "markdown",
+            "value": "404 - Page not found"
+        },
+        "title": {
+            "type": "string",
+            "value": "Page not found"
+        }
+    },
+    "id": 11,
+    "name": "404",
+    "template": "simple_site.template.html",
+    "template_repo": "default"
+}

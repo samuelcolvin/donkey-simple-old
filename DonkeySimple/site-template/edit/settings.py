@@ -6,9 +6,14 @@ COOKIE_NAME = 'ds-' + SHORT_RANDOM
 GIT_EMAIL = 'donkey-simple@example.com'
 GIT_NAME = 'DONKEY'
 
-# # email settings
-# EMAIL_HOST = 'localhost'
-# EMAIL_FROM = 'admin@%s' % SITE_NAME
+# URI used when generating the site
+# comment out or remove to auto-detect the URI 
+# (autodetect is only available in the web interface) 
+SITE_URI = '/uri/of/site'
+
+# email settings
+EMAIL_HOST = 'localhost'
+EMAIL_FROM = 'admin@%s' % SITE_NAME
 
 # #example gmail settings
 # EMAIL_USE_TLS = True

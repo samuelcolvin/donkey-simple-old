@@ -42,12 +42,17 @@ class View(object):
     response_code = ''
     page = ''
     
-    def __init__(self,):
+    def __init__(self):
         self._msgs = {}
         self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
         self._uri = os.environ['REQUEST_URI']
         self._site_uri = self._uri[:self._uri.index('/edit/')]
         print 'site_uri:', self._site_uri
+        if hasattr(settings, 'SITE_URI'):
+            set_site_uri = settings.SITE_URI
+            if self._site_uri != set_site_uri:
+                self._add_msg('Auto detected URI does not match settings.SITE_URI: "%s" vs. "%s"'\
+                               % (self._site_uri, set_site_uri), 'warnings')
         e_index = self._uri.index('/edit/') + 5
         self._site_edit_uri = self._uri[:e_index] + '/'
         self._edit_static_uri = join_uri(self._site_edit_uri, 'static/')

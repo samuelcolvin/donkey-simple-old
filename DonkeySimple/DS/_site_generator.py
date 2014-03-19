@@ -48,8 +48,10 @@ class SiteGenerator(object):
         context = {'static': 'static/', 
                    'libs': 'static/libs/', 
                    'todays_date': dtdt.now().strftime('%Y-%m-%d'),
-                   'this_page': '[set during page generation]',
-                   'index': self._get_site_uri()}
+                   'this_page': '[set during page generation]'}
+        index = self._get_site_uri()
+        if index:
+            context['index'] = index
         context['pages'] = []
         context['sitemap_pages'] = []
         for cf in self._page_con.cfiles.values():
@@ -61,12 +63,22 @@ class SiteGenerator(object):
         return context
     
     def _get_site_uri(self):
+        index = None
         try:
-            uri = os.environ['REQUEST_URI']
-            return uri[:uri.index('/edit/')]
-        except Exception, e:
-            self._output('Problem obtaining generating index URI: %s' % str(e))
-        return '/'
+            import settings
+        except:
+            self._output('Problem inporting settings, not setting index URI')
+        else:
+            if hasattr(settings, 'SITE_URI'):
+                index = settings.SITE_URI
+            if 'REQUEST_URI' in os.environ:
+                auto_uri = os.environ['REQUEST_URI']
+                auto_uri = auto_uri[:auto_uri.index('/edit/')]
+                if index and auto_uri != index:
+                    self._output('Auto detected URI (%s) does not match settings.SITE_URI (%s)' % (auto_uri, index))
+                if not index:
+                    index = auto_uri
+        return index
         
     def generate_statics(self):
         static_dst = self._get_static_dir()
@@ -101,7 +113,8 @@ class SiteGenerator(object):
         return os.path.join(self._base_dir, STATIC_DIR)
         
     def _delete_existing_files(self):
-        files = [os.path.join(self._base_dir, f) for f in os.listdir(self._base_dir) if f.endswith('.html') or f == 'sitemap.xml']
+        special_files = ['sitemap.xml', '.htaccess']
+        files = [os.path.join(self._base_dir, f) for f in os.listdir(self._base_dir) if f.endswith('.html') or f in special_files]
         [os.remove(f) for f in files]
         self._output('deleted %d html files' % len(files))
         static_path = self._get_static_dir()

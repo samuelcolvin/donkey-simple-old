@@ -47,9 +47,12 @@ To do:
 * make errors visible on save & generate (eg. template errors) - DONE
 * set owner permissions for all for .git folder - DONE
 * solve display of static png or ttf files - DONE
-* get global variable "index" from settings if not directly available (eg. in command line)
+* get global variable "index" from settings if not directly available (eg. in command line) - DONE
 
 * add docs - DONE
 * generate docs.txt from README.md - DONE
 * change donkeysimple utility to point out you need to be inside the site to run edituser - DONE
 * make sure index.cgi has execute permissions - DONE
+
+* convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy
+* auth with https://github.com/mitsuhiko/werkzeug/blob/master/examples/cookieauth.py

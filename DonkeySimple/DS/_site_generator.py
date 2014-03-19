@@ -19,7 +19,7 @@ class SiteGenerator(object):
         self.generate_statics()
     
     def generate_page(self, cfile):
-        context = {}
+        context = {'this_page': cfile.info['name']}
         for var, item in cfile.info['context'].items():
             context[var] = item['value']
             if item['type'] == 'markdown':
@@ -40,7 +40,11 @@ class SiteGenerator(object):
         
     def global_context(self):
         self._page_con = con.Pages()
-        context = {'static': 'static/', 'libs': 'static/libs/', 'todays_date': dtdt.now().strftime('%Y-%m-%d')}
+        context = {'static': 'static/', 
+                   'libs': 'static/libs/', 
+                   'todays_date': dtdt.now().strftime('%Y-%m-%d'),
+                   'this_page': '[set during page generation]',
+                   'index': self._get_site_uri()}
         context['pages'] = []
         context['sitemap_pages'] = []
         for cf in self._page_con.cfiles.values():
@@ -50,6 +54,14 @@ class SiteGenerator(object):
         extra_context = con.GlobConFiles().get_entire_context()
         context.update(extra_context)
         return context
+    
+    def _get_site_uri(self):
+        try:
+            uri = os.environ['REQUEST_URI']
+            return uri[:uri.index('/edit/')]
+        except Exception, e:
+            self._output('Problem obtaining index URI: %s' % str(e))
+        return '/'
         
     def generate_statics(self):
         static_dst = self._get_static_dir()

@@ -26,7 +26,7 @@
 		{% if save_gen_func %}
 	  		<input id="fajax" type="button" class="btn btn-default save_shortcut" save_gen_func="{{ save_gen_func }}" value="Save &amp; Generate Site"/>
 	    {% endif %}
-		<input type="submit" class="btn btn-default" altfunction="{{ function }}" value="Save &amp; Exit"/>
+		<input type="submit" class="btn btn-default {% if not save_gen_func %}save_shortcut{% endif %}" altfunction="{{ function }}" value="Save &amp; Exit"/>
 		<input altfunction="{{ delete_action }}" type="submit" class="btn btn-default" value="Delete"/>
 	</div>
 	

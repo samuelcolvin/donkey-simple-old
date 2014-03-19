@@ -2,7 +2,7 @@
 File controller class with inheritted classes for each type of file.
 """
 from _common import *
-import os, shutil, json, zipfile
+import os, shutil, json, zipfile, unicodedata
 import HTMLParser
 import _template_renderer as tr
 import re, base64, hashlib, pwd, subprocess
@@ -154,8 +154,15 @@ class _File_Controller(object):
     
     def write_file(self, content, repo, name):
         cfile = self.create_cfile(repo, name)
+        if isinstance(content, unicode) or isinstance(content, str):
+            content = self._sanitize(content)
         cfile.write_file(content)
         return cfile
+        
+    def _sanitize(self, text):
+        if not isinstance(text, unicode):
+            text = unicode(str(text).decode('utf8'))
+        return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
     
     def create_cfile(self, repo, name):
         self.active_cfile = _File(repo, self.DIR, self._valid_name(name))
@@ -247,7 +254,12 @@ class Pages(_File_Controller):
     
     def get_true_context(self):
         context = {}
-        for name, item in self.get_empty_context().items():
+        try:
+            empty_con = self.get_empty_context()
+        except Exception, e:
+            print 'Error getting empty context: %s' % str(e)
+            return 
+        for name, item in empty_con.items():
             context[name] = item
             if name in self.active_cfile.info['context']:
                 context[name]['value'] = self.active_cfile.info['context'][name]['value']
@@ -261,7 +273,7 @@ class Pages(_File_Controller):
         return context
     
     def update_context(self, fields, f_types):
-        print fields
+#         print fields
         context = {}
         if 'extension' in fields:
             self.active_cfile.info['extension'] = fields['extension']
@@ -270,7 +282,7 @@ class Pages(_File_Controller):
         for name, item in self.get_empty_context().items():
             if name in fields:
                 context[name] = item
-                text = fields[name]
+                text = self._sanitize(fields[name])
                 if item['type'] in ['html', 'markdown']:
                     text = HTMLParser.HTMLParser().unescape(text)
                 context[name]['value'] = text

@@ -37,6 +37,17 @@ To do:
 * save and keep editting, undo - DONE
 * generate on save - DONE
 
+* ignore dict and list variables in pages - DONE
+* add "donkysimple not installed message on ImportError: No module named DonkeySimple.WebInterface" - DONE
+* this_page variable on page - DONE
+* site index variable - DONE
+* page not found page pointed to by htaccess: "ErrorDocument 404 /notfound.html"
+* deal with "TemplateNotFound" error after deleting template - DONE
+* deal with "UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 56: ordinal not in range(128) - DONE?
+* make errors visible on save & generate (eg. template errors) - DONE
+* set owner permissions for all for .git folder
+* solve display of static png or ttf files
+
 * add docs - DONE
 * generate docs.txt from README.md - DONE
 * change donkeysimple utility to point out you need to be inside the site to run edituser - DONE

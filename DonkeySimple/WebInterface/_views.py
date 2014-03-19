@@ -47,11 +47,11 @@ class View(object):
     def __init__(self,):
         self._msgs = {}
         self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
-        uri = os.environ['REQUEST_URI']
-        self._site_uri = uri[:uri.index('/edit/')]
+        self._uri = os.environ['REQUEST_URI']
+        self._site_uri = self._uri[:self._uri.index('/edit/')]
         print 'site_uri:', self._site_uri
-        e_index = uri.index('/edit/') + 5
-        self._site_edit_uri = uri[:e_index] + '/'
+        e_index = self._uri.index('/edit/') + 5
+        self._site_edit_uri = self._uri[:e_index] + '/'
         self._edit_static_uri = join_uri(self._site_edit_uri, 'static/')
         fields = cgi.FieldStorage()
         valid_user = self._auth(fields)
@@ -66,7 +66,7 @@ class View(object):
                 AnonFormProcessor(self._add_msg, fields)
         except Exception, e:
             processing_error = e
-        self._generate_page(uri, loggedin = valid_user, error = processing_error)
+        self._generate_page(self._uri, loggedin = valid_user, error = processing_error)
         
     def _generate_page(self, uri, loggedin = False, error = None):
         self.context = {'title': '%s Editor' % settings.SITE_NAME, 'site_name': settings.SITE_NAME, 'site_title': '%s Editor' % settings.SITE_NAME, 
@@ -173,9 +173,12 @@ class View(object):
             self._page_not_found()
             
     def json_response(self, rid):
+        self._json_response(self._msgs)
+        
+    def _json_response(self, data):
         self._template = self._env.get_template('json_response.json')
         self.content_type = 'content-type: application/json\n'
-        self.context['json_response'] = json.dumps(self._msgs, sort_keys=True, indent=2, separators=(',', ': '))
+        self.context['json_response'] = json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
         
     def login(self):
         self._template = self._env.get_template('login.html')
@@ -247,7 +250,6 @@ class View(object):
         self.edit_page(self.created_item)
     
     def edit_page(self, pid):
-        print 'pid:', pid
         t_con = ds.con.Templates()
         self.context['page_templates'] = t_con.cfiles.values()
         self.context['other_formats'] = ['markdown', 'html']
@@ -267,30 +269,36 @@ class View(object):
             self.context['page_context_str'] = []
             self.context['page_context_other'] = []
             global_context = ds.SiteGenerator().global_context()
-            for name, value in page_con.get_true_context().items():
-                override = True
-                global_var = name in global_context
-                if value['value'] == None:
-                    value['value'] = ''
-                    if global_var:
-                        override = False
-                con_settings = {'name': name, 
-                                'value': value['value'], 
-                                'type': value['type'], 
-                                'override': override,
-                                'global_var': global_var}
-                if value['type'] == 'string':
-                    self.context['page_context_str'].append(con_settings)
-                else:
-                    con_settings['value'] = cgi.escape(value['value'])
-                    self.context['page_context_other'].append(con_settings)
-            self.context['active_page_template_id'] = t_con.get_cfile_name(name = cfile.info['template'], repo = cfile.info['template_repo']).id
+            true_context = page_con.get_true_context()
+            if true_context is None:
+                self._add_msg('Problem getting template context', 'errors')
+            else:
+                for name, value in true_context.items():
+                    override = True
+                    global_var = name in global_context
+                    if value['value'] == None:
+                        value['value'] = ''
+                        if global_var:
+                            override = False
+                    con_settings = {'name': name, 
+                                    'value': value['value'], 
+                                    'type': value['type'], 
+                                    'override': override,
+                                    'global_var': global_var}
+                    if value['type'] == 'string':
+                        self.context['page_context_str'].append(con_settings)
+                    else:
+                        con_settings['value'] = cgi.escape(value['value'])
+                        self.context['page_context_other'].append(con_settings)
+            try:
+                self.context['active_page_template_id'] = t_con.get_cfile_name(name = cfile.info['template'], repo = cfile.info['template_repo']).id
+            except Exception, e:
+                self._add_msg('Problem getting template id: %s' % str(e), 'errors')
             self.context['action_uri'] = self.context['edit_uri']
         self._template = self._env.get_template('edit_page.html')
     
     def edit_template(self, tid):
         def generate_global_vars(var_tree):
-            print var_tree
             for name, value in var_tree.items():
                 if type(value) == dict:
                     for name2, value2 in value.items():
@@ -438,7 +446,10 @@ class View(object):
         if error_details:
             self.context['error_details'] = str(error_details)
             traceback.print_exc()
-        self._template = self._env.get_template('bad.html')
+        if 'submit.json' in self._uri:
+            self._json_response(self.context)
+        else:
+            self._template = self._env.get_template('bad.html')
     
     def _add_msg(self, msg, mtype='info'):
         if mtype not in self._msgs:

@@ -40,6 +40,7 @@ class RenderTemplate(object):
     
     def get_empty_context(self):
         context = self.get_context_types()
+        context = {name: t for name, t in context.items() if t != 'list'}
         for var, t in context.items():
             context[var] = {'value': '', 'type': t}
             if t == 'list':

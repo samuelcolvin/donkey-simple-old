@@ -40,9 +40,14 @@ class Debug:
 
 debug = Debug()
 response = ''
+print_tb = True
 try:
-    from DonkeySimple.WebInterface import View 
-    import DonkeySimple.DS as ds
+    try:
+        from DonkeySimple.WebInterface import View
+        import DonkeySimple.DS as ds
+    except:
+        print_tb = False
+        raise Exception('Error importing DonkeySimple, check it is installed and available in PYTHONPATH')
     import settings
     debug.active = settings.DEBUG
     wi = View()
@@ -59,7 +64,8 @@ except Exception, e:
     print 'EXCEPTION OCCURRED:'
     print e
     try:
-        traceback.print_exc(file=sys.stdout)
+        if print_tb:
+            traceback.print_exc(file=sys.stdout)
     except:
         pass
     try: print debug.text
@@ -67,8 +73,9 @@ except Exception, e:
     print 'RESPONSE:\n', response
 else:
     debug.finish_debugging()
-    print response
+    try:
+        print response
+    except Exception, e:
+        print 'Error printing Response: %s' % str(e)
     if show_debug:
         print debug.html
-
-

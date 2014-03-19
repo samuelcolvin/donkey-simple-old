@@ -100,8 +100,7 @@ $('[name="page-template-id"].warn-change').change(function(){
 
 // receive response from form ajax submit
 function fajax_response(response_text){
-	console.log('fajax_response');
-	console.log(response_text);
+	hide_all();
 	if (typeof(response_text.success) != 'undefined')
 		message_fade(response_text.success, 'success');
 	if (typeof(response_text.errors) != 'undefined'){
@@ -112,12 +111,26 @@ function fajax_response(response_text){
 	if (typeof(response_text.warnings) != 'undefined')
 		message_fade(response_text.warnings, 'warning');
 }
+function fajax_error(data){
+	console.log(data);
+	hide_all();
+	var jdata = JSON.parse(data.responseText);
+	var errors = [jdata.error, jdata.error_name];
+	message_fade(errors, 'danger');
+}
+function hide_all(){
+	$('.alert-success').hide();
+	$('.alert-danger').hide();
+	$('.alert-info').hide();
+	$('.alert-warning').hide();
+}
 function message_fade(msg, msg_class){
 	var el_name = '.alert-' + msg_class;
 	var el = $(el_name);
 	el.show();
 	el.html('<p>' + msg.join('</p>\n<p>') + '</p>');
-	setTimeout("$('" + el_name + "').fadeOut()", 2000);
+	if (msg_class == 'success')
+		setTimeout("$('" + el_name + "').fadeOut()", 2000);
 }
 
 // submit ajax form => save and generate
@@ -127,7 +140,8 @@ $('#fajax').click(function() {
     $('#form').ajaxSubmit({
 	    success: fajax_response,
 	    url: json_submit_url,
-	    dataType: 'json'
+	    dataType: 'json',
+	    error: fajax_error,
 	}); 
     return false; 
 }); 

@@ -180,7 +180,8 @@ class ProcessForm(UniversalProcessor):
         
     def edit_static(self):
         cfile = self._edit_static()
-        self._add_msg('"%s" successfully saved' % cfile.display, 'success')
+        if cfile:
+            self._add_msg('"%s" successfully saved' % cfile.display, 'success')
         
     def _edit_static(self):
         static = ds.con.Statics()

@@ -65,7 +65,7 @@ class SiteGenerator(object):
             uri = os.environ['REQUEST_URI']
             return uri[:uri.index('/edit/')]
         except Exception, e:
-            self._output('Problem obtaining index URI: %s' % str(e))
+            self._output('Problem obtaining generating index URI: %s' % str(e))
         return '/'
         
     def generate_statics(self):

@@ -1,6 +1,10 @@
 Donkey Simple
 =============
 
+Copyright (C) 2013-2014 [Samuel Colvin](http://www.scolvin.com) <S@muelColvin.com>
+
+License: The MIT License (MIT)
+
 Donkey Simple is an extremely simple CMS that allows you to build a static website either from a web interface or the command line.
 
 It uses clever tools like [Ace Code Editor](http://ace.c9.io/), [Markdown](http://daringfireball.net/projects/markdown/) and [Jinja2](http://jinja.pocoo.org/) to make writing the site as painless as possible. 

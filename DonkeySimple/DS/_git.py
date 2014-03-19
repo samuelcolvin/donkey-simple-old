@@ -1,5 +1,8 @@
 import git, os, subprocess, traceback
 
+def repeat_owners_permission(path):
+    subprocess.call('chmod -R a+u %s' % path, shell=True)
+
 class _Git(object):
     """
     Simple git controller class.
@@ -65,9 +68,11 @@ class _Git(object):
         for fname, content in self.DEFAULT_FILES.items():
             path = os.path.join(self.gdir, fname)
             open(path, 'w').write(content)
-        
+        repeat_owners_permission(self.dot_gdir)
+            
     def open_repo(self):
         self.repo = self._open_repo()
+        repeat_owners_permission(self.dot_gdir)
     
     def _open_repo(self):
         return git.Repo(self.gdir)

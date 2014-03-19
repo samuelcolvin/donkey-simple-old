@@ -7,7 +7,8 @@ import HTMLParser
 import _template_renderer as tr
 import re, base64, hashlib, pwd, subprocess
 from download import download_libraries
-from _git import Change2Directory
+import _git
+
             
 def new_repo_path(repo):
     """
@@ -20,11 +21,11 @@ def new_repo_path(repo):
     return repo, repo_path
 
 def repeat_owners_permission(path = REPOS_DIR):
-    subprocess.call('chmod -R a+u %s' % path, shell=True)
+    _git.repeat_owners_permission(path)
     
 def zip_dir(path2zip, zip_file_path, arcfolder, path_check = None):
     zipf = zipfile.ZipFile(zip_file_path, 'w')
-    with Change2Directory(path2zip):
+    with _git.Change2Directory(path2zip):
         for root, _, files in os.walk('.'):
             for f in files:
                 file_path = os.path.join(root, f)

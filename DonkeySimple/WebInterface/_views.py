@@ -10,10 +10,8 @@ sg = ds.SiteGenerator
 THIS_PATH = os.path.dirname(os.path.realpath(__file__))
 EDITOR_TEMPLATE_DIR = os.path.join(THIS_PATH, 'templates') 
 
-static_urls = ('static/(.+)$', 'static_file')
 urls = (
     ('logout$', 'logout'),
-    static_urls,
     ('add-repo', 'edit_repo'),
     ('view-repo-(.+)$', 'view_repo'),
     ('add-page$', 'edit_page'),
@@ -85,12 +83,6 @@ class View(object):
             if 'reset-password' in uri:
                 self.reset_password()
             else:
-                # currently unused as static files are handled with a symlink:
-#                 m = re.search(static_urls[0], uri)
-#                 if m:
-#                     self.static_file(m.group(1))
-#                 else:
-#                     self.login()
                 self.login()
         else:
             found = False
@@ -143,34 +135,6 @@ class View(object):
         self.all_users = auth.users
 #         self.o_usernames = auth.get_sorted_users()
         return True
-    
-    def static_file(self, uri_path):
-        """
-        Render a static file from within the installed directory
-        having made sure the path is inside static.
-        
-        Currently unused as static files are handled with a symlink
-        for performance reasons (serving static files using cgi is a bit
-        mad and predicably slow).
-        """
-        this_dir = os.path.dirname(os.path.realpath(__file__))
-        uri_path = uri_path.strip(' ?')
-        name = os.path.basename(uri_path)
-        d = ''
-        if os.path.dirname(uri_path).endswith('libs/ace'):
-            d = 'libs/ace'
-        elif os.path.dirname(uri_path).endswith('libs'):
-            d = 'libs'
-        path = os.path.join(this_dir, 'static', d, name)
-#         print path
-        if os.path.exists(path):
-            if path.endswith('.css'):
-                self.content_type = 'content-type: text/css\n'
-            if path.endswith('.js'):
-                self.content_type = 'content-type: text/javascript\n'
-            self._static_file =open(path, 'r').read()
-        else:
-            self._page_not_found()
             
     def json_response(self, rid):
         self._json_response(self._msgs)

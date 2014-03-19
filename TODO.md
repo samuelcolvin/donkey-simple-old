@@ -45,8 +45,8 @@ To do:
 * deal with "TemplateNotFound" error after deleting template - DONE
 * deal with "UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 56: ordinal not in range(128) - DONE?
 * make errors visible on save & generate (eg. template errors) - DONE
-* set owner permissions for all for .git folder
-* solve display of static png or ttf files
+* set owner permissions for all for .git folder - DONE
+* solve display of static png or ttf files - DONE
 
 * add docs - DONE
 * generate docs.txt from README.md - DONE

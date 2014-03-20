@@ -114,6 +114,7 @@ class _File_Controller(object):
         self.cfiles = {}
         for cf in self._get_all_files():
             self.cfiles[cf.id] = cf
+        self.cfiles_ordered = sorted([(k, v) for k, v in self.cfiles.items()], key=lambda (k ,v): v.display)
     
     def _file_test(self, fn):
         """

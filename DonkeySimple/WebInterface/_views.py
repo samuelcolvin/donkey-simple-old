@@ -167,23 +167,23 @@ class View(object):
         try:
             page_con = ds.con.Pages()
             self.context['pages'] = []
-            for cf in page_con.cfiles.values():
+            for _, cf in page_con.cfiles_ordered:
                 self.context['pages'].append({'link': 'edit-page-%s' % cf.id, 'name': cf.display})
             self.context['templates'] = []
             t = ds.con.Templates()
-            for cf in t.cfiles.values():
+            for _, cf in t.cfiles_ordered:
                 self.context['templates'].append({'link': 'edit-template-%s' % cf.id, 'name': cf.display})
             self.context['static_files'] = []
             s = ds.con.Statics()
-            for cf in s.cfiles.values():
+            for _, cf in s.cfiles_ordered:
                 self.context['static_files'].append({'link': 'edit-static-%s' % cf.id, 'name': cf.display})
             self.context['library_files'] = []
             s = ds.con.LibraryFiles()
-            for cf in s.cfiles.values():
+            for _, cf in s.cfiles_ordered:
                 self.context['library_files'].append({'link': 'edit-libfile-%s' % cf.id, 'name': cf.display})
             self.context['globcon_files'] = []
             gc = ds.con.GlobConFiles()
-            for cf in gc.cfiles.values():
+            for _, cf in gc.cfiles_ordered:
                 self.context['globcon_files'].append({'link': 'edit-globcon-%s' % cf.id, 'name': cf.display})
             if self.isadmin:
                 self.context['users'] = []
@@ -230,6 +230,7 @@ class View(object):
             except:
                 return self._error_page('Page not found', code=httplib.BAD_REQUEST)
             self.context['page_name'] = cfile.info['name']
+            self.context['active_repo'] = cfile.repo
             if 'sitemap' in cfile.info:
                 self.context['sitemap'] = cfile.info['sitemap']
             if 'extension' in cfile.info:

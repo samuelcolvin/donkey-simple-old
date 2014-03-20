@@ -29,7 +29,7 @@
 	  <div class="col-lg-4 form-group">
 	  	<div class="input-group">
 		  <span class="input-group-addon">Repo</span>
-			<select name="repo" class="form-control" {% if active_repo %}readonly{% endif %}>
+			<select name="repo" class="form-control">
 			  {% for repo in repos %}<option value="{{ repo }}" {% if repo == active_repo %}selected{% endif %}>{{ repo }}</option>
 			  {% endfor %}
 			</select>

@@ -53,7 +53,8 @@ To do:
 * change donkeysimple utility to point out you need to be inside the site to run edituser - DONE
 * make sure index.cgi has execute permissions - DONE
 
-* convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy
-* auth with https://github.com/mitsuhiko/werkzeug/blob/master/examples/cookieauth.py
 * static file compression and organising - from json file
 * builtin repo with sitemap, htaccess, 404
+
+* convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy
+* auth with https://github.com/mitsuhiko/werkzeug/blob/master/examples/cookieauth.py

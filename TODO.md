@@ -19,7 +19,6 @@ To do:
 * global vars to include static-dir, list of pages etc. - DONE
 * global vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?)
 * link generation (link to a specific page), static-dir tag - DONE
-* static file compression and organising
 * JSON editor in pages for lists etc.
 * JSON editor mode
 * allow pages to use template from different repo (save repo in page) - DONE
@@ -56,3 +55,5 @@ To do:
 
 * convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy
 * auth with https://github.com/mitsuhiko/werkzeug/blob/master/examples/cookieauth.py
+* static file compression and organising - from json file
+* builtin repo with sitemap, htaccess, 404

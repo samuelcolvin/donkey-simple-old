@@ -145,9 +145,7 @@ class ProcessForm(UniversalProcessor):
         
     def delete_page(self):
         page = ds.con.Pages()
-        t_con = ds.con.Templates()
-        template = t_con.get_cfile_fid(self.fields['page-template-id'].value)
-        self._delete_file(page, None, 'page-name', repo = template.repo)
+        self._delete_file(page, 'repo', 'page-name')
         
     def edit_template_gen(self):
         cfile = self._edit_template()

@@ -5,10 +5,8 @@ import os, re
 
 from setuptools import setup
 
-long_description = ''
-if os.path.exists('DonkeySimple/docs.txt'):
-    with open('DonkeySimple/docs.txt') as file:
-        long_description = file.read()
+with open('DonkeySimple/docs.txt') as file:
+    long_description = file.read()
 
 setup(name='DonkeySimple',
     version='0.18',

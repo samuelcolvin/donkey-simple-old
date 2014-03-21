@@ -47,6 +47,7 @@ class View(object):
         self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
         self._uri = os.environ['REQUEST_URI']
         self._site_uri = self._uri[:self._uri.index('/edit/')]
+        if self._site_uri == '': self._site_uri = '/'
         print 'site_uri:', self._site_uri
         if hasattr(settings, 'SITE_URI'):
             set_site_uri = settings.SITE_URI
@@ -220,7 +221,7 @@ class View(object):
     
     def edit_page(self, pid):
         t_con = ds.con.Templates()
-        self.context['page_templates'] = t_con.cfiles.values()
+        self.context['page_templates'] = [cf for _, cf in t_con.cfiles_ordered]
         self.context['other_formats'] = ['markdown', 'html']
         self.context['action_uri'] = self._site_edit_uri + 'edit-page-last'
         if pid is not None:
@@ -235,7 +236,6 @@ class View(object):
                 self.context['sitemap'] = cfile.info['sitemap']
             if 'extension' in cfile.info:
                 self.context['extension'] = cfile.info['extension']
-            self.context['page_templates'] = t_con.cfiles.values()
             self.context['page_context_str'] = []
             self.context['page_context_other'] = []
             global_context = ds.SiteGenerator().global_context()
@@ -427,13 +427,15 @@ class View(object):
         else:
             self._msgs[mtype].append(msg)
  
-def get_font_name(filename):
+def get_font_name(filename, add_msg):
     try:
         from fontTools import ttLib
         tt = ttLib.TTFont(filename)
         return tt['name'].names[1].string
     except Exception, e:
-        print 'Problem processing font:', e
+        e_str = 'Problem processing font: %s' % str(e)
+        print e_str
+        add_msg(e_str, 'errors')
         return 'unknown'
 
 def join_uri(*args):

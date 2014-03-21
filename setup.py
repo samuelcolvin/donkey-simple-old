@@ -3,8 +3,8 @@
 from DonkeySimple.DS.download import download_libraries
 import os, re
 
-# to build from github
-#import mini_biuld
+#  to build from github
+# import mini_biuld
 
 from setuptools import setup
 
@@ -13,7 +13,7 @@ with open('DonkeySimple/docs.txt') as file:
     long_description = file.read()
 
 setup(name='DonkeySimple',
-    version='0.17',
+    version='0.18',
     description='Super Simple python system for building and deploying static websites',
     long_description=long_description,
     author='Samuel Colvin',
@@ -44,6 +44,7 @@ setup(name='DonkeySimple',
     install_requires=[
         'Jinja2>=2.7.2',
         'GitPython>=0.3.2.RC1',
-        'markdown2>=2.1.0'
+        'markdown2>=2.1.0',
+        'FontTools>=2.4'
     ],
 )

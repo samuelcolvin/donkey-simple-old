@@ -55,6 +55,16 @@ To do:
 
 * static file compression and organising - from json file
 * builtin repo with sitemap, htaccess, 404
+* web interface edit settings.py
+* fix template order on select on page - DONE
+* name page with error if error occurs during generate - DONE
+* generate: generate (tmp), delete, deploy
+* save and generate button on edit json context
+* move "Problem processing font: No module named fontTools" to alert - DONE
+* add details to list on index - erros on pages, number fo pages on templates, admin on users - sepeperate function used for cmd and web
+* check non admin users can't upgrade themselves
+* sitemap order: reverse priority order - DONE
+* fix Auto detected URI does not match settings.SITE_URI: "" vs. "/" - DONE
 
 * convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy
 * auth with https://github.com/mitsuhiko/werkzeug/blob/master/examples/cookieauth.py

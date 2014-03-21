@@ -19,6 +19,7 @@ class SiteGenerator(object):
         self.generate_statics()
     
     def generate_page(self, cfile):
+        self._output('Generating page: %s...' % cfile.info['name'])
         context = {'this_page': cfile.info['name']}
         for var, item in cfile.info['context'].items():
             context[var] = item['value']
@@ -40,8 +41,7 @@ class SiteGenerator(object):
         fn2 = fn
         if len(fn2) > 40:
             fn2 = '...%s' % fn2[-37:]
-        self._output('Generated html file "%s" from page: %s, using template: %s' % \
-                     (fn2, cfile.info['name'], cfile.info['template']))
+        self._output('File generated "%s" using template: %s' % (fn2, cfile.info['template']))
         
     def global_context(self):
         self._page_con = con.Pages()
@@ -50,14 +50,28 @@ class SiteGenerator(object):
                    'todays_date': dtdt.now().strftime('%Y-%m-%d'),
                    'this_page': '[set during page generation]'}
         index = self._get_site_uri()
+        index_slash = index
+        if not index_slash.endswith('/'):
+            index_slash += '/'
         if index:
             context['index'] = index
         context['pages'] = []
         context['sitemap_pages'] = []
         for cf in self._page_con.cfiles.values():
-            context['pages'].append(cf.info['name'])
+            url = cf.info['name']
+            if url == 'index':
+                url = index
+            else:
+                url = index_slash + url
+            context['pages'].append(url)
             if 'sitemap' in cf.info:
-                context['sitemap_pages'].append({'url': cf.info['name'], 'priority': cf.info['sitemap']})
+                priority = 0.1
+                try:
+                    priority = '%0.1f' % float(cf.info['sitemap'])
+                except:
+                    self._output('Failed to convert sitemap priority to float: %s' % cf.info['sitemap'])
+                context['sitemap_pages'].append({'url': url, 'priority': priority})
+        context['sitemap_pages'].sort(key=lambda u: -float(u['priority']))
         extra_context = con.GlobConFiles().get_entire_context()
         context.update(extra_context)
         return context

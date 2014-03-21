@@ -43,6 +43,6 @@ setup(name='DonkeySimple',
         'Jinja2>=2.7.2',
         'GitPython>=0.3.2.RC1',
         'markdown2>=2.1.0',
-        'FontTools>=2.4'
+#         'FontTools>=2.4' (requires numpy so not required)
     ],
 )

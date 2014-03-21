@@ -47,6 +47,7 @@ To do:
 * set owner permissions for all for .git folder - DONE
 * solve display of static png or ttf files - DONE
 * get global variable "index" from settings if not directly available (eg. in command line) - DONE
+* add site URL (not URI) to settings and use on sitemap?
 
 * add docs - DONE
 * generate docs.txt from README.md - DONE

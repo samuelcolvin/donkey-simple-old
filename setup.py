@@ -3,11 +3,7 @@
 from DonkeySimple.DS.download import download_libraries
 import os, re
 
-#  to build from github
-# import mini_biuld
-
 from setuptools import setup
-
 
 with open('DonkeySimple/docs.txt') as file:
     long_description = file.read()

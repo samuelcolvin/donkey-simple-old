@@ -17,10 +17,10 @@ To do:
 * global variables eg author, title, checkbox for override on pages - DONE
 * get "override global" working for ace editors - DONE
 * global vars to include static-dir, list of pages etc. - DONE
-* global vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?)
+* global vars to allow lists for menus (or pages to include tags: http://aehlke.github.io/tag-it/ ?) - DONE
 * link generation (link to a specific page), static-dir tag - DONE
-* JSON editor in pages for lists etc.
-* JSON editor mode
+* JSON editor in pages for lists etc. - NOTDONE
+* JSON editor mode - NOTDONE
 * allow pages to use template from different repo (save repo in page) - DONE
 * library static files should be downloaded (implement zip bit) - DONE
 * static library file webinterface - DONE

@@ -1,0 +1,12 @@
+{
+    "context": {
+        "main_article": {
+            "type": "markdown",
+            "value": "###404 - Page not Found\r\n\r\n[return to home page](/)"
+        }
+    },
+    "id": 25,
+    "name": "404",
+    "template": "page.template.html",
+    "template_repo": "default"
+}

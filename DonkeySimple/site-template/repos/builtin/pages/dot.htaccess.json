@@ -1,8 +1,9 @@
 {
     "context": {},
     "extension": "None",
-    "id": 17,
+    "id": 27,
     "name": "dot.htaccess",
+    "sitemap": "",
     "template": "htaccess.template.conf",
-    "template_repo": "builtins"
+    "template_repo": "builtin"
 }

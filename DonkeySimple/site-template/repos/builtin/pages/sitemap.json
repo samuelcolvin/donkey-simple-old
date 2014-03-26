@@ -1,8 +1,9 @@
 {
     "context": {},
     "extension": "xml",
-    "id": 15,
+    "id": 28,
     "name": "sitemap",
+    "sitemap": "",
     "template": "sitemap.template.xml",
-    "template_repo": "builtins"
+    "template_repo": "builtin"
 }

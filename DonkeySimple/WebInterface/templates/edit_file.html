@@ -91,12 +91,12 @@
 
 {% block js %}
 {{ super() }}
-<script src="{{ static_uri }}libs/jquery.form.min.js"></script>
-<script src="{{ static_uri }}libs/mousetrap.min.js"></script>
-<script src="{{ static_uri }}libs/ace/ace.js"></script>
-<script src="{{ static_uri }}libs/ace/ext-modelist.js"></script>
+<script src="{{ static_url }}libs/jquery.form.min.js"></script>
+<script src="{{ static_url }}libs/mousetrap.min.js"></script>
+<script src="{{ static_url }}libs/ace/ace.js"></script>
+<script src="{{ static_url }}libs/ace/ext-modelist.js"></script>
 <script>
 	var json_submit_url = '{{ json_submit_url }}';
 </script>
-<script src="{{ static_uri }}editor.js"></script>
+<script src="{{ static_url }}editor.js"></script>
 {% endblock %}

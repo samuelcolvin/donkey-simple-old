@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 import DonkeySimple.DS as ds
-settings = ds.get_settings()
+import settings
     
 def send_email(send_to, subject, body):
     msg = MIMEText(body)

@@ -5,9 +5,9 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 		<title>{{title}}</title>
-		<link rel="icon" type="image/png" href="{{ static_uri }}favicon.png" />
-		<link rel="stylesheet" href="{{ static_uri }}libs/bootstrap.min.css">
-		<link rel="stylesheet" href="{{ static_uri }}editor_styles.css">
+		<link rel="icon" type="image/png" href="{{ static_url }}favicon.png" />
+		<link rel="stylesheet" href="{{ static_url }}libs/bootstrap.min.css">
+		<link rel="stylesheet" href="{{ static_url }}editor_styles.css">
 	{% endblock head %}
   </head>
   <body>
@@ -73,9 +73,9 @@
 	  	{% block content %}Content not defined.{% endblock %}
 	</div>
 	{% block js %}
-  	<script src="{{ static_uri }}libs/jquery.min.js"></script>
-  	<script src="{{ static_uri }}libs/bootstrap.min.js"></script>
-  	<script src="{{ static_uri }}libs/bootbox.min.js"></script>
+  	<script src="{{ static_url }}libs/jquery.min.js"></script>
+  	<script src="{{ static_url }}libs/bootstrap.min.js"></script>
+  	<script src="{{ static_url }}libs/bootbox.min.js"></script>
   	{% endblock %}
   </body>
 </html>

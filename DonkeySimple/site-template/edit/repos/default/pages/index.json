@@ -6,14 +6,14 @@
         },
         "main_article": {
             "type": "markdown",
-            "value": "Donkey Simple is an extremely simple CMS that allows you to build a static website from a web interface alone (once installed).\r\n\r\nIt uses clever tools like [Ace Code Editor](http://ace.c9.io/), [Markdown](http://daringfireball.net/projects/markdown/) and [Jinja2](http://jinja.pocoo.org/) to make writing the site as painless as possible.\r\n\r\nOnce you've written your site, it is generated **ONCE** and then saved as static files, meaning the site is **FAST**, **REALLY FAST** in a way dynamic sites build from templates using lots of database calls and slow interpretted languages so rarely are.\r\n\r\nTo start building your site go to \"edit/\" from here login with the default username (**donkey**) and password (**simple**), change that password and set off.\r\n\r\nView the code and download it at [https://github.com/samuelcolvin/donkey-simple](https://github.com/samuelcolvin/donkey-simple)."
+            "value": "Donkey Simple is an extremely simple CMS that allows you to build a static website from a web interface alone (once installed).x\r\n\r\nIt uses clever tools like [Ace Code Editor](http://ace.c9.io/), [Markdown](http://daringfireball.net/projects/markdown/) and [Jinja2](http://jinja.pocoo.org/) to make writing the site as painless as possible.\r\n\r\nOnce you've written your site, it is generated **ONCE** and then saved as static files, meaning the site is **FAST**, **REALLY FAST** in a way dynamic sites build from templates using lots of database calls and slow interpretted languages so rarely are.\r\n\r\nTo start building your site go to \"edit/\" from here login with the default username (**donkey**) and password (**simple**), change that password and set off.\r\n\r\nView the code and download it at [https://github.com/samuelcolvin/donkey-simple](https://github.com/samuelcolvin/donkey-simple)."
         },
         "title": {
             "type": "string",
             "value": "Donkey Simple"
         }
     },
-    "id": 3,
+    "id": 26,
     "name": "index",
     "sitemap": "1",
     "template": "page.template.html",

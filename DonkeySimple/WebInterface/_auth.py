@@ -120,9 +120,9 @@ class UserAuth(object):
         if 'hash' not in user or password is not None:
             pw = Password()
             user['hash'] = pw.make_hash(password)
-            user['cookie'] = self._generate_cookie()['value']
-        if 'cookie' not in user:
-            user['cookie'] = self._generate_cookie()['value']
+#             user['cookie'] = self._generate_cookie()['value']
+#         if 'cookie' not in user:
+#             user['cookie'] = self._generate_cookie()['value']
         if 'admin' not in user:
             user['admin'] = False
         if 'created' not in user:

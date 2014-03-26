@@ -9,7 +9,7 @@
 	  <button type="submit" class="btn btn-primary" altfunction="clear-download-libs"> Clear &amp; Download Libraries</button>
 	  <button type="submit" class="btn btn-primary" altfunction="repos-zip"> Generate Repos Zip </button>
 	  <button type="submit" class="btn btn-primary" altfunction="site-zip"> Generate Site Zip </button>
-	  <a class="btn btn-primary" href="{{ site_uri }}">Go to {{ site_name }}</a>
+	  <a class="btn btn-primary" href="{{ site_url }}">Go to {{ site_name }}</a>
 	</div>
 </form>
 <div class="row">
@@ -175,7 +175,7 @@
 {% endblock %}
 {% block js %}
 {{ super() }}
-<script src="{{ static_uri }}editor.js"></script>
+<script src="{{ static_url }}editor.js"></script>
 <script>
 	$('.upload-modal-btn').click(function(){
 		$('#upload-name').text($(this).text());

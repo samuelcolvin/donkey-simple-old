@@ -2,6 +2,9 @@ import DonkeySimple.DS as ds
 import os, json, imp, getpass
 from DonkeySimple.DS.ds_creator import create_ds
 
+class PathError(Exception):
+    pass
+
 def get_status(path):
     """
     Prints the current state of the site.
@@ -14,7 +17,7 @@ def get_status(path):
             print ' '*new_indent, v
     def print_con(title, con, indent = 2):
         print_list(title, [cf.display for cf in con.cfiles.values()], indent)
-    settings = ds.get_settings()
+    import settings
     print '  ================'
     print '  %s Status' % settings.SITE_NAME
     print '  ================'
@@ -42,6 +45,11 @@ def generate_site(path):
     print ''
     print '  Site Generated Successfully'
     print '  ---------------------------'
+    
+def runserver(path):
+    _chdir(path)
+    import DonkeySimple.WebInterface as wi
+    wi.run_dev_server()
     
 def edituser(path):
     _chdir(path)
@@ -73,12 +81,12 @@ def edituser(path):
         pw = pw1
         if len(pw) < ds.MIN_PASSWORD_LENGTH:
             raise Exception('Password must be at least %d characters in length' % ds.MIN_PASSWORD_LENGTH)
-        auth = wi.Auth()
+        auth = wi.UserAuth()
         user = auth.pop_user(username)
         auth.add_user(username, user, pw)
         print 'Password Changed'
     elif action in ['reset password and print', 'reset password and email']:
-        auth = wi.Auth()
+        auth = wi.UserAuth()
         user = auth.pop_user(username)
         pw = auth.new_random_password()
         if action == 'reset password and print':
@@ -110,11 +118,11 @@ def _chdir(path):
                     return d
         else:
             if not all([os.path.exists(os.path.join(path,f)) for f in look_for]):
-                raise Exception(
+                raise PathError(
                 'Path supplied "%s" does not appear to be the "edit" folder of a donkey simple site tree.'\
                 % path)
             return path
-        raise Exception("No path supplied and you don't appear to be in a site tree now.")
+        raise PathError("No path supplied and you don't appear to be in a site tree now.")
     
     new_path = find_path()
     if new_path != '.':

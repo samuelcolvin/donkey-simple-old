@@ -7,4 +7,4 @@
         <changefreq>weekly</changefreq>
         {% if page.priority %}<priority>{{ page.priority }}</priority>{% endif %}
     </url>{% endfor %}
-</urlset>
+</urlset> 

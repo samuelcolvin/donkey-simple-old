@@ -1,18 +1,20 @@
+import os
 DEBUG = True
 SITE_NAME = 'Site'
 COOKIE_NAME = 'donksimpses'
 SECRET_COOKIE_KEY = 'random_var_created_on_build'
 
-# COOKIE_NAME = 'session'
-# SECRET_COOKIE_KEY = '\xfa\xdd\xb8z\xae\xe0}4\x8b\xea'
+# either 'PAGE' or 'STDOUT'
+PRINT_TO = 'PAGE'
 
 GIT_EMAIL = 'donkey-simple@example.com'
 GIT_NAME = 'DONKEY'
 
-# URI used when generating the site
-# comment out or remove to auto-detect the URI 
-# (autodetect is only available in the web interface) 
-SITE_URI = '/uri/of/site'
+# URL used when generating the site
+SITE_URL = '/site/'
+this_dir = os.path.dirname(__file__)
+SITE_PATH = os.path.join(this_dir, 'site')
+SITE_PATH_TMP = os.path.join(this_dir, 'site_tmp')
 
 # email settings
 EMAIL_HOST = 'localhost'

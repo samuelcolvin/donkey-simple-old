@@ -1,17 +1,17 @@
 import jinja2, os, re, httplib, traceback, json, sys, StringIO
-# import cgi
-# import Cookie
 import DonkeySimple.DS as ds
 from _forms import ProcessForm, AnonFormProcessor
 from _auth import UserAuth, SecureRequest
-import settings
+from DonkeySimple.DS import get_settings
+settings = get_settings()
 
 from werkzeug.utils import redirect
 from werkzeug.wrappers import Response
 from werkzeug.utils import escape
-from werkzeug.wrappers import BaseRequest
-from werkzeug.exceptions import HTTPException, NotFound, BadRequest
-from werkzeug.debug.tbtools import get_current_traceback
+from werkzeug.wsgi import SharedDataMiddleware, get_path_info
+# from werkzeug.wrappers import BaseRequest
+# from werkzeug.exceptions import HTTPException, NotFound, BadRequest
+# from werkzeug.debug.tbtools import get_current_traceback
 
 sg = ds.SiteGenerator
 DEBUG_PORT = 4000
@@ -56,41 +56,50 @@ def application(request):
     request.session.save_cookie(response)
     return response
 
+def get_siteserve_application():
+    static_files= {'/favicon.ico': os.path.join('static', 'favicon.png'), 
+                   '/static': 'static', 
+                   '/repos': 'repos', 
+                   settings.SITE_URL.rstrip('/'): settings.SITE_PATH}
+    return SiteServeMiddleware(application, static_files, fallback_mimetype='text/html')
+
 class View(object):
-    _uri = ''
-    _site_edit_uri = ''
-    _edit_static_uri = 'static/'
-    isadmin = False
+    site_edit_url = '/'
+    edit_static_url = 'static/'
     response_code = ''
     page = ''
     mimetype = 'text/html'
-    _response = None
-    processing_error = None
     debug_mode = False
     
     def __init__(self, request):
-        self._msgs = {}
-        if SERVER_MODE == SERVER_MODES.UNKNOWN:
-            raise Exception('Mode UNKNOWN')
-        self.request = request
-        if self.request.login_message:
-            self._add_msg(self.request.login_message, ('errors', 'success')[self.request.valid_user])
-        if self.request.valid_user:
-            self.isadmin = self.request.user['admin']
-        self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
-        url = request.base_url.replace('http://', '')
-        self._uri = url[url.index('/')+1:]
-        print 'url: "%s", uri: "%s"' % (url, self._uri)
-        self.debug_mode = SERVER_MODE == SERVER_MODES.DEBUG
-        if self.debug_mode:
-            self._site_uri = '/test_site/'
-        else:
-            self._site_uri = self._uri[:self._uri.index('/edit/')]
-            if self._site_uri == '': self._site_uri = '/'
-            self._site_edit_uri = self._uri[:self._uri.index('/edit/') + 6]
-            self._edit_static_uri = join_uri(self._site_edit_uri, 'static/')
-        self._process_forms()
-        self._generate_page(self._uri, loggedin = request.valid_user, error = self.processing_error)
+        with CatchStdout(self.print_function):
+            self._msgs = {}
+            self._response = None
+            if SERVER_MODE == SERVER_MODES.UNKNOWN:
+                raise Exception('Mode UNKNOWN')
+            self.request = request
+            if self.request.login_message:
+                self._add_msg(self.request.login_message, ('errors', 'success')[self.request.valid_user])
+            self.isadmin = self.request.valid_user and self.request.user['admin']
+            self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
+            self.site_url = (settings.SITE_URL, '/')[settings.SITE_URL == '']
+            url = request.base_url.replace('http://', '')
+            self._uri = str(url[url.index('/'):])
+            print 'url: "%s", uri: "%s"' % (url, self._uri)
+            self.debug_mode = SERVER_MODE == SERVER_MODES.DEBUG
+            if not self.debug_mode:
+                self.site_edit_url = self._uri[:self.site_url.index('/edit/') + 6]
+            self.edit_static_url = join_uri(self.site_edit_url, 'static/')
+            self._process_forms()
+            self._generate_page(self._uri, loggedin = request.valid_user, error = self.processing_error)
+            
+    @property
+    def print_function(self):
+        if settings.PRINT_TO == 'PAGE':
+            return self.add_to_page
+        
+    def add_to_page(self, content):
+        self.page += content
         
     @property
     def response(self):
@@ -99,6 +108,7 @@ class View(object):
         return self._response
     
     def _process_forms(self):
+        self.processing_error = None
         if self.request.method != 'POST':
             return
         fields = self.request.form
@@ -107,7 +117,7 @@ class View(object):
             if self.request.valid_user:
                 proc_form = ProcessForm(self._add_msg, fields, self.isadmin, self.request.username)
                 if proc_form.regen_users:
-                    self.request.check_for_login()
+                    self.logout(None)
                 self.created_item = proc_form.created_item
             else:
                 AnonFormProcessor(self._add_msg, fields)
@@ -117,10 +127,9 @@ class View(object):
             self.processing_error = (e, exc_traceback)
         
     def _generate_page(self, uri, loggedin = False, error = None):
-        self._check_uri()
         self.context = {'title': '%s Editor' % settings.SITE_NAME, 'site_name': settings.SITE_NAME, 'site_title': '%s Editor' % settings.SITE_NAME, 
-                        'static_uri': self._edit_static_uri, 'edit_uri': self._site_edit_uri,
-                        'site_uri': self._site_uri, 'json_submit_url': '%ssubmit.json' % self._site_edit_uri}
+                        'static_url': self.edit_static_url, 'edit_uri': self.site_edit_url,
+                        'site_url': self.site_url, 'json_submit_url': '%ssubmit.json' % self.site_edit_url}
         if loggedin:
             self.context.update({'username': self.request.username, 'admin': self.isadmin})
         self.repo_paths = list(ds.get_all_repos())
@@ -148,7 +157,7 @@ class View(object):
                     getattr(self, func)(fid)
                     break
             if not found:
-                if uri != self._site_edit_uri:
+                if uri != self.site_edit_url:
                     self._add_msg('%s not found' % uri, 'errors')
                 self.index()
         self.context.update(self._msgs)
@@ -156,13 +165,6 @@ class View(object):
 #             self.page = self._static_file
         if hasattr(self, '_template'):
             self.page = self._template.render(**self.context)
-    
-    def _check_uri(self):
-        if hasattr(settings, 'SITE_URI'):
-            set_site_uri = settings.SITE_URI
-            if self._site_uri != set_site_uri:
-                self._add_msg('Auto detected URI does not match settings.SITE_URI: "%s" vs. "%s"'\
-                               % (self._site_uri, set_site_uri), 'warnings')
             
     def json_response(self, rid):
         self._json_response(self._msgs)
@@ -181,11 +183,8 @@ class View(object):
         self._template = self._env.get_template('reset_password.html')
         
     def logout(self, fid):
-#         auth = Auth()
-#         auth.logout(self.request.username)
-#         self.location = 'Location: %s\n' % self._site_edit_uri
         self.request.logout()
-        self._response = redirect('.')
+        self._response = redirect(self.site_edit_url)
     
     def index(self):
         self._template = self._env.get_template('index.html')
@@ -220,7 +219,7 @@ class View(object):
     def view_repo(self, repo_name):
         self.context['repo_name'] = repo_name
         self.context['title'] = repo_name
-        self.context['action_uri'] = self._site_edit_uri + 'view-repo-' + repo_name
+        self.context['action_uri'] = self.site_edit_url + 'view-repo-' + repo_name
         
         repo_path = (p for r, p in self.repo_paths if r == repo_name).next()
         git_repo = ds.Git(repo_path)
@@ -247,7 +246,7 @@ class View(object):
         t_con = ds.con.Templates()
         self.context['page_templates'] = [cf for _, cf in t_con.cfiles_ordered]
         self.context['other_formats'] = ['markdown', 'html']
-        self.context['action_uri'] = self._site_edit_uri + 'edit-page-last'
+        self.context['action_uri'] = self.site_edit_url + 'edit-page-last'
         if pid is not None:
             page_con = ds.con.Pages()
             try:
@@ -336,7 +335,7 @@ class View(object):
             self.context['file_id'] = cfile.id
             self.context['active_repo'] = cfile.repo
             self.context['file_type'] = static.get_file_type(self.context['file_name'])
-            static_uri = join_uri(self._site_edit_uri, ds.REPOS_DIR, cfile.repo, static.DIR, cfile.name)
+            static_uri = join_uri(self.site_edit_url, ds.REPOS_DIR, cfile.repo, static.DIR, cfile.name)
             if self.context['file_type'] == 'Text':
                 self.context['file_text'] = escape(content)
                 self.context['show_file_text'] = True
@@ -396,10 +395,10 @@ class View(object):
                 return self._permission_denied()
             if uid != self.request.username:
                 return self._permission_denied()
-        self.context['action_uri'] = self._site_edit_uri + 'edit-user-last'
+        self.context['action_uri'] = self.site_edit_url + 'edit-user-last'
         if uid is not None:
             self.context['existing_user'] = True
-            self.context['password_uri'] = self._site_edit_uri + 'set-password-%s' % uid
+            self.context['password_uri'] = self.site_edit_url + 'set-password-%s' % uid
             edit_user = self.request.users[uid]
             self.context['page_tag'] = uid
             self.context['edit_email'] = edit_user['email']
@@ -453,20 +452,47 @@ class View(object):
         if mtype not in self._msgs:
             self._msgs[mtype] = [msg]
         else:
-            self._msgs[mtype].append(msg)    
+            self._msgs[mtype].append(msg)
+
+class SiteServeMiddleware(SharedDataMiddleware):
+    
+    def get_directory_loader(self, directory):        
+        def loader(path):
+            """
+            changed from original to serve index.html if the directory is requested
+            and /*.html if if /* is requested.
+            """ 
+            path_orig = path
+            if path is not None:
+                path = os.path.join(directory, path)
+            else:
+                path = directory
+            if os.path.isfile(path):
+                return os.path.basename(path), self._opener(path)
+            
+            attempts = []
+            if path_orig is None:
+                attempts.append('index.html')
+            else:
+                attempts.append(path_orig + '.html')
+            attempts.append('404.html')
+            for attempt_fname in attempts:
+                filepath = os.path.join(directory, attempt_fname)
+                if os.path.isfile(filepath):
+                    return attempt_fname, self._opener(filepath)
+            return None, None
+        return loader
             
 class CatchStdout(object):
     """
     change working directory and always return
     """
     _text = ''
-    active = True
     
-    def __init__(self):
-        pass
+    def __init__(self, print_to = None):
+        self.print_to = print_to
     
     def __enter__(self):
-        self.active = True
         self._stdout_original = sys.stdout
         sys.stdout = StringIO.StringIO()
     
@@ -475,23 +501,26 @@ class CatchStdout(object):
         sys.stdout.close()
         sys.stdout = self._stdout_original
         self._finished = True
+        if settings.DEBUG:
+            if self.print_to and traceback is None:
+                self.print_to(self.html)
+            else:
+                self.print_text()
         
     @property
     def html(self):
-        if self._text.strip('\r\t\n ') == '' or not self.active:
+        if self._text.strip('\r\t\n ') == '':
             return ''
         try:
-            import cgi
             self._text = escape(self._text)
         except:
             pass
         return '<div class="container"><h4>Debug Output:</h4>\n<pre><code>%s\n</code></pre></div>' % self._text.strip('\r\t\n ')
     
-    @property
-    def text(self):
-        if not self.active:
-            return ''
-        return 'DEBUG OUTPUT:\n%s' % self._text.strip('\r\t\n ')
+    def print_text(self):
+        print '==========DEBUG OUTPUT=========='
+        print ':\n%s' % self._text.strip('\r\t\n ')
+        print '================================'
  
 def get_font_name(filename, add_msg):
     try:
@@ -508,4 +537,5 @@ def join_uri(*args):
     uri = '/' + '/'.join(p.strip('/') for p in args)
     if args[-1].endswith('/'):
         uri += '/'
+    uri = uri.replace('//', '/')
     return uri

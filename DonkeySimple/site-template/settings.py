@@ -16,6 +16,10 @@ this_dir = os.path.dirname(__file__)
 SITE_PATH = os.path.join(this_dir, 'site')
 SITE_PATH_TMP = os.path.join(this_dir, 'site_tmp')
 
+# delete SITE_PATH completely and start again, or just delete *.html, sitemap.xml, .htaccess and static/ files
+# note SITE_PATH_TMP will always be deleted entirely
+DELETE_ENTIRE_SITE_PATH = False
+
 # email settings
 EMAIL_HOST = 'localhost'
 EMAIL_FROM = 'admin@%s' % SITE_NAME

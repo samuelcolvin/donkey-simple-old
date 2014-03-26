@@ -24,12 +24,21 @@ class SiteGenerator(object):
         for cf in self._page_con.cfiles.values():
             self.generate_page(cf)
         self.generate_statics()
-        self._output('site succesfully generated, deleting live...')
-        if os.path.exists(self._base_dir):
-            shutil.rmtree(self._base_dir)
-        self._output('moving temp to live...')
-        shutil.move(self._tmp_base_dir, self._base_dir)
-        self._output('site copied to live: %s' % self._base_dir)
+        delete_type = ('partially', 'completely-')[settings.DELETE_ENTIRE_SITE_PATH]
+        self._output('site succesfully generated, deleting live %s...' % delete_type)
+        if settings.DELETE_ENTIRE_SITE_PATH:
+            if os.path.exists(self._base_dir):
+                shutil.rmtree(self._base_dir)
+            self._output('moving temp to live in bulk...')
+            shutil.move(self._tmp_base_dir, self._base_dir)
+        else:
+            self._delete_relevent()
+            self._output('moving temp to live one by one...')
+            for f in os.listdir(self._tmp_base_dir):
+                path = os.path.join(self._tmp_base_dir, f)
+                shutil.move(path, self._base_dir)
+            shutil.rmtree(self._tmp_base_dir)
+        self._output('site copied to live, temp deleted: %s' % self._base_dir)
     
     def generate_page(self, cfile):
         self._output('Generating page: %s...' % cfile.info['name'])
@@ -97,7 +106,7 @@ class SiteGenerator(object):
         return context
         
     def generate_statics(self):
-        static_dst = self._get_static_dir()
+        static_dst = self._get_static_dir(self._tmp_base_dir)
         os.mkdir(static_dst)
         s = con.Statics()
         for i, src_cfile in enumerate(s.cfiles.values()):
@@ -127,9 +136,20 @@ class SiteGenerator(object):
                 shutil.copytree(s, d, symlinks, ignore)
             else:
                 shutil.copy2(s, d)
+                
+    def _delete_relevent(self):
+        special_files = ['sitemap.xml', '.htaccess']
+        files = [os.path.join(self._base_dir, f) for f in os.listdir(self._base_dir) if f.endswith('.html') or f in special_files]
+        [os.remove(f) for f in files]
+        self._output('deleted %d relevent files: %s' % (len(files), ', '.join(files)))
+        static_path = self._get_static_dir(self._base_dir)
+        if os.path.exists(static_path):
+            shutil.rmtree(static_path)
+            self._output('deleted static dir: %s' % static_path)
+        return files
         
-    def _get_static_dir(self):
-        return os.path.join(self._tmp_base_dir, STATIC_DIR)
+    def _get_static_dir(self, base):
+        return os.path.join(base, STATIC_DIR)
 
     def _output(self, msg):
         print msg

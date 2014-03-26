@@ -59,7 +59,7 @@ To do:
 * web interface edit settings.py
 * fix template order on select on page - DONE
 * name page with error if error occurs during generate - DONE
-* generate: generate (tmp), delete, deploy
+* generate: generate (tmp), delete, deploy - DONE
 * save and generate button on edit json context
 * move "Problem processing font: No module named fontTools" to alert - DONE
 * add details to list on index - erros on pages, number fo pages on templates, admin on users - sepeperate function used for cmd and web
@@ -67,5 +67,6 @@ To do:
 * sitemap order: reverse priority order - DONE
 * fix Auto detected URI does not match settings.SITE_URI: "" vs. "/" - DONE
 
-* convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy
-* auth with https://github.com/mitsuhiko/werkzeug/blob/master/examples/cookieauth.py
+* convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy - DONE
+* test cgi and wsgi versions of Werkzeug, test with edit inside site
+* add .html or not to settings so urls are generated correctly in templates

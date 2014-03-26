@@ -16,6 +16,6 @@
     "id": 3,
     "name": "index",
     "sitemap": "1",
-    "template": "simple_site.template.html",
+    "template": "page.template.html",
     "template_repo": "default"
 }

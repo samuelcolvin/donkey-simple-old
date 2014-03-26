@@ -1,8 +1,11 @@
 DEBUG = True
 SITE_NAME = 'Site'
-PASSWORD_EXPIRE_HOURS = 24
-SHORT_RANDOM = 'short_random_var'
-COOKIE_NAME = 'ds-' + SHORT_RANDOM
+COOKIE_NAME = 'donksimpses'
+SECRET_COOKIE_KEY = 'random_var_created_on_build'
+
+# COOKIE_NAME = 'session'
+# SECRET_COOKIE_KEY = '\xfa\xdd\xb8z\xae\xe0}4\x8b\xea'
+
 GIT_EMAIL = 'donkey-simple@example.com'
 GIT_NAME = 'DONKEY'
 

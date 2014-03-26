@@ -1,6 +1,6 @@
 import os, json
 import DonkeySimple.DS as ds
-from _auth import Auth
+from _auth import UserAuth
 import HTMLParser
 from DonkeySimple.DS.send_emails import password_email
 settings = ds.get_settings()

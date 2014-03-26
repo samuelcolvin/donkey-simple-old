@@ -15,6 +15,50 @@ from DonkeySimple.DS import *
 from DonkeySimple.DS.random_string import get_random_string
 settings = get_settings()
 
+from werkzeug.utils import cached_property
+from werkzeug.wrappers import Request
+from werkzeug.contrib.securecookie import SecureCookie
+
+class SecureRequest(Request):
+    """
+    Request with a secure cookie session
+    """
+    user = None
+    
+    def __init__(self, *args, **kw):
+        self.user_auth = UserAuth()
+        super(SecureRequest, self).__init__(*args, **kw)
+
+    def logout(self):
+        self.session.pop('username', None)
+    
+    def check_for_login(self):
+        self.login_message = None
+        if self.method != 'POST':
+            return
+        username = self.form.get('username')
+        password = self.form.get('password')
+        if None not in [username, password]:
+            self.login(username, password)
+        
+    def login(self, username, password):
+        valid, self.login_message = self.user_auth.check_login(username, password)
+        if valid:
+            self.session['username'] = username
+        
+    @property
+    def valid_user(self):
+        if 'username' in self.session:
+            self.username = self.session['username']
+            self.users = self.user_auth.users
+            self.user = self.users[self.username]
+            return True
+        return False
+
+    @cached_property
+    def session(self):
+        return SecureCookie.load_cookie(self, secret_key=settings.SECRET_COOKIE_KEY)
+
 UNUSABLE_PASSWORD_PREFIX = '!'
 UNUSABLE_PASSWORD_SUFFIX_LENGTH = 40
 
@@ -26,46 +70,38 @@ except NotImplementedError:
     print 'A secure pseudo-random number generator is not available on your system. Falling back to Mersenne Twister.'
     using_sysrandom = False
 
-class Auth(object):
+class UserAuth(object):
     dt_format = '%a, %d-%b-%Y %H:%M:%S UTC'
-    cookie = None
-    msg = None
-    username = None
-    user = None
     
     def __init__(self):
         self._load_success, self.users = self._get_users()
     
-    def login(self, username, password):
+    def check_login(self, username, password):
         if not self._load_success:
-            self.msg = 'Error Loading Users file'
-            return False
+            return False, 'Error Loading Users file'
         if username not in self.users:
-            self.msg = 'Username not found'
-            return False
+            return False, 'Username not found'
         self.user = self.users[username]
         pw = Password()
         correct_pw = pw.check_password(password, self.user['hash'])
         if not correct_pw:
-            self.msg = 'Incorrect Password'
-            return False
-        self.cookie = self._generate_cookie()
+            return False, 'Incorrect Password'
+#         self.cookie = self._generate_cookie()
         self.username = username
-        self._update_user(self.username, self.cookie)
-        self.msg = 'Logged in successfully'
-        return True
+        self._update_user(self.username)
+        return True, 'Logged in successfully'
     
-    def logout(self, username):
-        self.username = username
-        self.cookie = self._generate_cookie()
-        self._update_user(self.username, self.cookie)
-    
-    def check_cookie(self, cookies):
-        if self._get_user(cookies):
-            self.cookie = self._generate_cookie(self.user['cookie'])
-            self._update_user(self.username, self.cookie)
-            return True
-        return False
+#     def logout(self, username):
+#         self.username = username
+#         self.cookie = self._generate_cookie()
+#         self._update_user(self.username, self.cookie)
+#     
+#     def check_cookie(self, cookies):
+#         if self._get_user(cookies):
+#             self.cookie = self._generate_cookie(self.user['cookie'])
+#             self._update_user(self.username, self.cookie)
+#             return True
+#         return False
     
     def get_sorted_users(self):
         return sorted(self.users.keys())
@@ -104,20 +140,19 @@ class Auth(object):
                     return True
         return False
     
-    def _generate_cookie(self, value=None):
-        if value is None:
-            value = get_random_string(length=15)
-        cook = {'version': 1}
-        expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=settings.PASSWORD_EXPIRE_HOURS)
-        cook['expires'] = expiration.strftime(self.dt_format)
-        if hasattr(settings, 'COOKIE_DOMAIN'):
-            cook['domain'] = settings.COOKIE_DOMAIN
-        if hasattr(settings, 'COOKIE_PATH'):
-            cook['path'] = settings.COOKIE_PATH
-        return {'name': settings.COOKIE_NAME, 'value': value, 'extra_values': cook}
+#     def _generate_cookie(self, value=None):
+#         if value is None:
+#             value = get_random_string(length=15)
+#         cook = {'version': 1}
+#         expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=settings.PASSWORD_EXPIRE_HOURS)
+#         cook['expires'] = expiration.strftime(self.dt_format)
+#         if hasattr(settings, 'COOKIE_DOMAIN'):
+#             cook['domain'] = settings.COOKIE_DOMAIN
+#         if hasattr(settings, 'COOKIE_PATH'):
+#             cook['path'] = settings.COOKIE_PATH
+#         return {'name': settings.COOKIE_NAME, 'value': value, 'extra_values': cook}
             
-    def _update_user(self, username, cookie):
-        self.users[username]['cookie'] = cookie['value']
+    def _update_user(self, username):
         self.users[username]['last_seen'] = datetime.datetime.utcnow().strftime(self.dt_format)
         self._save_users()
             

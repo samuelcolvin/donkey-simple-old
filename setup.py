@@ -38,6 +38,7 @@ setup(name='DonkeySimple',
     ]},
     scripts=['DonkeySimple/bin/donkeysimple'],
     install_requires=[
+        'Werkzeug>=0.9.4',
         'Jinja2>=2.7.2',
         'GitPython>=0.3.2.RC1',
         'markdown2>=2.1.0',

@@ -18,8 +18,8 @@ def create_ds(path):
     print 'Generating short random variable for cookies...'
     settings_file = os.path.join(path, 'edit', 'settings.py')
     text = open(settings_file, 'r').read()
-    random_text = get_random_string(8)
-    text = text.replace('short_random_var', random_text)
+    random_text = get_random_string(20)
+    text = text.replace('random_var_created_on_build', random_text)
     open(settings_file, 'w').write(text)
     print 'Changing files to replicate owner permissions for all...'
     con.repeat_owners_permission(path)

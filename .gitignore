@@ -39,3 +39,5 @@ nosetests.xml
 
 # added by me
 DonkeySimple/docs.txt
+upload_2_pypi.sh
+*.com/

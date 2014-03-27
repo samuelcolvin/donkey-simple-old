@@ -37,7 +37,7 @@ which will create a new site template at `working/directory/my_new_site`. Eg. yo
 
 You can then use the system on a dev server by running
 
-   donkeysimple runserver
+    donkeysimple runserver
 
 from within the new site directory.
 

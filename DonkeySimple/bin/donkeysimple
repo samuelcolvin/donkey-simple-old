@@ -3,8 +3,12 @@ import sys, argparse, os
 import sys
     
 DEFAULT_SITE = 'donkey_simple_site'
-import DonkeySimple
-import DonkeySimple.CmdInterface as dscmd
+try:
+    import DonkeySimple
+    import DonkeySimple.CmdInterface as dscmd
+except ImportError:
+    print 'Error Importing DonkeySimple, check its installed'
+    sys.exit()
 
 class Actions:
     def __init__(self, path):
@@ -49,14 +53,10 @@ Utility for building and controlling donkey-simple websites
     edituser - edit a users password.
     version - print version of DonkeySimple.
 """ % DEFAULT_SITE, formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('action', metavar='action', choices=['status', 'runserver','build',  'generate', 'edituser', 'version'],
-                   help='action to perform: status|build|runserver|generate|edituser (defaults to status)')
+parser.add_argument('action', metavar='action', choices=['status', 'runserver', 'build',  'generate', 'edituser', 'version'],
+                   help='action to perform: status|runserver|build|generate|edituser (defaults to status)')
 parser.add_argument('path', metavar='site-path', nargs='?', default=DEFAULT_SITE,
                    help='Relative path of donkey simple site.')
-# if len(sys.argv) == 1:
-#     args = parser.parse_args(['status'])
-# else:
-#     args = parser.parse_args()
     
 args = parser.parse_args()
 

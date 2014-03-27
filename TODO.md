@@ -73,5 +73,5 @@ To do:
 * optional setting for url of site when being served by werkz
 * setting to switch off auth in debug
 * add static file compression to download and split off to seperate library
-* increase the part of hte page dedicated to code
+* increase the part of the page dedicated to code
 

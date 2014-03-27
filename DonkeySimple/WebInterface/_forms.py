@@ -4,23 +4,27 @@ from _auth import UserAuth
 import HTMLParser
 from DonkeySimple.DS.send_emails import password_email
 from DonkeySimple.DS import get_settings
+from werkzeug.wsgi import FileWrapper
+
 settings = get_settings()
 
 class UniversalProcessor(object):
-    def process(self, fields):
-        if 'function' in fields:
-            for name in fields:
+    def process(self):
+        if 'function' in self.fields:
+            for name in self.fields:
                 print '%s:' % name, 
-                if hasattr(fields[name], 'value'):
+                if hasattr(self.fields[name], 'value'):
                     if 'password' in name:
-                        print '*'*len(fields[name])
+                        print '*'*len(self.fields[name])
                     else:
-                        print fields[name]
+                        print self.fields[name]
                 else:
-                    print fields[name]
-            action_func = fields['function'].replace('-', '_')
+                    print self.fields[name]
+            if hasattr(self, 'files'):
+                for file_name in self.files:
+                    print 'file:', file_name
+            action_func = self.fields['function'].replace('-', '_')
             if hasattr(self, action_func):
-                self.fields = fields
                 getattr(self, action_func)()
             else:
                 raise Exception('ProcessForm has no function called %s' % action_func)
@@ -48,12 +52,15 @@ class UniversalProcessor(object):
 
 class ProcessForm(UniversalProcessor):
     created_item = None
-    def __init__(self, add_msg, fields, isadmin, username):
+    def __init__(self, add_msg, request, isadmin, username):
         self._add_msg = add_msg
         self.isadmin = isadmin
         self.username = username
         self.regen_users = False
-        self.process(fields)
+        self.request = request
+        self.fields = request.form
+        self.files = request.files
+        self.process()
     
     def generate_site(self):
         ds.SiteGenerator(self._add_msg).generate_entire_site()
@@ -309,17 +316,14 @@ class ProcessForm(UniversalProcessor):
     
     def _process_files(self, field_name, controller):
         self._upload_repo = self.fields['repo']
-        if isinstance(self.fields[field_name], list):
-            for f in self.fields[field_name]:
-                self._process_file(f, controller)
-        else:
-            self._process_file(self.fields[field_name], controller)
+        print 'files:', self.files.getlist(field_name)
+        for f in self.files.getlist(field_name):
+            self._process_file(f, controller)
     
     def _process_file(self, file_field, controller):
-        if file_field.file:
-            file_name = file_field.filename
-            bin_write = _BinaryWriter(file_field.file)
-            cf = controller.write_file(bin_write.get_chunk(), self._upload_repo, file_name)
+        if file_field:
+            wrapped_file = FileWrapper(file_field)
+            cf = controller.write_file(wrapped_file, self._upload_repo, file_field.filename)
             self._add_msg('File successfully uploaded to "%s"' % cf.display, 'success')
         else:
             self._add_msg('Error getting file from upload', 'errors')
@@ -336,19 +340,11 @@ class ProcessForm(UniversalProcessor):
             return HTMLParser.HTMLParser().unescape(self.fields['file-text'])
         return ''
     
-class _BinaryWriter(object):
-    def __init__(self, file_ob):
-        self._file = file_ob
-    
-    def get_chunk(self):
-        chunk = self._file.read(100000)
-        if chunk:
-            yield chunk
-    
 class AnonFormProcessor(UniversalProcessor):
     def __init__(self, add_msg, fields):
         self._add_msg = add_msg
-        self.process(fields)
+        self.fields = fields
+        self.process()
  
     def reset_password(self):
         username = self.fields['username']

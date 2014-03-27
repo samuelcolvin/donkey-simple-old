@@ -8,6 +8,7 @@ import _template_renderer as tr
 import re, base64, hashlib, pwd, subprocess
 from download import download_libraries
 import _git
+from werkzeug.utils import secure_filename
 
             
 def new_repo_path(repo):
@@ -220,7 +221,7 @@ class _File_Controller(object):
         """
         add the file extension if needed and make sure this is just a file name not a path.
         """
-        name = os.path.basename(name)
+        name = secure_filename(name)
         if name.endswith(self.EXTENSION):
             return name
         else:

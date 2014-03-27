@@ -12,6 +12,7 @@ GIT_NAME = 'DONKEY'
 
 # URL used when generating the site
 SITE_URL = '/site/'
+SITE_URL = '/links/donkeysimple/site/'
 this_dir = os.path.dirname(__file__)
 SITE_PATH = os.path.join(this_dir, 'site')
 SITE_PATH_TMP = os.path.join(this_dir, 'site_tmp')

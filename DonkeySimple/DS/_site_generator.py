@@ -32,7 +32,11 @@ class SiteGenerator(object):
             self._output('moving temp to live in bulk...')
             shutil.move(self._tmp_base_dir, self._base_dir)
         else:
-            self._delete_relevent()
+            if os.path.exists(self._base_dir):
+                self._delete_relevent()
+            else:
+                os.mkdir(self._base_dir)
+                os.chmod(self._base_dir, 0777)
             self._output('moving temp to live one by one...')
             for f in os.listdir(self._tmp_base_dir):
                 path = os.path.join(self._tmp_base_dir, f)
@@ -108,6 +112,7 @@ class SiteGenerator(object):
     def generate_statics(self):
         static_dst = self._get_static_dir(self._tmp_base_dir)
         os.mkdir(static_dst)
+        os.chmod(static_dst, 0777)
         s = con.Statics()
         for i, src_cfile in enumerate(s.cfiles.values()):
             dst = os.path.join(static_dst, src_cfile.name)
@@ -129,6 +134,7 @@ class SiteGenerator(object):
     def _copytree(self, src, dst, symlinks=False, ignore=None):
         if not os.path.exists(dst):
             os.mkdir(dst)
+            os.chmod(dst, 0777)
         for item in os.listdir(src):
             s = os.path.join(src, item)
             d = os.path.join(dst, item)

@@ -1,12 +1,22 @@
 {
     "context": {
+        "aside": {
+            "type": "string",
+            "value": ""
+        },
         "main_article": {
             "type": "markdown",
-            "value": "###404 - Page not Found\r\n\r\n[return to home page](/)"
+            "value": "### 404 - Page not Found\r\n\r\n[return to home page](.)"
+        },
+        "title": {
+            "type": "string",
+            "value": ""
         }
     },
-    "id": 25,
+    "extension": "",
+    "id": 29,
     "name": "404",
+    "sitemap": "",
     "template": "page.template.html",
     "template_repo": "default"
 }

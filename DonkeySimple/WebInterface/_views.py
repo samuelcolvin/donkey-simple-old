@@ -1,29 +1,56 @@
 import jinja2, os, re, httplib, traceback, json, sys, StringIO
 import DonkeySimple.DS as ds
+from DonkeySimple.DS import get_settings
+sg = ds.SiteGenerator
+settings = get_settings()
 from _forms import ProcessForm, AnonFormProcessor
 from _auth import UserAuth, SecureRequest
-from DonkeySimple.DS import get_settings
-settings = get_settings()
 
 from werkzeug.utils import redirect
 from werkzeug.wrappers import Response
 from werkzeug.utils import escape
-from werkzeug.wsgi import SharedDataMiddleware, get_path_info
-# from werkzeug.wrappers import BaseRequest
+from werkzeug.wsgi import SharedDataMiddleware
 # from werkzeug.exceptions import HTTPException, NotFound, BadRequest
-# from werkzeug.debug.tbtools import get_current_traceback
 
-sg = ds.SiteGenerator
+
 DEBUG_PORT = 4000
-SERVER_MODE = 0
 class SERVER_MODES:
     UNKNOWN = 0
     DEBUG = 1
     CGI = 2
     WSGI = 3
+SERVER_MODE = SERVER_MODES.UNKNOWN
 
 THIS_PATH = os.path.dirname(os.path.realpath(__file__))
 EDITOR_TEMPLATE_DIR = os.path.join(THIS_PATH, 'templates') 
+
+def make_dev_app():
+    """
+    Generates the DEV server. Here werkzeug takes care of serving all the static
+    files as well as the site itself.
+    SiteServeMiddleware takes care of some server like file serving.
+    """
+    static_files= {'/favicon.ico': os.path.join('static', 'favicon.png'), 
+                   '/static': 'static', 
+                   '/repos': 'repos', 
+                   settings.SITE_URL.rstrip('/'): settings.SITE_PATH}
+    return SiteServeMiddleware(application, static_files, fallback_mimetype='text/html')
+
+def make_cgi_app():
+    """
+    Generates the CGI application, with CGI we can't afford to serve static files with
+    the application. That has to be done by the real server, eg. apache: see the .htaccess
+    file in the site file (the one with settings.py).
+    """
+    return application
+
+@SecureRequest.application
+def application(request):
+    request.check_for_login()
+    view = View(request)
+    response = view.response
+    request.session.save_cookie(response)
+    return response
 
 urls = (
     ('logout$', 'logout'),
@@ -48,28 +75,12 @@ urls = (
     ('set-password-(.+)$', 'set_user_password'),
 )
 
-@SecureRequest.application
-def application(request):
-    request.check_for_login()
-    view = View(request)
-    response = view.response
-    request.session.save_cookie(response)
-    return response
-
-def get_siteserve_application():
-    static_files= {'/favicon.ico': os.path.join('static', 'favicon.png'), 
-                   '/static': 'static', 
-                   '/repos': 'repos', 
-                   settings.SITE_URL.rstrip('/'): settings.SITE_PATH}
-    return SiteServeMiddleware(application, static_files, fallback_mimetype='text/html')
-
 class View(object):
     site_edit_url = '/'
     edit_static_url = 'static/'
-    response_code = ''
+    response_code = httplib.OK
     page = ''
     mimetype = 'text/html'
-    debug_mode = False
     
     def __init__(self, request):
         with CatchStdout(self.print_function):
@@ -83,16 +94,17 @@ class View(object):
             self.isadmin = self.request.valid_user and self.request.user['admin']
             self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
             self.site_url = (settings.SITE_URL, '/')[settings.SITE_URL == '']
-            url = request.base_url.replace('http://', '')
-            self._uri = str(url[url.index('/'):])
-            print 'url: "%s", uri: "%s"' % (url, self._uri)
-            self.debug_mode = SERVER_MODE == SERVER_MODES.DEBUG
-            if not self.debug_mode:
-                self.site_edit_url = self._uri[:self.site_url.index('/edit/') + 6]
+            if SERVER_MODE == SERVER_MODES.CGI:
+                self._uri = request.environ['REQUEST_URI']
+                sim = _string_similar_point(self._uri, request.environ['SCRIPT_NAME'])
+                self.site_edit_url = self._uri[:sim]
+            else:
+                url = request.base_url.replace('http://', '')
+                self._uri = str(url[url.index('/'):])
             self.edit_static_url = join_uri(self.site_edit_url, 'static/')
             self._process_forms()
             self._generate_page(self._uri, loggedin = request.valid_user, error = self.processing_error)
-            
+                  
     @property
     def print_function(self):
         if settings.PRINT_TO == 'PAGE':
@@ -100,27 +112,26 @@ class View(object):
         
     def add_to_page(self, content):
         self.page += content
-        
+    
     @property
     def response(self):
         if self._response is None:
-            self._response = Response(self.page, mimetype= self.mimetype)
+            self._response = Response(self.page, mimetype = self.mimetype, status = self.response_code)
         return self._response
     
     def _process_forms(self):
         self.processing_error = None
         if self.request.method != 'POST':
             return
-        fields = self.request.form
         self.processing_error = None
         try:
             if self.request.valid_user:
-                proc_form = ProcessForm(self._add_msg, fields, self.isadmin, self.request.username)
+                proc_form = ProcessForm(self._add_msg, self.request, self.isadmin, self.request.username)
                 if proc_form.regen_users:
                     self.logout(None)
                 self.created_item = proc_form.created_item
             else:
-                AnonFormProcessor(self._add_msg, fields)
+                AnonFormProcessor(self._add_msg, self.request.form)
         except Exception, e:
             print 'processing _process_forms error:', e
             _, _, exc_traceback = sys.exc_info()
@@ -438,7 +449,7 @@ class View(object):
     def _bad(self, error_name, error_details = None, code = httplib.BAD_REQUEST):
         print error_details
         self.context['error'] = '%d %s' % (code, httplib.responses[code])
-        self.response_code = 'Status: %s\n' % self.context['error']
+        self.response_code = code
         self.context['error_name'] = error_name
         if error_details:
             self.context['error_details'] = str(error_details)
@@ -482,45 +493,58 @@ class SiteServeMiddleware(SharedDataMiddleware):
                     return attempt_fname, self._opener(filepath)
             return None, None
         return loader
-            
+
+
 class CatchStdout(object):
     """
     change working directory and always return
     """
-    _text = ''
+    stdout_text = ''
+    override = False
     
     def __init__(self, print_to = None):
         self.print_to = print_to
     
     def __enter__(self):
-        self._stdout_original = sys.stdout
+        if self.override:
+            return
+        sys.stdout.flush()
+        self._stdout_orig = sys.stdout
         sys.stdout = StringIO.StringIO()
     
-    def __exit__(self, type, value, traceback):
-        self._text = sys.stdout.getvalue()
+    def __exit__(self, e_type, e_value, e_tb):
+        if self.override:
+            return
+        self._stdout_orig.flush()
+        self.stdout_text = sys.stdout.getvalue()
         sys.stdout.close()
-        sys.stdout = self._stdout_original
-        self._finished = True
+        sys.stdout = self._stdout_orig
         if settings.DEBUG:
-            if self.print_to and traceback is None:
-                self.print_to(self.html)
+            if self.print_to:
+                if e_tb:
+                    print self.text
+                else:
+                    self.print_to(self.html)
             else:
-                self.print_text()
+                print self.text
         
     @property
     def html(self):
-        if self._text.strip('\r\t\n ') == '':
+        if self.stdout_text.strip('\r\t\n ') == '':
             return ''
+        text = ''
         try:
-            self._text = escape(self._text)
+            text = escape(self.stdout_text).strip('\r\t\n ')
         except:
             pass
-        return '<div class="container"><h4>Debug Output:</h4>\n<pre><code>%s\n</code></pre></div>' % self._text.strip('\r\t\n ')
+        return '<div class="container"><h4>Debug Output:</h4>\n<pre><code>%s\n</code></pre></div>' % text
     
-    def print_text(self):
-        print '==========DEBUG OUTPUT=========='
-        print ':\n%s' % self._text.strip('\r\t\n ')
-        print '================================'
+    @property
+    def text(self):
+        debug  = '==========DEBUG OUTPUT==========\n'
+        debug += '%s\n' % self.stdout_text
+        debug += '================================'
+        return debug
  
 def get_font_name(filename, add_msg):
     try:
@@ -539,3 +563,14 @@ def join_uri(*args):
         uri += '/'
     uri = uri.replace('//', '/')
     return uri
+
+    
+def _string_similar_point(s1, s2):
+    i = 0
+    while True:
+        if i == len(s1) or i == len(s2):
+            return i
+        if s1[i] != s2[i]:
+            return i
+        i += 1
+    

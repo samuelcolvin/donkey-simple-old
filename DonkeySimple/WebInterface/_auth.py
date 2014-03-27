@@ -18,7 +18,6 @@ settings = get_settings()
 from werkzeug.utils import cached_property
 from werkzeug.wrappers import Request
 from werkzeug.contrib.securecookie import SecureCookie
-
 class SecureRequest(Request):
     """
     Request with a secure cookie session

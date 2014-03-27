@@ -55,7 +55,7 @@ To do:
 * make sure index.cgi has execute permissions - DONE
 
 * static file compression and organising - from json file
-* builtin repo with sitemap, htaccess, 404
+* builtin repo with sitemap, htaccess, 404 - DONE
 * web interface edit settings.py
 * fix template order on select on page - DONE
 * name page with error if error occurs during generate - DONE
@@ -69,4 +69,9 @@ To do:
 
 * convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy - DONE
 * test cgi and wsgi versions of Werkzeug, test with edit inside site
-* add .html or not to settings so urls are generated correctly in templates
+* add .html or not to settings so urls are generated correctly in templates - done by dev server
+* optional setting for url of site when being served by werkz
+* setting to switch off auth in debug
+* add static file compression to download and split off to seperate library
+* increase the part of hte page dedicated to code
+

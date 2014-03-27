@@ -17,13 +17,25 @@ DonkeySimple was built to work with Apache (it comes with .htaccess files) but i
 
 View the code and download it at [github.com/samuelcolvin/donkey-simple](https://github.com/samuelcolvin/donkey-simple). Donkey Simple is available through PyPi [pypi.python.org/pypi/DonkeySimple](https://pypi.python.org/pypi/DonkeySimple/).
 
+### Quick Start
+
+    sudo pip install DonkeySimple
+    donkeysimple build my_new_site
+    cd ./my_new_site
+    donkeysimple runserver
+    # go to localhost:4000
+
+Then edit `./my_new_site/settings.py`.
+
+If you're running this on a server **set REQUIRE_AUTH = False** and **change your username/password form the defaults: donkey/simple**.
+
 ### Documentation
 
 (These docs assume you're setting up Donkey Simple to work with Apache on Ubuntu, but they should give you the gist of the process on other linux variants and Mac OS, even Windows and other web servers (like nginx and lighttpd) shouldn't be that different.)
 
 To Install run:
 
-    sudo pip install DonkeySimple
+    [sudpo] pip install DonkeySimple
     
 You should then be able to use the command line utility `donkeysimple`.
 

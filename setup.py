@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-from DonkeySimple.DS.download import download_libraries
 import os, re
 
 from setuptools import setup
@@ -9,7 +8,7 @@ with open('DonkeySimple/docs.txt') as file:
     long_description = file.read()
 
 setup(name='DonkeySimple',
-    version='0.20',
+    version='0.20.01',
     description='Super Simple python system for building and deploying static websites',
     long_description=long_description,
     author='Samuel Colvin',

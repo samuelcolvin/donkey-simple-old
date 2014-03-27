@@ -74,4 +74,5 @@ To do:
 * setting to switch off auth in debug - DONE
 * add static file compression to download and split off to seperate library
 * increase the part of the page dedicated to code - DONE
+* fix zip download
 

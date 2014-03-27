@@ -26,3 +26,6 @@ def get_all_repos():
         repo_path = os.path.join(REPOS_DIR, repo)
         if os.path.isdir(repo_path):
             yield repo, repo_path
+
+class KnownError(Exception):
+    pass

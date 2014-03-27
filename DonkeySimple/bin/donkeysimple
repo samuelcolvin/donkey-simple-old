@@ -63,7 +63,7 @@ args = parser.parse_args()
 try:
     actions = Actions(args.path)
     actions.call_func(args.action)
-except dscmd.PathError, e:
+except dscmd.KnownError, e:
     print 'Error: %s' % str(e)
 except Exception, e:
     print 'Error: %s' % str(e)

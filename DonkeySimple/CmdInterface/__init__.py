@@ -1,9 +1,7 @@
 import DonkeySimple.DS as ds
 import os, json, imp, getpass
 from DonkeySimple.DS.ds_creator import create_ds
-
-class PathError(Exception):
-    pass
+from DonkeySimple.DS import KnownError
 
 def get_status(path):
     """
@@ -77,10 +75,10 @@ def edituser(path):
         pw1 = getpass.getpass('Enter new password: ')
         pw2 = getpass.getpass('Repeat: ')
         if pw1 != pw2:
-            raise Exception('Passwords do not match')
+            raise KnownError('Passwords do not match')
         pw = pw1
         if len(pw) < ds.MIN_PASSWORD_LENGTH:
-            raise Exception('Password must be at least %d characters in length' % ds.MIN_PASSWORD_LENGTH)
+            raise KnownError('Password must be at least %d characters in length' % ds.MIN_PASSWORD_LENGTH)
         auth = wi.UserAuth()
         user = auth.pop_user(username)
         auth.add_user(username, user, pw)
@@ -101,7 +99,7 @@ def edituser(path):
                     auth.add_user(username, user, pw)
                     print 'Password email sent'
                 else:
-                    raise Exception('Error sending email, not changing password')
+                    raise KnownError('Error sending email, not changing password')
 
 def _get_users():
     with open(ds.USERS_FILE, 'r') as handle:
@@ -118,11 +116,11 @@ def _chdir(path):
                     return d
         else:
             if not all([os.path.exists(os.path.join(path,f)) for f in look_for]):
-                raise PathError(
+                raise KnownError(
                 'Path supplied "%s" does not appear to be the "edit" folder of a donkey simple site tree.'\
                 % path)
             return path
-        raise PathError("No path supplied and you don't appear to be in a site tree now.")
+        raise KnownError("No path supplied and you don't appear to be in a site tree now.")
     
     new_path = find_path()
     if new_path != '.':

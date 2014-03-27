@@ -68,10 +68,10 @@ To do:
 * fix Auto detected URI does not match settings.SITE_URI: "" vs. "/" - DONE
 
 * convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy - DONE
-* test cgi and wsgi versions of Werkzeug, test with edit inside site
-* add .html or not to settings so urls are generated correctly in templates - done by dev server
+* test cgi versions of Werkzeug, test with edit inside site - DONE
+* add wsgi
 * optional setting for url of site when being served by werkz
-* setting to switch off auth in debug
+* setting to switch off auth in debug - DONE
 * add static file compression to download and split off to seperate library
-* increase the part of the page dedicated to code
+* increase the part of the page dedicated to code - DONE
 

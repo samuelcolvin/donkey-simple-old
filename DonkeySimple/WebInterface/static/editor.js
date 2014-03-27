@@ -114,9 +114,15 @@ function fajax_response(response_text){
 function fajax_error(data){
 	console.log(data);
 	hide_all();
-	var jdata = JSON.parse(data.responseText);
-	var errors = [jdata.error, jdata.error_name];
+	try {
+	  var jdata = JSON.parse(data.responseText);
+	  var errors = [jdata.error, jdata.error_name];
+	}
+	catch(err) {
+	  var errors = ["Error processing response", err];
+	}
 	message_fade(errors, 'danger');
+	
 }
 function hide_all(){
 	$('.alert-success').hide();

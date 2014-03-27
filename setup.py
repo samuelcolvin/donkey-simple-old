@@ -9,7 +9,7 @@ with open('DonkeySimple/docs.txt') as file:
     long_description = file.read()
 
 setup(name='DonkeySimple',
-    version='0.18',
+    version='0.20',
     description='Super Simple python system for building and deploying static websites',
     long_description=long_description,
     author='Samuel Colvin',

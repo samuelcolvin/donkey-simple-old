@@ -7,14 +7,13 @@
 		<title>{{title}}</title>
 		<link rel="icon" type="image/png" href="{{ static_url }}favicon.png" />
 		<link rel="stylesheet" href="{{ static_url }}libs/bootstrap.min.css">
+		<link rel="stylesheet" href="{{ static_url }}libs/bootstrap-theme.min.css">
 		<link rel="stylesheet" href="{{ static_url }}editor_styles.css">
 	{% endblock head %}
   </head>
   <body>
-  	<div class="container">
-
-      <!-- Static navbar -->
-      <div class="navbar navbar-default" role="navigation">
+    <div class="navbar navbar-inverse" role="navigation">
+  	  <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
@@ -23,6 +22,7 @@
             <span class="icon-bar"></span>
           </button>
           <a class="navbar-brand" href="{{ edit_uri }}">{{ site_title }}</a>
+          <span class="navbar-brand no-link">{% block page_tag %}{% endblock %}</span>
         </div>
         <div class="navbar-collapse collapse">
           {# <ul class="nav navbar-nav">
@@ -31,16 +31,17 @@
             <li><a href="#">Link</a></li>
           </ul> #}
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="user">{{ username }}</a></li>
+            <li><a href="{% if not anon %}user{% endif %}">{{ username }}</a></li>
+            {% if not anon %}
             <li><a href="logout">Logout</a></li>
+            {% endif %}
           </ul>
         </div><!--/.nav-collapse -->
       </div>
+    </div>
+  	<div class="container main">
     
-      	<div class="page-header">
-	        <h3>{% block page_tag %}{% endblock %}</h3>
-	        <div>{% block page_comment %}{% endblock %}</div>
-	    </div>
+    	{% block page_comment %}{% endblock %}
 	    <div id="msgs">
 		    {% if success %}
 			<div class="alert alert-success">
@@ -71,6 +72,9 @@
 			{% endif %}
 		</div>
 	  	{% block content %}Content not defined.{% endblock %}
+		<div id="footer">
+		  <a href="https://github.com/samuelcolvin/donkey-simple" target="_blank">Donkey Simple Version {{ version }}</a>
+		</div>
 	</div>
 	{% block js %}
   	<script src="{{ static_url }}libs/jquery.min.js"></script>

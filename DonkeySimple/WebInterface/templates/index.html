@@ -1,6 +1,11 @@
 {% extends "base.html" %}
-{% block page_tag %}Site Editor{% endblock %}
-{% block page_comment %}Edit, add and delete templates, pages and static files.{% endblock %}
+
+{% block page_comment %}
+  	<div class="page-header">
+  		Edit, add and delete templates, pages and static files.
+  	</div>
+{% endblock %}
+
 {% block content %}
 <form action="" method="post">
 	<input name="function" type="hidden" value="generate-site"/>

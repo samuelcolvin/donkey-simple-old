@@ -32,15 +32,23 @@ class Debug:
         sys.stdout = self._stdout_orig
         sys.stderr = self._stderr_orig
         if e_type or stderr != '':
+            stdout = stdout.strip('\r\t\n ')
+            start_stdout = stdout.startswith('Status:') or stdout.startswith('Content-Type:')
             stdout = re.sub('Content\-Length\:[ 0-9]*\r*\n', '', stdout)
-            print stdout
-#             print 'Status: 500 Internal Server Error\n'
-            print 'CGI SERVER CAUGHT EXCEPTION:'
+            if start_stdout:
+                print stdout
+                print 'EXCEPTION INFO:'
+            else:
+                print 'Status: 500 Internal Server Error\n'
+                print '\n\nCGI SERVER CAUGHT EXCEPTION:'
             if e_type:
                 print '%s: %s' % (e_type.__name__, e_value)
                 print 'TRACEBACK:'
                 print '/n'.join(traceback.format_tb(e_tb)) 
-            print '\n\n    STDERR:\n', stderr
+            print '\nSTDERR:\n', stderr
+            if not start_stdout:
+                print '\nSTDOUT:\n', stderr
+                print stdout
         else:
             print stdout
             

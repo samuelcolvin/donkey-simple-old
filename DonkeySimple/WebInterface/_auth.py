@@ -23,6 +23,7 @@ class SecureRequest(Request):
     Request with a secure cookie session
     """
     user = None
+    anon = 'anon'
     
     def __init__(self, *args, **kw):
         self.user_auth = UserAuth()
@@ -33,6 +34,10 @@ class SecureRequest(Request):
     
     def check_for_login(self):
         self.login_message = None
+        if settings.REQUIRE_AUTH is False:
+            self.session['username'] = self.anon
+        elif self.is_anon:
+            self.session.pop('username', None)
         if self.method != 'POST':
             return
         username = self.form.get('username')
@@ -44,13 +49,20 @@ class SecureRequest(Request):
         valid, self.login_message = self.user_auth.check_login(username, password)
         if valid:
             self.session['username'] = username
+            
+    @property
+    def is_anon(self):
+        if self.valid_user:
+            return self.session['username'] == self.anon
+        return False
         
     @property
     def valid_user(self):
         if 'username' in self.session:
             self.username = self.session['username']
             self.users = self.user_auth.users
-            self.user = self.users[self.username]
+            if self.username != self.anon:
+                self.user = self.users[self.username]
             return True
         return False
 
@@ -85,22 +97,9 @@ class UserAuth(object):
         correct_pw = pw.check_password(password, self.user['hash'])
         if not correct_pw:
             return False, 'Incorrect Password'
-#         self.cookie = self._generate_cookie()
         self.username = username
         self._update_user(self.username)
         return True, 'Logged in successfully'
-    
-#     def logout(self, username):
-#         self.username = username
-#         self.cookie = self._generate_cookie()
-#         self._update_user(self.username, self.cookie)
-#     
-#     def check_cookie(self, cookies):
-#         if self._get_user(cookies):
-#             self.cookie = self._generate_cookie(self.user['cookie'])
-#             self._update_user(self.username, self.cookie)
-#             return True
-#         return False
     
     def get_sorted_users(self):
         return sorted(self.users.keys())
@@ -119,9 +118,6 @@ class UserAuth(object):
         if 'hash' not in user or password is not None:
             pw = Password()
             user['hash'] = pw.make_hash(password)
-#             user['cookie'] = self._generate_cookie()['value']
-#         if 'cookie' not in user:
-#             user['cookie'] = self._generate_cookie()['value']
         if 'admin' not in user:
             user['admin'] = False
         if 'created' not in user:
@@ -138,18 +134,6 @@ class UserAuth(object):
                     self.user = user
                     return True
         return False
-    
-#     def _generate_cookie(self, value=None):
-#         if value is None:
-#             value = get_random_string(length=15)
-#         cook = {'version': 1}
-#         expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=settings.PASSWORD_EXPIRE_HOURS)
-#         cook['expires'] = expiration.strftime(self.dt_format)
-#         if hasattr(settings, 'COOKIE_DOMAIN'):
-#             cook['domain'] = settings.COOKIE_DOMAIN
-#         if hasattr(settings, 'COOKIE_PATH'):
-#             cook['path'] = settings.COOKIE_PATH
-#         return {'name': settings.COOKIE_NAME, 'value': value, 'extra_values': cook}
             
     def _update_user(self, username):
         self.users[username]['last_seen'] = datetime.datetime.utcnow().strftime(self.dt_format)

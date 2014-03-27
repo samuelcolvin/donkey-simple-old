@@ -1,18 +1,23 @@
 import os
-DEBUG = True
+DEBUG = False
 SITE_NAME = 'Site'
 COOKIE_NAME = 'donksimpses'
 SECRET_COOKIE_KEY = 'random_var_created_on_build'
 
-# either 'PAGE' or 'STDOUT'
+# if debug is true, where to redirect print statements
+# either 'PAGE' or 'STDOUT', might add STDERR in future
+# (this can't be 'STDOUT' if you are using cgi)
 PRINT_TO = 'PAGE'
+
+# whether or not to require authenication
+# WARNING: if you are using this on a server this NEEDS  to set to True
+REQUIRE_AUTH = False
 
 GIT_EMAIL = 'donkey-simple@example.com'
 GIT_NAME = 'DONKEY'
 
 # URL used when generating the site
 SITE_URL = '/site/'
-SITE_URL = '/links/donkeysimple/site/'
 this_dir = os.path.dirname(__file__)
 SITE_PATH = os.path.join(this_dir, 'site')
 SITE_PATH_TMP = os.path.join(this_dir, 'site_tmp')

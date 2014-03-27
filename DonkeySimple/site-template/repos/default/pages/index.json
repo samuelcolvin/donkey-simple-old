@@ -2,18 +2,19 @@
     "context": {
         "aside": {
             "type": "string",
-            "value": "This is the default home page for the super simple CMS Donkey Simple"
+            "value": ""
         },
         "main_article": {
             "type": "markdown",
-            "value": "Donkey Simple is an extremely simple CMS that allows you to build a static website from a web interface alone (once installed).x\r\n\r\nIt uses clever tools like [Ace Code Editor](http://ace.c9.io/), [Markdown](http://daringfireball.net/projects/markdown/) and [Jinja2](http://jinja.pocoo.org/) to make writing the site as painless as possible.\r\n\r\nOnce you've written your site, it is generated **ONCE** and then saved as static files, meaning the site is **FAST**, **REALLY FAST** in a way dynamic sites build from templates using lots of database calls and slow interpretted languages so rarely are.\r\n\r\nTo start building your site go to \"edit/\" from here login with the default username (**donkey**) and password (**simple**), change that password and set off.\r\n\r\nView the code and download it at [https://github.com/samuelcolvin/donkey-simple](https://github.com/samuelcolvin/donkey-simple)."
+            "value": "**This is the default homepage page for Donkey Simple, go to the web interface to start building your site, or edit the pages and templates directly in `./repos/` .**\r\n\r\n### Donkey Simple\r\n\r\nDonkey Simple is an extremely simple platform for building static websites either from a web interface or the command line.\r\n\r\nIt uses [Werkzeug](http://werkzeug.pocoo.org/), [Jinja2](http://jinja.pocoo.org/), [Ace Code Editor](http://ace.c9.io/) and [Markdown](http://daringfireball.net/projects/markdown/) to make writing the site as painless as possible. \r\n\r\nThe pages, templates, static files and config files which make up the site are stored in a git repository so you can easily manage the version history of your site.\r\n\r\nOnce you've written your site, it is generated **ONCE** and then saved as static files, meaning the site is **FAST**, **REALLY FAST** in a way dynamic sites build from templates using lots of database calls and slow interpretted languages so rarely are.\r\n\r\nDonkeySimple was built to work with Apache (it comes with .htaccess files) but it should be extremely simple to use it with other server. Similarly it has only been tested on Linux and Mac OS, however there's nothing fundamental to stop it running on windows.\r\n\r\nView the code and download it at [github.com/samuelcolvin/donkey-simple](https://github.com/samuelcolvin/donkey-simple). Donkey Simple is available through PyPi [pypi.python.org/pypi/DonkeySimple](https://pypi.python.org/pypi/DonkeySimple/)."
         },
         "title": {
             "type": "string",
-            "value": "Donkey Simple"
+            "value": "Donkey Simple Default Homepage"
         }
     },
-    "id": 26,
+    "extension": "",
+    "id": 30,
     "name": "index",
     "sitemap": "1",
     "template": "page.template.html",

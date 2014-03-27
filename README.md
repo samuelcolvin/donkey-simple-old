@@ -5,9 +5,9 @@ Copyright (C) 2013-2014 [Samuel Colvin](http://www.scolvin.com) <S@muelColvin.co
 
 License: The MIT License (MIT)
 
-Donkey Simple is an extremely simple CMS that allows you to build a static website either from a web interface or the command line.
+Donkey Simple is an extremely simple platform for building static websites either from a web interface or the command line.
 
-It uses clever tools like [Ace Code Editor](http://ace.c9.io/), [Markdown](http://daringfireball.net/projects/markdown/) and [Jinja2](http://jinja.pocoo.org/) to make writing the site as painless as possible. 
+It uses [Werkzeug](http://werkzeug.pocoo.org/), [Jinja2](http://jinja.pocoo.org/), [Ace Code Editor](http://ace.c9.io/) and [Markdown](http://daringfireball.net/projects/markdown/) to make writing the site as painless as possible. 
 
 The pages, templates, static files and config files which make up the site are stored in a git repository so you can easily manage the version history of your site.
 
@@ -15,7 +15,7 @@ Once you've written your site, it is generated **ONCE** and then saved as static
 
 DonkeySimple was built to work with Apache (it comes with .htaccess files) but it should be extremely simple to use it with other server. Similarly it has only been tested on Linux and Mac OS, however there's nothing fundamental to stop it running on windows.
 
-View the code and download it at [https://github.com/samuelcolvin/donkey-simple](https://github.com/samuelcolvin/donkey-simple). Donkey Simple is available through PyPi [here](https://pypi.python.org/pypi/DonkeySimple/).
+View the code and download it at [github.com/samuelcolvin/donkey-simple](https://github.com/samuelcolvin/donkey-simple). Donkey Simple is available through PyPi [pypi.python.org/pypi/DonkeySimple](https://pypi.python.org/pypi/DonkeySimple/).
 
 ### Documentation
 
@@ -33,19 +33,23 @@ To build a new site run
     
 which will create a new site template at `working/directory/my_new_site`. Eg. you might think of running this command from `/var/www/home/` to create `/var/www/my_new_site`.
 
-(More details on what the donkeysimple utility can do can be found by running `donkeysimpl --help`.)
+(More details on what the donkeysimple utility can do can be found by running `donkeysimple --help`.)
 
-At this stage you might think about changing the password for the default user, you can do this by going into `my_new_site` and running.
+You can then use the system on a dev server by running
+
+   donkeysimple runserver
+
+from within the new site directory.
+
+You might also think about changing the password for the default user, you can do this by going into `my_new_site` and running.
 
     donkeysimple edituser
+    
+Once you've run "generate site" you can host the resulting site anywhere.
 
-The only remaining step is to setup apache to work with this directory. I won't go into details of setting up an apache site, the only "special" thing you need to do is enable `.htaccess` files, there are details [here](https://help.ubuntu.com/community/EnablingUseOfApacheHtaccessFiles) but basically just need something like
+To host the donkey simple web interface is only a little more complicated, it's a standard Werkzeug application so it can run via cgi, wsgi or the dev server as above.
 
-    <Directory /var/www/home/my_new_site>
-        AllowOverride All
-    </Directory>
-
-You should then be able to go to the site at http://ww.example.com/my_new_site to see the default site and http://ww.example.com/my_new_site/edit to login and start building your site.
+Example `.htaccess` are generated on `build` (see above).
 
 ### Building (You can Probably ignore this)
 

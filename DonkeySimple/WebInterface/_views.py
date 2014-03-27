@@ -1,4 +1,5 @@
 import jinja2, os, re, httplib, traceback, json, sys, StringIO
+import DonkeySimple
 import DonkeySimple.DS as ds
 from DonkeySimple.DS import get_settings
 sg = ds.SiteGenerator
@@ -91,7 +92,7 @@ class View(object):
             self.request = request
             if self.request.login_message:
                 self._add_msg(self.request.login_message, ('errors', 'success')[self.request.valid_user])
-            self.isadmin = self.request.valid_user and self.request.user['admin']
+            self.isadmin = self.request.valid_user and self.request.user and self.request.user['admin']
             self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
             self.site_url = (settings.SITE_URL, '/')[settings.SITE_URL == '']
             if SERVER_MODE == SERVER_MODES.CGI:
@@ -111,7 +112,8 @@ class View(object):
             return self.add_to_page
         
     def add_to_page(self, content):
-        self.page += content
+        if self.mimetype == 'text/html':
+            self.page += content
     
     @property
     def response(self):
@@ -138,11 +140,18 @@ class View(object):
             self.processing_error = (e, exc_traceback)
         
     def _generate_page(self, uri, loggedin = False, error = None):
-        self.context = {'title': '%s Editor' % settings.SITE_NAME, 'site_name': settings.SITE_NAME, 'site_title': '%s Editor' % settings.SITE_NAME, 
-                        'static_url': self.edit_static_url, 'edit_uri': self.site_edit_url,
-                        'site_url': self.site_url, 'json_submit_url': '%ssubmit.json' % self.site_edit_url}
+        self.context = {'title': '%s Editor' % settings.SITE_NAME, 
+                        'site_name': settings.SITE_NAME, 
+                        'site_title': '%s Editor' % settings.SITE_NAME, 
+                        'static_url': self.edit_static_url, 
+                        'edit_uri': self.site_edit_url,
+                        'site_url': self.site_url, 
+                        'json_submit_url': '%ssubmit.json' % self.site_edit_url, 
+                        'version': DonkeySimple.__version__
+                        }
         if loggedin:
             self.context.update({'username': self.request.username, 'admin': self.isadmin})
+            self.context['anon'] = self.request.is_anon
         self.repo_paths = list(ds.get_all_repos())
         self.context['repos'] = [r for r, _ in self.repo_paths]
         if len(self.context['repos']) == 0:
@@ -158,7 +167,7 @@ class View(object):
                 self.login()
         else:
             found = False
-            for reg, func in urls:
+            for reg, func in urls:  
                 m = re.search(reg, uri)
                 if m:
                     found = True
@@ -170,10 +179,9 @@ class View(object):
             if not found:
                 if uri != self.site_edit_url:
                     self._add_msg('%s not found' % uri, 'errors')
+                    self.response_code = httplib.NOT_FOUND
                 self.index()
         self.context.update(self._msgs)
-#         if hasattr(self, '_static_file'):
-#             self.page = self._static_file
         if hasattr(self, '_template'):
             self.page = self._template.render(**self.context)
             
@@ -402,9 +410,7 @@ class View(object):
     def edit_user(self, uid):
         self.context['page_tag'] = 'New User'
         if not self.isadmin:
-            if uid is None:
-                return self._permission_denied()
-            if uid != self.request.username:
+            if uid is None or uid != self.request.username or self.request.is_anon:
                 return self._permission_denied()
         self.context['action_uri'] = self.site_edit_url + 'edit-user-last'
         if uid is not None:
@@ -426,7 +432,7 @@ class View(object):
         
     def set_user_password(self, uid):
         edit_username = self.request.users[uid]
-        if not self.isadmin and edit_username != self.request.username:
+        if not self.isadmin and edit_username != self.request.username or self.request.is_anon:
             return self._permission_denied()
         self.context['edit_username'] = uid
         self._template = self._env.get_template('set_password.html')
@@ -452,7 +458,7 @@ class View(object):
         self.response_code = code
         self.context['error_name'] = error_name
         if error_details:
-            self.context['error_details'] = str(error_details)
+#             self.context['error_details'] = str(error_details)
             traceback.print_exc()
         if 'submit.json' in self._uri:
             self._json_response(self.context)
@@ -541,6 +547,8 @@ class CatchStdout(object):
     
     @property
     def text(self):
+        if self.stdout_text.strip('\r\t\n ') == '':
+            return ''
         debug  = '==========DEBUG OUTPUT==========\n'
         debug += '%s\n' % self.stdout_text
         debug += '================================'

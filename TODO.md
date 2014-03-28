@@ -75,4 +75,5 @@ To do:
 * add static file compression to download and split off to seperate library
 * increase the part of the page dedicated to code - DONE
 * fix zip download
+* fix "Failed to convert sitemap priority to float:"
 

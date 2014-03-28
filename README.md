@@ -65,6 +65,6 @@ To host the donkey simple web interface is only a little more complicated, it's 
 
 Example `.htaccess` are generated on `create` (see above).
 
-### Building (You can Probably ignore this)
+### Building (You can probably ignore this)
 
 If you download the source (eg. from github as opposed to installing with pip) you should run `python mini_build.py` prior to installing. All this does is download the static files for the web interface and generate the docs.txt file for PyPi's `long_description`, for this you will require pandoc and pyandoc.

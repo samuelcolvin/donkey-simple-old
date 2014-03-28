@@ -13,8 +13,6 @@ from werkzeug.utils import escape
 from werkzeug.wsgi import SharedDataMiddleware
 # from werkzeug.exceptions import HTTPException, NotFound, BadRequest
 
-
-DEBUG_PORT = 4000
 class SERVER_MODES:
     UNKNOWN = 0
     DEBUG = 1
@@ -31,16 +29,17 @@ def make_dev_app():
     files as well as the site itself.
     SiteServeMiddleware takes care of some server like file serving.
     """
+    print __file__
     static_files= {'/favicon.ico': os.path.join('static', 'favicon.png'), 
                    '/static': 'static', 
                    '/repos': 'repos', 
-                   settings.SITE_URL.rstrip('/'): settings.SITE_PATH}
+                   settings.DEV_SITE_URL.rstrip('/'): settings.SITE_PATH}
     return SiteServeMiddleware(application, static_files, fallback_mimetype='text/html')
 
 def make_cgi_app():
     """
     Generates the CGI application, with CGI we can't afford to serve static files with
-    the application. That has to be done by the real server, eg. apache: see the .htaccess
+    werkzeug; that has to be done by the real server, eg. apache: see the cgi.htaccess
     file in the site file (the one with settings.py).
     """
     return application
@@ -94,7 +93,6 @@ class View(object):
                 self._add_msg(self.request.login_message, ('errors', 'success')[self.request.valid_user])
             self.isadmin = self.request.valid_user and self.request.user and self.request.user['admin']
             self._env = jinja2.Environment(loader=jinja2.FileSystemLoader(EDITOR_TEMPLATE_DIR))
-            self.site_url = (settings.SITE_URL, '/')[settings.SITE_URL == '']
             if SERVER_MODE == SERVER_MODES.CGI:
                 self._uri = request.environ['REQUEST_URI']
                 sim = _string_similar_point(self._uri, request.environ['SCRIPT_NAME'])
@@ -102,7 +100,7 @@ class View(object):
             else:
                 url = request.base_url.replace('http://', '')
                 self._uri = str(url[url.index('/'):])
-            self.edit_static_url = join_uri(self.site_edit_url, 'static/')
+            self.edit_static_url = ds.join_uri(self.site_edit_url, 'static/')
             self._process_forms()
             self._generate_page(self._uri, loggedin = request.valid_user, error = self.processing_error)
                   
@@ -145,7 +143,7 @@ class View(object):
                         'site_title': '%s Editor' % settings.SITE_NAME, 
                         'static_url': self.edit_static_url, 
                         'edit_uri': self.site_edit_url,
-                        'site_url': self.site_url, 
+                        'site_url': settings.DEV_SITE_URL, 
                         'json_submit_url': '%ssubmit.json' % self.site_edit_url, 
                         'version': DonkeySimple.__version__
                         }
@@ -354,7 +352,7 @@ class View(object):
             self.context['file_id'] = cfile.id
             self.context['active_repo'] = cfile.repo
             self.context['file_type'] = static.get_file_type(self.context['file_name'])
-            static_uri = join_uri(self.site_edit_url, ds.REPOS_DIR, cfile.repo, static.DIR, cfile.name)
+            static_uri = ds.join_uri(self.site_edit_url, ds.REPOS_DIR, cfile.repo, static.DIR, cfile.name)
             if self.context['file_type'] == 'Text':
                 self.context['file_text'] = escape(content)
                 self.context['show_file_text'] = True
@@ -564,14 +562,6 @@ def get_font_name(filename, add_msg):
         print e_str
         add_msg(e_str, 'errors')
         return 'unknown'
-
-def join_uri(*args):
-    uri = '/' + '/'.join(p.strip('/') for p in args)
-    if args[-1].endswith('/'):
-        uri += '/'
-    uri = uri.replace('//', '/')
-    return uri
-
     
 def _string_similar_point(s1, s2):
     i = 0

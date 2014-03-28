@@ -3,7 +3,6 @@
     "extension": "None",
     "id": 27,
     "name": "dot.htaccess",
-    "sitemap": "",
     "template": "htaccess.template.conf",
     "template_repo": "builtin"
 }

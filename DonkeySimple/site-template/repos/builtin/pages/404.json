@@ -16,7 +16,6 @@
     "extension": "",
     "id": 29,
     "name": "404",
-    "sitemap": "",
     "template": "page.template.html",
     "template_repo": "default"
 }

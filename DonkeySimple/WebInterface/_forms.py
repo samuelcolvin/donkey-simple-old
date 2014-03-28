@@ -88,7 +88,7 @@ class ProcessForm(UniversalProcessor):
         if 'repo-url' in self.fields:
             url = self.fields['repo-url']
         git_repo.pull_clone_create(url)
-        ds.con.repeat_owners_permission()
+        ds.repeat_owners_permission(ds.REPOS_DIR)
         self._add_msg('Repo successfully created')
         
     def delete_repo(self):
@@ -102,7 +102,7 @@ class ProcessForm(UniversalProcessor):
         repo_path = self._get_repo_path(repo_name)
         git_repo = ds.Git(repo_path)
         response = str(git_repo.pull())
-        ds.con.repeat_owners_permission()
+        ds.repeat_owners_permission(ds.REPOS_DIR)
         self._add_msg('Pull Response: ')
         [self._add_msg(l) for l in response.split('\n')]
     
@@ -128,7 +128,7 @@ class ProcessForm(UniversalProcessor):
             msg = self.fields['commit-msg']
         git_repo.add_all()
         git_repo.set_user(settings.GIT_EMAIL, settings.GIT_NAME)
-        ds.con.repeat_owners_permission()
+        ds.repeat_owners_permission(ds.REPOS_DIR)
         [self._add_msg(line) for line in git_repo.commit(msg).split('\n')]
         
     def _get_repo_path(self, name):

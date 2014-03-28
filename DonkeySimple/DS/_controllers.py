@@ -5,7 +5,7 @@ from _common import *
 import os, shutil, json, zipfile, unicodedata
 import HTMLParser
 import _template_renderer as tr
-import re, base64, hashlib, pwd, subprocess
+import re, base64, hashlib
 from download import download_libraries
 import _git
 from werkzeug.utils import secure_filename
@@ -20,9 +20,6 @@ def new_repo_path(repo):
     if os.path.exists(repo_path):
         raise(Exception('path "%s" already exists, cannot create repo' % repo_path))
     return repo, repo_path
-
-def repeat_owners_permission(path = REPOS_DIR):
-    _git.repeat_owners_permission(path)
     
 def zip_dir(path2zip, zip_file_path, arcfolder, path_check = None):
     zipf = zipfile.ZipFile(zip_file_path, 'w')

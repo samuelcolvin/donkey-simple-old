@@ -3,7 +3,6 @@
     "extension": "xml",
     "id": 28,
     "name": "sitemap",
-    "sitemap": "",
     "template": "sitemap.template.xml",
     "template_repo": "builtin"
 }

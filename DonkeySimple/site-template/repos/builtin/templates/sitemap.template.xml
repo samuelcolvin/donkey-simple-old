@@ -2,9 +2,9 @@
  
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     {% for page in sitemap_pages %}<url>
-        <loc>http://www.scolvin.com{{ page.url }}</loc>
+        <loc>{{ domain }}{{ page.uri }}</loc>
         <lastmod>{{ todays_date }}</lastmod>
-        <changefreq>weekly</changefreq>
+        <changefreq>monthly</changefreq>{# options: always, hourly, daily, weekly, monthly, yearly, never #}
         {% if page.priority %}<priority>{{ page.priority }}</priority>{% endif %}
     </url>{% endfor %}
 </urlset> 

@@ -29,3 +29,14 @@ def get_all_repos():
 
 class KnownError(Exception):
     pass
+
+def shell_path(path):
+#     import re
+#     return re.sub(r'([^\\]) ', r'\1\\ ', path)
+    return '"%s"' % path
+
+def repeat_owners_permission(path):
+    import subprocess
+    path = shell_path(path)
+    command = 'chmod -R a+u %s' % path
+    subprocess.check_call(command, shell=True)

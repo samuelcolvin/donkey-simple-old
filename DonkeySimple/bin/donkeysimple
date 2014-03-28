@@ -28,7 +28,7 @@ class Actions:
         if self.path == DEFAULT_SITE: self.path = None
         dscmd.runserver(self.path)
     
-    def build(self):
+    def create(self):
         dscmd.create_ds(self.path)
         
     def generate(self):
@@ -38,23 +38,21 @@ class Actions:
     def edituser(self):
         if self.path == DEFAULT_SITE: self.path = None
         dscmd.edituser(self.path)
-    
-    def version(self):
-        print 'Version: %s' % DonkeySimple.__version__
 
 parser = argparse.ArgumentParser(description="""Donkey Simple Controller.
-Utility for building and controlling donkey-simple websites 
+
+Utility for building and controlling DonkeySimple websites 
+DonkeySimple Version: %s
 (https://github.com/samuelcolvin/donkey-simple).
 
-    status - prints the status of the site you are currently in or the one specified by path.
-    runserver - run the development server for this site.
-    build - builds a new site with edit interface at the specified, default is "%s".
-    generate - generates the site.
-    edituser - edit a users password.
-    version - print version of DonkeySimple.
-""" % DEFAULT_SITE, formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('action', metavar='action', choices=['status', 'runserver', 'build',  'generate', 'edituser', 'version'],
-                   help='action to perform: status|runserver|build|generate|edituser (defaults to status)')
+  status - prints the status of the site you are currently in or the one specified by path.
+  runserver - run the development server for this site.
+  create - builds a new site at the specified path, default is "%s".
+  generate - generates the site.
+  edituser - edit a users password.
+""" % (DonkeySimple.__version__, DEFAULT_SITE), formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('action', metavar='action', choices=['status', 'runserver', 'create',  'generate', 'edituser'],
+                   help='action to perform: status|runserver|create|generate|edituser')
 parser.add_argument('path', metavar='site-path', nargs='?', default=DEFAULT_SITE,
                    help='Relative path of donkey simple site.')
     

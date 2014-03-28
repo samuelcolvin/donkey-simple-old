@@ -1,4 +1,4 @@
-import os, shutil
+import os, shutil, re
 import markdown2
 from _common import *
 import _template_renderer as tr
@@ -74,36 +74,35 @@ class SiteGenerator(object):
         return path2
         
     def global_context(self):
+        """
+        generates the global context that can be accessed by all templates
+        """
         self._page_con = con.Pages()
-        context = {'static': 'static/', 
-                   'libs': 'static/libs/', 
+        static_uri = join_uri(settings.INTERLINK_URI, 'static/')
+        context = {'static': static_uri, 
+                   'libs': join_uri(static_uri, 'libs/'), 
                    'todays_date': dtdt.now().strftime('%Y-%m-%d'),
                    'this_page': '[set during page generation]'}
-        if not hasattr(settings, 'SITE_URL'):
-            raise Exception('settings.SITE_URL is not set')
-        index = settings.SITE_URL
-        self._output('Site URL: ' + index)
-        index_slash = index
-        if not index_slash.endswith('/'):
-            index_slash += '/'
-        if index:
-            context['index'] = index
+        context['site_uri'] = settings.SITE_URI
+        context['site_name'] = settings.SITE_NAME
         context['pages'] = []
         context['sitemap_pages'] = []
         for cf in self._page_con.cfiles.values():
-            url = cf.info['name']
-            if url == 'index':
-                url = index
+            page_name = cf.info['name']
+            if page_name == 'index':
+                uri = settings.SITE_URI
             else:
-                url = index_slash + url
-            context['pages'].append(url)
-            if 'sitemap' in cf.info:
+                uri = join_uri(settings.INTERLINK_URI, page_name)
+            context['pages'].append(uri)
+            if 'sitemap' in cf.info and cf.info['sitemap'] != '':
                 priority = 0.1
+                if page_name != 'index':
+                    uri = join_uri(settings.SITE_URI, page_name)
                 try:
                     priority = '%0.1f' % float(cf.info['sitemap'])
                 except:
                     self._output('Failed to convert sitemap priority to float: %s' % cf.info['sitemap'])
-                context['sitemap_pages'].append({'url': url, 'priority': priority})
+                context['sitemap_pages'].append({'uri': uri, 'priority': priority})
         context['sitemap_pages'].sort(key=lambda u: -float(u['priority']))
         extra_context = con.GlobConFiles().get_entire_context()
         context.update(extra_context)
@@ -177,3 +176,8 @@ def site_zip(zip_path):
     con.zip_dir('..', zip_path, 'site', path_check)
 
 
+
+def join_uri(*args):
+    uri = '/'.join(p for p in args if p != '')
+    uri = re.sub('//*', '/', uri)
+    return uri

@@ -31,7 +31,7 @@ If you're running this on a server **set REQUIRE_AUTH = False** and **change you
 
 ### Documentation
 
-(These docs assume you're setting up Donkey Simple to work with Apache on Ubuntu, but they should give you the gist of the process on other linux variants and Mac OS, even Windows and other web servers (like nginx and lighttpd) shouldn't be that different.)
+(These docs assume you're setting up Donkey Simple to work with Apache on Ubuntu, but they should give you the gist of the process on other linux variants and Mac OS, even Windows and other web servers (like nginx and lighttpd) shouldn't be that different. However you might have problems with windows paths.)
 
 To Install run:
 

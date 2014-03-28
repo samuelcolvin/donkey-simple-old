@@ -5,7 +5,7 @@ import sys, StringIO, traceback, re
 def run_dev_server():
     from werkzeug.serving import run_simple
     views.SERVER_MODE = views.SERVER_MODES.DEBUG
-    run_simple('localhost', views.DEBUG_PORT, views.make_dev_app(), use_reloader = True, use_debugger = True)
+    run_simple('localhost', views.settings.DEV_PORT, views.make_dev_app(), use_reloader = True, use_debugger = True)
     
 def run_cgi_server():
     from wsgiref.handlers import CGIHandler

@@ -70,10 +70,10 @@ To do:
 * convert to Werkzeug, demonstrate cgi, wsgi and dev server deploy - DONE
 * test cgi versions of Werkzeug, test with edit inside site - DONE
 * add wsgi
-* optional setting for url of site when being served by werkz
+* optional setting for url of site when being served by werkz - DONE
 * setting to switch off auth in debug - DONE
 * add static file compression to download and split off to seperate library
 * increase the part of the page dedicated to code - DONE
 * fix zip download
-* fix "Failed to convert sitemap priority to float:"
+* fix "Failed to convert sitemap priority to float:" - DONE
 

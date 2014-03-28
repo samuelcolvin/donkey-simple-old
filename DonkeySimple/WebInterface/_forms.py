@@ -36,9 +36,9 @@ class UniversalProcessor(object):
         user = auth.pop_user(username)
         pw = auth.new_random_password()
         email = user['email']
-        url = os.environ['HTTP_REFERER']
-        e_index = url.index('/edit/') + 5
-        url = url[:e_index] + '/'
+        url = 'Donkey Simple admin site'
+        if hasattr(self, 'edit_url') and hasattr(self, 'request'):
+            url = self.request.environ['HTTP_ORIGIN'] + self.edit_url
         if '@' in email:
             success, msg = password_email(user['email'], url, username, pw)
             if success:
@@ -52,14 +52,15 @@ class UniversalProcessor(object):
 
 class ProcessForm(UniversalProcessor):
     created_item = None
-    def __init__(self, add_msg, request, isadmin, username):
-        self._add_msg = add_msg
-        self.isadmin = isadmin
-        self.username = username
+    def __init__(self, view):
+        self._add_msg = view._add_msg
+        self.isadmin = view.isadmin
+        self.username = view.request.username
         self.regen_users = False
-        self.request = request
-        self.fields = {k:v for k, v in request.form.items() if v not in ('', None)}
-        self.files = request.files
+        self.request = view.request
+        self.fields = {k:v for k, v in view.request.form.items() if v not in ('', None)}
+        self.files = view.request.files
+        self.edit_url = view.site_edit_url
         self.process()
     
     def generate_site(self):

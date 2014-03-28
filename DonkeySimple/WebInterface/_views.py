@@ -127,7 +127,7 @@ class View(object):
         self.processing_error = None
         try:
             if self.request.valid_user:
-                proc_form = ProcessForm(self._add_msg, self.request, self.isadmin, self.request.username)
+                proc_form = ProcessForm(self)
                 if proc_form.regen_users:
                     self.request.regenerate_users()
                 self.created_item = proc_form.created_item

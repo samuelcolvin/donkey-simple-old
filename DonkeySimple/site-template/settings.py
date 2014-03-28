@@ -17,13 +17,8 @@ REQUIRE_AUTH = False
 GIT_EMAIL = 'donkey-simple@example.com'
 GIT_NAME = 'DONKEY'
 
-# domain of your site; prepended to SITE_URI to generate the sitemap
-# should not end with /
-SITE_DOMAIN = 'http://www.example.com'
-
-# this is the base used for generating sitemap urls, 
-# the homepage url and the 404 uri
-# INTERLINK_URI is used for links between pages so the site works on the dev server
+# SITE_URI is the base used for generating sitemap urls,  the homepage url and the 404 uri
+# INTERLINK_URI is used for links between pages so the site still works on the dev server
 # should always start and end with /, eg '/' not '', '/site/' not 'site'
 SITE_URI = '/site/'
 # path site is generated at at

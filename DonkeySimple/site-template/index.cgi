@@ -7,7 +7,8 @@ You Shouldn't have to change anything, for settings look in settings.py
 try:
     import DonkeySimple.WebInterface
 except:
-    print 'Status: 500 Internal Server Error\n\nERROR IMPORTING DonkeySimple.WebInterface'
+    print 'Status: 500 Internal Server Error\n'
+    print 'ERROR IMPORTING DonkeySimple.WebInterface'
     print 'check DonkeySimple is installed'
 else:
     DonkeySimple.WebInterface.run_cgi_server()

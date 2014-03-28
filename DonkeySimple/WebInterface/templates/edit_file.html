@@ -14,7 +14,7 @@
 	{% endif %}
 {% endblock head %}
 {% block content %}
-<form id="form" action="{{ edit_uri }}" method="post" class="pad">
+<form id="form" action="{{ edit_uri }}" method="post">
 	<input name="function" type="hidden" value="void"/>
 	<input name="file-text" type="hidden" value="empty"/>
     <input name="previous-file-id" type="hidden" value="{{ file_id }}">
@@ -47,9 +47,11 @@
 	  </div>
 	</div>
 </form>
+{% if help_statement %}
 <div class="help-block">
 	{{ help_statement|safe }}
 </div>
+{% endif %}
 {% if file_type %}
 <div class="pad">File Type: <strong>{{ file_type }}</strong></div>
 {% endif %}

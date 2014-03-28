@@ -42,7 +42,7 @@ h1 a:link, h1 a:visited, h1 a:hover, h1 a:active{
 }
 
 .form-group {
-	margin-bottom: 10px;
+	margin-bottom: 8px;
 }
 
 #editor, .ace-editor{

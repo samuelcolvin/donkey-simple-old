@@ -20,7 +20,7 @@ View the code and download it at [github.com/samuelcolvin/donkey-simple](https:/
 ### Quick Start
 
     sudo pip install DonkeySimple
-    donkeysimple build my_new_site
+    donkeysimple create my_new_site
     cd ./my_new_site
     donkeysimple runserver
     # go to localhost:4000
@@ -37,11 +37,13 @@ To Install run:
 
     [sudpo] pip install DonkeySimple
     
-You should then be able to use the command line utility `donkeysimple`.
+You should then be able to use the command line utility `donkeysimple`, to show options:
+
+    donkeysimple --help
 
 To build a new site run
 
-    donkeysimple build my_new_site
+    donkeysimple create my_new_site
     
 which will create a new site template at `working/directory/my_new_site`. Eg. you might think of running this command from `/var/www/home/` to create `/var/www/my_new_site`.
 
@@ -61,7 +63,7 @@ Once you've run "generate site" you can host the resulting site anywhere.
 
 To host the donkey simple web interface is only a little more complicated, it's a standard Werkzeug application so it can run via cgi, wsgi or the dev server as above.
 
-Example `.htaccess` are generated on `build` (see above).
+Example `.htaccess` are generated on `create` (see above).
 
 ### Building (You can Probably ignore this)
 

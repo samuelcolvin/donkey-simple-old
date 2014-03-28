@@ -1,4 +1,5 @@
 import jinja2, os, re, httplib, traceback, json, sys, StringIO
+from datetime import datetime
 import DonkeySimple
 import DonkeySimple.DS as ds
 from DonkeySimple.DS import get_settings
@@ -29,9 +30,9 @@ def make_dev_app():
     files as well as the site itself.
     SiteServeMiddleware takes care of some server like file serving.
     """
-    print __file__
-    static_files= {'/favicon.ico': os.path.join('static', 'favicon.png'), 
-                   '/static': 'static', 
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    static_files= {'/favicon.ico': os.path.join(static_dir, 'favicon.png'), 
+                   '/static': static_dir, 
                    '/repos': 'repos', 
                    settings.DEV_SITE_URL.rstrip('/'): settings.SITE_PATH}
     return SiteServeMiddleware(application, static_files, fallback_mimetype='text/html')
@@ -469,14 +470,30 @@ class View(object):
         else:
             self._msgs[mtype].append(msg)
 
+
+extra_page_content = """
+<a href="/" style="
+position: fixed;
+left: 50px;
+bottom: 50px;
+padding: 10px 20px;
+background-color: #2d6ca2;
+color: white !important;
+border-radius: 5px;
+text-decoration: none !important;
+background-image: linear-gradient(to bottom,#428bca 0,#2d6ca2 100%);
+border: 1px solid #2b669a;
+">Back to Donkey Simple</a>\n
+"""
+
 class SiteServeMiddleware(SharedDataMiddleware):
     
     def get_directory_loader(self, directory):        
         def loader(path):
             """
             changed from original to serve index.html if the directory is requested
-            and /*.html if if /* is requested.
-            """ 
+            and /*.html if /* is requested.
+            """
             path_orig = path
             if path is not None:
                 path = os.path.join(directory, path)
@@ -497,6 +514,20 @@ class SiteServeMiddleware(SharedDataMiddleware):
                     return attempt_fname, self._opener(filepath)
             return None, None
         return loader
+    
+        
+    def _opener(self, filename):
+        if filename.endswith('.html'):
+            new_filename = os.path.basename(filename) .replace('.html', '.tmp.html')
+            new_path = os.path.join(settings.SITE_PATH_TMP, new_filename)
+            if not os.path.exists(new_path):
+                text = open(filename, 'r').read()
+                text = text.replace('</body>', extra_page_content + '</body>')
+                if not os.path.exists(settings.SITE_PATH_TMP):
+                    os.mkdir(settings.SITE_PATH_TMP)
+                open(new_path, 'w').write(text)
+            filename = new_path
+        return super(SiteServeMiddleware, self)._opener(filename)
 
 
 class CatchStdout(object):
@@ -548,7 +579,7 @@ class CatchStdout(object):
         if self.stdout_text.strip('\r\t\n ') == '':
             return ''
         debug  = '==========DEBUG OUTPUT==========\n'
-        debug += '%s\n' % self.stdout_text
+        debug += '%s\n' % self.stdout_text.strip('\r\t\n ')
         debug += '================================'
         return debug
  

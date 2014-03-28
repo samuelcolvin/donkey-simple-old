@@ -2,7 +2,7 @@
 {% block page_tag %}{{ page_tag }}{% endblock %}
 {% block content %}
 <form id="form" action="{{ action_uri }}" method="post" class="pad">
-	<input name="function" type="hidden" value="edit-user"/>
+	<input name="function" type="hidden" value="void"/>
     <input name="previous-username" type="hidden" value="{{ edit_username }}">
 	
 	<div class="form-group">
@@ -10,8 +10,8 @@
 		  <input type="submit" class="btn btn-default" value="Save"/>
 		  {% if existing_user %}
 		  	<input altfunction="email-pword-user" type="submit" class="btn btn-default" value="Reset & Email Password"/>
-		  	<a type="submit" class="btn btn-default" href="{{ password_uri }}">Change Password</a>
-		  	<input altfunction="delete-user" type="submit" class="btn btn-default" value="Delete"/>
+		  	<a type="submit" altfunction="edit-user" class="btn btn-default" href="{{ password_uri }}">Change Password</a>
+		  	<input altfunction="delete-user" type="submit" class="btn btn-default btn-delete" value="Delete"/>
 		  {% endif %}
 		</div>
 	</div>

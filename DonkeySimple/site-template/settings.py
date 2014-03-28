@@ -44,7 +44,6 @@ You can probably ignore settings from here on
 
 # whether to print details about the web interface as it's running
 DEBUG = False
-DEBUG = True
 
 COOKIE_NAME = 'donksimpses'
 SECRET_COOKIE_KEY = 'random_var_created_on_build'
@@ -54,7 +53,6 @@ SECRET_COOKIE_KEY = 'random_var_created_on_build'
 # either 'PAGE' or 'STDOUT', might add STDERR in future
 # (this can't be 'STDOUT' if you are using cgi)
 PRINT_TO = 'PAGE'
-PRINT_TO = 'STDOUT'
 
 # temporary path site is built at during generate
 #  will always be deleted entirely on generate

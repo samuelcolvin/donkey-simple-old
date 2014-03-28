@@ -98,6 +98,17 @@ $('[name="page-template-id"].warn-change').change(function(){
 	});
 });
 
+// "are you sure" for delete buttons
+$('.btn-delete').click(function(){
+	bootbox.confirm('Are you sure you wish to delete this file. This cannot be undone.',
+	function(result) {
+	  if (result){
+	  	$('#form').submit();
+	  }
+	});
+	return false;
+});
+
 // receive response from form ajax submit
 function fajax_response(response_text){
 	hide_all();

@@ -108,11 +108,11 @@ def _get_users():
 
 def _chdir(path):
     def find_path():
-        look_for = ('index.cgi', 'settings.py')
+        look_for = 'settings.py'
         if path is None:
             search_dirs = ('edit', '.', '..', '../..', '../../..')
             for d in search_dirs:
-                if all([os.path.exists(os.path.join(d,f)) for f in look_for]):
+                if os.path.exists(os.path.join(d,look_for)):
                     return d
         else:
             if not all([os.path.exists(os.path.join(path,f)) for f in look_for]):

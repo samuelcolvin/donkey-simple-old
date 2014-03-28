@@ -12,7 +12,7 @@ from collections import OrderedDict
 import time
 import json, datetime
 from DonkeySimple.DS import *
-from DonkeySimple.DS.random_string import get_random_string
+from DonkeySimple.DS.random_string import get_random_string, UNUSABLE_PASSWORD_PREFIX, UNUSABLE_PASSWORD_SUFFIX_LENGTH
 settings = get_settings()
 
 from werkzeug.utils import cached_property
@@ -61,17 +61,19 @@ class SecureRequest(Request):
         if 'username' in self.session:
             self.username = self.session['username']
             self.users = self.user_auth.users
-            if self.username != self.anon:
-                self.user = self.users[self.username]
-            return True
+            if self.username == self.anon or self.username in self.users:
+                if self.username != self.anon and self.username in self.users:
+                    self.user = self.users[self.username]
+                return True
         return False
+    
+    def regenerate_users(self):
+        self.user_auth = UserAuth()
+        return self.valid_user
 
     @cached_property
     def session(self):
         return SecureCookie.load_cookie(self, secret_key=settings.SECRET_COOKIE_KEY)
-
-UNUSABLE_PASSWORD_PREFIX = '!'
-UNUSABLE_PASSWORD_SUFFIX_LENGTH = 40
 
 import random
 try:
@@ -88,6 +90,12 @@ class UserAuth(object):
         self._load_success, self.users = self._get_users()
     
     def check_login(self, username, password):
+        """
+        check where a username, password pair are valid
+        """
+        # the simplest possible guard against brute force or dictionary attack
+        # i know it's a hack, you fix it.
+        from time import sleep; sleep(0.5)
         if not self._load_success:
             return False, 'Error Loading Users file'
         if username not in self.users:

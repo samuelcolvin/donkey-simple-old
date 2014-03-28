@@ -58,7 +58,7 @@ class ProcessForm(UniversalProcessor):
         self.username = username
         self.regen_users = False
         self.request = request
-        self.fields = request.form
+        self.fields = {k:v for k, v in request.form.items() if v not in ('', None)}
         self.files = request.files
         self.process()
     
@@ -238,6 +238,7 @@ class ProcessForm(UniversalProcessor):
             self._add_msg('"%s" successfully saved' % cf.display, 'success')
         
     def edit_user(self):
+        prev_username = None
         if 'previous-username' in self.fields:
             prev_username = self.fields['previous-username']
             if not self.isadmin and prev_username != self.username:
@@ -249,7 +250,7 @@ class ProcessForm(UniversalProcessor):
         formuser['admin'] = self.isadmin and 'admin' in self.fields and self.fields['admin'] == 'on'
         auth = UserAuth()
         msg_type = 'success'
-        if 'previous-username' not in self.fields:
+        if prev_username is None:
             if username in auth.users:
                 self._add_msg('user "%s" already exists, not creating user' % username, 'errors')
                 return
@@ -288,8 +289,7 @@ class ProcessForm(UniversalProcessor):
             return self._add_msg('Permission Denied', 'errors')
         else:
             self._password_reset_email(username)
-            if username == self.username:
-                self.regen_users = True
+            self.regen_users = True
 
     def change_user_password(self):
         username = self.fields['username']
@@ -308,8 +308,7 @@ class ProcessForm(UniversalProcessor):
         user = auth.pop_user(username)
         auth.add_user(username, user, pw)
         self._add_msg('"%s" password updated' % username, 'success')
-        if username == self.username:
-            self.regen_users = True
+        self.regen_users = True
         
     def upload_static(self):
         self._process_files('files', ds.con.Statics())

@@ -54,26 +54,26 @@ def application(request):
     return response
 
 urls = (
-    ('logout$', 'logout'),
-    ('add-repo', 'edit_repo'),
-    ('view-repo-(.+)$', 'view_repo'),
-    ('add-page$', 'edit_page'),
-    ('edit-page-last$', 'edit_last_page'),
-    ('edit-page-(.+)$', 'edit_page'),
-    ('add-template$', 'edit_template'),
-    ('edit-template-(.+)$', 'edit_template'),
-    ('add-static$', 'edit_static'),
-    ('edit-static-(.+)$', 'edit_static'),
-    ('add-libfile', 'edit_libfile'),
-    ('edit-libfile-(.+)$', 'edit_libfile'),
-    ('add-globcon', 'edit_globcon'),
-    ('edit-globcon-(.+)$', 'edit_globcon'),
-    ('submit.json', 'json_response'),
-    ('add-user$', 'edit_user'),
-    ('user$', 'edit_this_user'),
-    ('edit-user-last$', 'edit_last_user'),
-    ('edit-user-(.+)$', 'edit_user'),
-    ('set-password-(.+)$', 'set_user_password'),
+    ('/logout$', 'logout'),
+    ('/add-repo', 'edit_repo'),
+    ('/view-repo-(.+)$', 'view_repo'),
+    ('/add-page$', 'edit_page'),
+    ('/edit-page-last$', 'edit_last_page'),
+    ('/edit-page-(.+)$', 'edit_page'),
+    ('/add-template$', 'edit_template'),
+    ('/edit-template-(.+)$', 'edit_template'),
+    ('/add-static$', 'edit_static'),
+    ('/edit-static-(.+)$', 'edit_static'),
+    ('/add-libfile', 'edit_libfile'),
+    ('/edit-libfile-(.+)$', 'edit_libfile'),
+    ('/add-globcon', 'edit_globcon'),
+    ('/edit-globcon-(.+)$', 'edit_globcon'),
+    ('/submit.json', 'json_response'),
+    ('/add-user$', 'edit_user'),
+    ('/edit-user-last$', 'edit_last_user'),
+    ('/edit-user-(.+)$', 'edit_user'),
+    ('/set-password-(.+)$', 'set_user_password'),
+    ('/user$', 'edit_this_user'),
 )
 
 class View(object):
@@ -129,12 +129,11 @@ class View(object):
             if self.request.valid_user:
                 proc_form = ProcessForm(self._add_msg, self.request, self.isadmin, self.request.username)
                 if proc_form.regen_users:
-                    self.logout(None)
+                    self.request.regenerate_users()
                 self.created_item = proc_form.created_item
             else:
                 AnonFormProcessor(self._add_msg, self.request.form)
         except Exception, e:
-            print 'processing _process_forms error:', e
             _, _, exc_traceback = sys.exc_info()
             self.processing_error = (e, exc_traceback)
         
@@ -166,7 +165,7 @@ class View(object):
                 self.login()
         else:
             found = False
-            for reg, func in urls:  
+            for reg, func in urls:
                 m = re.search(reg, uri)
                 if m:
                     found = True
@@ -413,6 +412,8 @@ class View(object):
                 return self._permission_denied()
         self.context['action_uri'] = self.site_edit_url + 'edit-user-last'
         if uid is not None:
+            if uid not in self.request.users:
+                return self._error_page('user "%s" not found' % uid)
             self.context['existing_user'] = True
             self.context['password_uri'] = self.site_edit_url + 'set-password-%s' % uid
             edit_user = self.request.users[uid]
@@ -430,8 +431,8 @@ class View(object):
         self._template = self._env.get_template('edit_user.html')
         
     def set_user_password(self, uid):
-        edit_username = self.request.users[uid]
-        if not self.isadmin and edit_username != self.request.username or self.request.is_anon:
+        edit_username = uid
+        if (not self.isadmin and edit_username != self.request.username) or self.request.is_anon:
             return self._permission_denied()
         self.context['edit_username'] = uid
         self._template = self._env.get_template('set_password.html')
@@ -445,10 +446,13 @@ class View(object):
     def _error_page(self, e, code = httplib.INTERNAL_SERVER_ERROR, tb = None):
         error_details = None
         if settings.DEBUG:
+            if issubclass(type(e), Exception):
+                error_details = '%s: %s' % (e.__class__.__name__, str(e))
             if tb:
-                error_details = '\n'.join(traceback.format_tb(tb))
+                print '\n'.join(traceback.format_tb(tb))
             else:
-                error_details = traceback.format_exc()
+                exc = traceback.format_exc()
+                if exc: print exc
         self._bad(str(e),error_details=error_details, code=code)
         
     def _bad(self, error_name, error_details = None, code = httplib.BAD_REQUEST):
@@ -457,7 +461,7 @@ class View(object):
         self.response_code = code
         self.context['error_name'] = error_name
         if error_details:
-#             self.context['error_details'] = str(error_details)
+            self.context['error_details'] = str(error_details)
             traceback.print_exc()
         if 'submit.json' in self._uri:
             self._json_response(self.context)

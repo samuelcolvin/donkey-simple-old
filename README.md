@@ -27,7 +27,7 @@ View the code and download it at [github.com/samuelcolvin/donkey-simple](https:/
 
 Then edit `./my_new_site/settings.py`.
 
-If you're running this on a server **set REQUIRE_AUTH = False** and **change your username/password** from the defaults: donkey/simple.
+If you're running this on a server **set REQUIRE_AUTH = True** and **change your username/password** from the defaults: donkey/simple.
 
 ### Documentation
 

@@ -138,12 +138,15 @@ class View(object):
             self.processing_error = (e, exc_traceback)
         
     def _generate_page(self, uri, loggedin = False, error = None):
+        site_url = settings.DEV_SITE_URL
+        if SERVER_MODE == SERVER_MODES.CGI:
+            site_url = settings.SITE_URI
         self.context = {'title': '%s Editor' % settings.SITE_NAME, 
                         'site_name': settings.SITE_NAME, 
                         'site_title': '%s Editor' % settings.SITE_NAME, 
                         'static_url': self.edit_static_url, 
                         'edit_uri': self.site_edit_url,
-                        'site_url': settings.DEV_SITE_URL, 
+                        'site_url': site_url, 
                         'json_submit_url': '%ssubmit.json' % self.site_edit_url, 
                         'version': DonkeySimple.__version__
                         }

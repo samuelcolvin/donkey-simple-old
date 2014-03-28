@@ -76,6 +76,7 @@ To do:
 * increase the part of the page dedicated to code - DONE
 * fix zip download
 * fix "Failed to convert sitemap priority to float:" - DONE
-* add "are you sure to delete buttons"
+* add "are you sure to delete buttons" - DONE
 * add "generate with context" option to pages
+* add link to repo on repo page
 

@@ -316,7 +316,6 @@ class ProcessForm(UniversalProcessor):
     
     def _process_files(self, field_name, controller):
         self._upload_repo = self.fields['repo']
-        print 'files:', self.files.getlist(field_name)
         for f in self.files.getlist(field_name):
             self._process_file(f, controller)
     

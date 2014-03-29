@@ -79,4 +79,14 @@ To do:
 * add "are you sure to delete buttons" - DONE
 * add "generate with context" option to pages
 * add link to repo on repo page
+* think about static urls to work in sub folders
+* improve messages on repo page
+* make sure uploaded templates have .template. in their name
+* list of static files next to global variable on template page
+* move much of top bar of options to header or convert to dropdown
+* improve zip extract in lib download to deal with lack of file variable
+* fix issue with path existing on zip extract if path is just "", probably solved by above
+* think about support for folders in static???
+* test and fix problems with git messages
+
 

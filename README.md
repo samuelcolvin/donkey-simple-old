@@ -70,3 +70,7 @@ Example `.htaccess` are generated on `create` (see above).
 ### Building (You can probably ignore this)
 
 If you download the source (eg. from github as opposed to installing with pip) you should run `python mini_build.py` prior to installing. All this does is download the static files for the web interface and generate the docs.txt file for PyPi's `long_description`, for this you will require pandoc and pyandoc.
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/samuelcolvin/donkey-simple/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+

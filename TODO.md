@@ -90,5 +90,6 @@ To do:
 * test and fix problems with git messages
 * integrate GrabLib
 * get working on Windows
+* Use GitHub api to add ssh key and thereby push
 
 

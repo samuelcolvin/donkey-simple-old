@@ -91,5 +91,6 @@ To do:
 * integrate GrabLib
 * get working on Windows
 * Use GitHub api to add ssh key and thereby push
+* Add readme to new site
 
 

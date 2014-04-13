@@ -11,9 +11,11 @@ It uses [Werkzeug](http://werkzeug.pocoo.org/), [Jinja2](http://jinja.pocoo.org/
 
 The pages, templates, static files and config files which make up the site are stored in a git repository so you can easily manage the version history of your site.
 
+It comes with a develeopment server (courtesy of Werkzeug) so you don't need anything more than python to use the web interface and get started.
+
 Once you've written your site, it is generated **ONCE** and then saved as static files, meaning the site is **FAST**, **REALLY FAST** in a way dynamic sites build from templates using lots of database calls and slow interpretted languages so rarely are.
 
-DonkeySimple was built to work with Apache (it comes with .htaccess files) but it should be extremely simple to use it with other server. Similarly it has only been tested on Linux and Mac OS, however there's nothing fundamental to stop it running on windows.
+DonkeySimple was built to work with Apache (it comes with .htaccess files) but it should be extremely simple to use it with other servers. Similarly it has only been tested on Linux and Mac OS, however there's nothing fundamental to stop it running on windows.
 
 View the code and download it at [github.com/samuelcolvin/donkey-simple](https://github.com/samuelcolvin/donkey-simple). Donkey Simple is available through PyPi [pypi.python.org/pypi/DonkeySimple](https://pypi.python.org/pypi/DonkeySimple/).
 
@@ -68,3 +70,7 @@ Example `.htaccess` are generated on `create` (see above).
 ### Building (You can probably ignore this)
 
 If you download the source (eg. from github as opposed to installing with pip) you should run `python mini_build.py` prior to installing. All this does is download the static files for the web interface and generate the docs.txt file for PyPi's `long_description`, for this you will require pandoc and pyandoc.
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/samuelcolvin/donkey-simple/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+

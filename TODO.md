@@ -88,5 +88,9 @@ To do:
 * fix issue with path existing on zip extract if path is just "", probably solved by above
 * think about support for folders in static???
 * test and fix problems with git messages
+* integrate GrabLib
+* get working on Windows
+* Use GitHub api to add ssh key and thereby push
+* Add readme to new site
 
 

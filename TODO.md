@@ -54,7 +54,6 @@ To do:
 * change donkeysimple utility to point out you need to be inside the site to run edituser - DONE
 * make sure index.cgi has execute permissions - DONE
 
-* static file compression and organising - from json file
 * builtin repo with sitemap, htaccess, 404 - DONE
 * web interface edit settings.py
 * fix template order on select on page - DONE
@@ -92,5 +91,9 @@ To do:
 * get working on Windows
 * Use GitHub api to add ssh key and thereby push
 * Add readme to new site
-
+* remove "logged in successfully message"
+* anon >> anonymous
+* static file compression and organising - from json file
+* improve appearance of main page.
+* github api???
 

@@ -102,4 +102,5 @@ To do:
 * add `{{ site_uri }}` to favicon in template
 * comment in readme about `AllowOverride`
 * check change template - seems to give error
+* settings.json file to override settings.py so settings can be changed without access to python
 

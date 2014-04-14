@@ -55,7 +55,7 @@ To do:
 * make sure index.cgi has execute permissions - DONE
 
 * builtin repo with sitemap, htaccess, 404 - DONE
-* web interface edit settings.py
+* web interface edit settings.py - NOT DONE - no python edit access from web interface
 * fix template order on select on page - DONE
 * name page with error if error occurs during generate - DONE
 * generate: generate (tmp), delete, deploy - DONE
@@ -96,4 +96,10 @@ To do:
 * static file compression and organising - from json file
 * improve appearance of main page.
 * github api???
+* improve error message on missing template during generate
+* change font on back to Donkey Simple button - move button?
+* use `trim_blocks` in jinja2
+* add `{{ site_uri }}` to favicon in template
+* comment in readme about `AllowOverride`
+* check change template - seems to give error
 

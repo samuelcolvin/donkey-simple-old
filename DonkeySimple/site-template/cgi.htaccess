@@ -1,4 +1,4 @@
-# .htaccess apache config file suitable if you are serve the
+# .htaccess apache config file suitable if you are serving the
 # DS web interface with CGI.
 # If you're not using CGI you can delete this,
 # if you are you should rename it to .htaccess

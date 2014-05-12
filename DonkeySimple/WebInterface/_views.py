@@ -481,15 +481,14 @@ class View(object):
 extra_page_content = """
 <a href="/" style="
 position: fixed;
-left: 50px;
-bottom: 50px;
-padding: 10px 20px;
-background-color: #2d6ca2;
+left: 0;
+bottom: 0;
+padding: 1px 20px;
+background-color: black;
 color: white !important;
-border-radius: 5px;
-text-decoration: none !important;
-background-image: linear-gradient(to bottom,#428bca 0,#2d6ca2 100%);
 border: 1px solid #2b669a;
+width: 100%;
+opacity: 0.6;
 ">Back to Donkey Simple</a>\n
 """
 

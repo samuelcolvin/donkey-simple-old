@@ -5,7 +5,7 @@ from _common import *
 import os, shutil, json, zipfile, unicodedata
 import HTMLParser
 import _template_renderer as tr
-import re, base64, hashlib
+import re, base64, hashlib, codecs
 from download import download_libraries
 import _git
 from werkzeug.utils import secure_filename
@@ -85,15 +85,15 @@ class _File(object):
     
     def write_file(self, content):
         chunking = hasattr(content, 'next')
-        write_setting = ('w', 'wb')[chunking]
         try:
             self.delete_file()
         except: pass
-        with open(self.path, write_setting) as handle:
-            if chunking:
-                for chunk in content:
-                    handle.write(chunk)
-            else:
+        if chunking:
+            with open(self.path, 'wb') as handle:
+                    for chunk in content:
+                        handle.write(chunk)
+        else:
+            with codecs.open(self.path, encoding='utf-8', mode='w') as handle:
                 handle.write(content)
         self.set_mod()
     
@@ -142,8 +142,9 @@ class _File_Controller(object):
             cfile = self.cfiles[fid]
         else:
             cfile = self.get_cfile_name(name, repo)
-        with open(cfile.path, 'r') as handle:
+        with open(cfile.path, 'rb') as handle:
             content = handle.read()
+            content = unicode(str(content).decode('utf8'))
         return cfile, content
     
     def copy_file(self, src_cfile, dst_cfile):
@@ -162,7 +163,7 @@ class _File_Controller(object):
     def _sanitize(self, text):
         if not isinstance(text, unicode):
             text = unicode(str(text).decode('utf8'))
-        return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
+        return unicodedata.normalize('NFKD', text)#.encode('ascii', 'ignore')
     
     def create_cfile(self, repo, name):
         self.active_cfile = _File(repo, self.DIR, self._valid_name(name))

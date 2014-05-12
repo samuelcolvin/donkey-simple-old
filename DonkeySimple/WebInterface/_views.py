@@ -483,12 +483,13 @@ extra_page_content = """
 position: fixed;
 left: 0;
 bottom: 0;
-padding: 1px 20px;
+padding: 0 20px;
 background-color: black;
 color: white !important;
-border: 1px solid #2b669a;
 width: 100%;
-opacity: 0.6;
+opacity: 0.7;
+font-size: 13px;
+font-family: sans-serif;
 ">Back to Donkey Simple</a>\n
 """
 

@@ -113,9 +113,14 @@ class SiteGenerator(object):
         os.mkdir(static_dst)
         os.chmod(static_dst, 0777)
         s = con.Statics()
+        i = 0
         for i, src_cfile in enumerate(s.cfiles.values()):
             dst = os.path.join(static_dst, src_cfile.name)
-            shutil.copy(src_cfile.path, dst)
+            if os.path.isdir(src_cfile.path):
+                self._copytree(src_cfile.path, dst)
+            else:
+                shutil.copy(src_cfile.path, dst)
+            
         self._output('copied %d static files from "%s" to "%s"' % (i + 1, STATIC_DIR, self._short_path(static_dst)))
         download_lib_statics(self._output)
         libfiles = con.LibraryFiles()
@@ -138,7 +143,7 @@ class SiteGenerator(object):
             s = os.path.join(src, item)
             d = os.path.join(dst, item)
             if os.path.isdir(s):
-                shutil.copytree(s, d, symlinks, ignore)
+                self._copytree(s, d, symlinks, ignore)
             else:
                 shutil.copy2(s, d)
                 

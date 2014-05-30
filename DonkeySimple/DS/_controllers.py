@@ -114,11 +114,11 @@ class _File_Controller(object):
             self.cfiles[cf.id] = cf
         self.cfiles_ordered = sorted([(k, v) for k, v in self.cfiles.items()], key=lambda (k ,v): v.display)
     
-    def _file_test(self, fn):
+    def _file_test(self, fn, path):
         """
         Tests whether a given file should be included in control.
         """
-        return True
+        return os.path.isfile(path)
     
     def _get_all_files(self):
         """
@@ -131,7 +131,7 @@ class _File_Controller(object):
                 chmod_own(directory, 0777)
             for fn in os.listdir(directory):
                 file_path = os.path.join(directory, fn)
-                if os.path.isfile(file_path) and self._file_test(fn) and fn not in self.perm_files:
+                if self._file_test(fn, file_path) and fn not in self.perm_files:
                     yield _File(repo, self.DIR, fn, self.EXTENSION)
     
     def get_file_content(self, fid = None, name=None, repo=None):
@@ -291,8 +291,8 @@ class Pages(_File_Controller):
                     context[name]['type'] = f_types[name]
         self.active_cfile.info['context'] = context
         
-    def _file_test(self, fn):
-        return fn.endswith(self.EXTENSION)
+    def _file_test(self, fn, path):
+        return super(Pages, self)._file_test(fn, path) and fn.endswith(self.EXTENSION)
         
     def generate_page(self):
         return self._write()
@@ -311,8 +311,8 @@ class Pages(_File_Controller):
 class Templates(_File_Controller):
     DIR = TEMPLATES_DIR
     
-    def _file_test(self, fn):
-        return '.template.' in fn
+    def _file_test(self, fn, path):
+        return super(Templates, self)._file_test(fn, path) and '.template.' in fn
 
 class Statics(_File_Controller):
     DIR = STATIC_DIR
@@ -321,6 +321,9 @@ class Statics(_File_Controller):
         ('Image', ('.png', '.jpeg', '.jpg', '.gif', '.bmp')),
         ('Font', ('.ttf')),
     )
+    
+    def _file_test(self, fn, path):
+        return True
         
     def get_file_type(self, file_name):
         for name, extensions in self.extension_groups:
